@@ -55,3 +55,52 @@ socket.on("disconnect", () => {
 
     console.log(`Peer ${socket.id} left room ${roomID}`)
 })
+
+
+socket.on("create-send-transport", async (callback) => {
+    try{
+        const roomID = socket.roomID
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+            
+        router = room.router
+        const peer = room.peer.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
+        
+        const transport = await router.createWebRtcTransport({
+            listenIPs: [
+                {
+                    ip: "0.0.0.0",
+                    announcedIp: process.env.ANNOUNCEDIP_IP || null     //! Add the public IP (AWS, etc) while deploying
+                },
+            ],
+            enableUdp: true,
+            enableTcp: true,
+            PreferUdp: true,
+        })
+
+        peer.sendTransport = transport
+
+        transport.on("dtlsstatechange", (state) => {
+            if( state === "closed"){
+                console.log("Send Transport Closed")
+                transport.close()
+            }
+        })
+
+        transport.on("close", () => {
+            console.log("Send transport fully closed");
+        })
+
+        callback({
+            id: transport.id,
+            iceParameters: transport.iceParameters,
+            iceCandidates: transport.iceCandidates,
+            dtlsParameters: transport.dtlsParameters,
+        })
+        
+    } catch (error) {
+        console.error(`Error creating sent transport ${error}`);
+        callback({ error: error.message })
+    }
+})
