@@ -14,27 +14,44 @@ export const registerSocketEvents = (io, socket) => {
 
             const room = await roomManager.createRoom(roomID)
 
-            const peer = roomManager.addPeer(roomID, socket)
+            const peer = roomManager.addPeer(roomID, socket, user)
 
+            socket.roomID = roomID
             
+            socket.join(roomID)
+
+            const router = roomManager.getRouter(roomID)
+            socket.emit("router-rtp-capabilities", room.router.rtpCapabilities)
+
+            const producers = roomManager.getProducers(roomID, socket.id)
+            socket.emit("existing-producers", producers)
+
+            socket.to(roomID).emit("peer-joined", {
+                peerID: socket.id,
+                user
+            })
+
+            io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
+
+            console.log(`Peer ${socket.id} joined room ${roomID}`)
+            callback({ success: true})
+
+        } catch(error) {
+            console.error(`join-room error: ${error}`);
+            callback({ error: "join failed"})
         }
-
-
-        const room = roomManager.createRoom(roomID)
-
-        const peer = roomManager.addPeer(roomID, socket)
-
-        socket.roomID = roomID
-
-        socket.emit("router-rtp-capabilities", room.router.rtpCapabilities)
     })
-
-
 }
 
 //Disconnect a Room (Removal of Peer)
 socket.on("disconnect", () => {
-    if(socket.roomID){
-        roomManager.removePeer(socket.roomID, socket.id)
-    }
+    const roomID = socket.roomID
+    if(!roomID) return
+
+    roomManager.removePeer(roomID, socket.id)
+
+    socket.to(roomID).emit("peer-left", { socketID: socket.id })
+    io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
+
+    console.log(`Peer ${socket.id} left room ${roomID}`)
 })
