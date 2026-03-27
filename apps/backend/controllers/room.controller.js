@@ -1,16 +1,36 @@
 import roomManager from "../sfu/roomManager.js"
 
 
-//Join or Create a Room
-socket.on("join-room", async ({ roomID }) => {
-    const room = roomManager.createRoom(roomID)
+export const registerSocketEvents = (io, socket) => {
 
-    const peer = roomManager.addPeer(roomID, socket)
+    //Join or Create a Room
+    socket.on("join-room", async ({ roomID }, callback) => {
+        try{
+            const user = socket.user    //! From Auth Middleware
 
-    socket.roomID = roomID
+            if(!roomID){
+                return callback({ error: `roomID is required`})
+            }
 
-    socket.emit("router-rtp-capabilities", room.router.rtpCapabilities)
-})
+            const room = await roomManager.createRoom(roomID)
+
+            const peer = roomManager.addPeer(roomID, socket)
+
+            
+        }
+
+
+        const room = roomManager.createRoom(roomID)
+
+        const peer = roomManager.addPeer(roomID, socket)
+
+        socket.roomID = roomID
+
+        socket.emit("router-rtp-capabilities", room.router.rtpCapabilities)
+    })
+
+
+}
 
 //Disconnect a Room (Removal of Peer)
 socket.on("disconnect", () => {

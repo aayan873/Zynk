@@ -62,17 +62,25 @@ class RoomManager{
     }
 
 
-    addPeer(roomID, socket){
+    addPeer(roomID, socket, user){
         const room = this.rooms.get(roomID)
         if(!room) throw new Error(`Room Does Not Exist`)
 
         const peer = {
             id: socket.id,
             socket,
+            user,
             sendTransport: null,
             recvTransports: new Map(),
             producers: new Map(),
-            consumers: new Map()
+            consumers: new Map(),
+
+            joinedAt: Date.now(),
+            permission: {
+                canVideo: true,
+                canAudio: true,
+                canChat: true
+            }
         }
 
         room.peers.set(socket.id, peer)
@@ -125,6 +133,35 @@ class RoomManager{
         } catch(error){
             console.error(`Error Closing Peer: ${error}`)
         }
+    }
+
+
+    getProducers(roomID, excludeSocketID){
+        const room = this.rooms.get(roomID)
+        if(!room)   return []
+
+        const producers = []
+
+        for(const [peerID, peer] of room.peers){
+            if(peerID === excludeSocketID)  continue;
+            peer.producers.forEach((p) => {
+                producers.push({
+                    producerID: p.id,
+                    peerID,
+                    kind: p.kind
+                })
+            })
+        }
+
+        return producers
+    }
+
+
+    getRouter(roomID){
+        const room = this.rooms.get(roomID)
+        if(!room)   return null
+
+        return room.router
     }
 }
 
