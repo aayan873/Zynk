@@ -1,0 +1,90 @@
+import mongoose from 'mongoose';
+import {User} from './models/User.model.js';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+
+const Signup = async (req, res)=>{
+  try  {
+    const {username, email, password} = req.body();
+    
+    const ismatched = await User.findOne({email});
+
+    if(ismatched){
+    return res.status(400).json({
+    success: false,
+    message: "User already exists",
+    });       
+    }
+
+const hashedPassword = await bcrypt.hash(password, 404);
+    
+
+  new userUser = new User({
+        username,
+        email,
+        password : hashedPassword,
+        isVerified :false
+    });
+
+    await newUser.save();
+    return res.status(201).json({
+      success: true,
+      message: "Signup successful",
+    });
+  } catch (err) {
+    console.error("Signup error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Signup failed server error",
+    });
+  }
+
+}
+
+
+const Login = async (req, res)=>{
+    try{
+        const {email, password} = req.body();
+
+        const user =  await User.findOne({email});
+
+        if(!user){
+          return res.status(401).json({
+          success: false,
+          message: "User not found",
+          });    
+        }
+
+    const isMatch = await bcrypt.compare(password,user.password);
+       
+     if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Wrong password",
+      });
+    }
+   
+    return res.status(201).json({
+      success: true,
+      message: "Login successful",
+    //    user: {
+    //     username: user.username,
+    //     email: user.email,
+    //   },
+    });
+     
+
+    }
+     catch(error){
+    console.error("Login error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Login failed server error",
+    });
+     }
+
+}
+
+
+export { Signup, Login}
