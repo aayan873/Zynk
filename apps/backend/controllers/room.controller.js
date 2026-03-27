@@ -60,11 +60,13 @@ socket.on("disconnect", () => {
 socket.on("create-send-transport", async (callback) => {
     try{
         const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+
         const room = roomManager.getRoom(roomID)
         if(!room) return callback({ error: `Room Not Found`});
             
         router = room.router
-        const peer = room.peer.get(socket.id)
+        const peer = room.peers.get(socket.id)
         if(!peer) return callback({ error: `Peer Not Found`});
         
         const transport = await router.createWebRtcTransport({
@@ -101,6 +103,32 @@ socket.on("create-send-transport", async (callback) => {
         
     } catch (error) {
         console.error(`Error creating sent transport ${error}`);
+        callback({ error: error.message })
+    }
+})
+
+
+socket.on("connect-send-transport", async({ dtlsParameters }, callback) => {
+    try{
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+        
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+        
+        const peer = room.peers.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
+        
+        const transport = peer.sendTransport;
+        if(!transport)  return callback({ error: `Send Transport Not Found`});
+
+        await transport.connect({ dtlsParameters })
+
+        console.log(`Send Transport Connected For ${socket.id}`)
+        callback({ success: true })
+
+    } catch(error) {
+        console.error(`Error connecting send transport: ${error}`);
         callback({ error: error.message })
     }
 })
