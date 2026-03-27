@@ -2,7 +2,7 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import { createWorker } from "./utils/workerPool.js";
+import { createWorker } from "./sfu/workerPool.js";
 
 export const startServer = async ({ port }) => {
 
