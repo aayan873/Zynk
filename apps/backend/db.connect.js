@@ -1,7 +1,11 @@
 import mongoose from "mongoose";
 
-export const connectDB = async () => {
+const connectDB = async () => {
     try {
+        if (!process.env.ATLAS_URI) {
+            throw new Error("ATLAS_URI is not defined in environment variables");
+        }
+
         await mongoose.connect(process.env.ATLAS_URI);
         console.log("MongoDB successfully connected");
     }
@@ -10,3 +14,5 @@ export const connectDB = async () => {
         process.exit(1);
     }
 }
+
+export default connectDB;
