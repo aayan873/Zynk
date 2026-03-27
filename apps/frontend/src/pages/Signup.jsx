@@ -1,5 +1,6 @@
 import{useState,useEffect} from 'react';
-import { Link } from 'react-router-dom';
+import { Link,useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import './Signup.css';
 
 
@@ -20,9 +21,30 @@ const Signup = ()=>{
            return;
           }
 
-      console.log("Username:",username);
-        console.log("Email:",email);
-        
+          
+        setLoading(true);
+
+         try{
+        const response = await fetch("http://localhost:5000/api/auth/signup",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({username,email,password})
+        });
+        const data = await response.json();
+        if (response.ok) {
+            toast.success("Signup successful!");
+            navigate("/dashboard");
+        } else {
+            toast.error(data.message || "Signup failed");
+        }
+     } catch (error) {
+        toast.error("An error occurred during Signup");
+     } finally {
+        setLoading(false);
+     }
+
     
 
       }

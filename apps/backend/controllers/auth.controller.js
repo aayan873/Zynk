@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
-import {User} from './models/User.model.js';
+import User from '../models/User.model.js';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 
 const Signup = async (req, res)=>{
   try  {
-    const {username, email, password} = req.body();
+    const { username, email, password } = req.body;
     
     const ismatched = await User.findOne({email});
 
@@ -17,10 +17,10 @@ const Signup = async (req, res)=>{
     });       
     }
 
-const hashedPassword = await bcrypt.hash(password, 404);
+const hashedPassword = await bcrypt.hash(password, 10);
     
 
-  new userUser = new User({
+  const newUser = new User({
         username,
         email,
         password : hashedPassword,
@@ -45,7 +45,7 @@ const hashedPassword = await bcrypt.hash(password, 404);
 
 const Login = async (req, res)=>{
     try{
-        const {email, password} = req.body();
+        const {email, password} = req.body;
 
         const user =  await User.findOne({email});
 
@@ -77,7 +77,7 @@ const Login = async (req, res)=>{
 
     }
      catch(error){
-    console.error("Login error:", err);
+    console.error("Login error:", error);
     return res.status(500).json({
       success: false,
       message: "Login failed server error",
