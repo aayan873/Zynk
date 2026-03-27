@@ -21,7 +21,7 @@ export const registerSocketEvents = (io, socket) => {
             socket.join(roomID)
 
             const router = roomManager.getRouter(roomID)
-            socket.emit("router-rtp-capabilities", room.router.rtpCapabilities)
+            socket.emit("router-rtp-capabilities", router.rtpCapabilities)
 
             const producers = roomManager.getProducers(roomID, socket.id)
             socket.emit("existing-producers", producers)
@@ -69,6 +69,7 @@ socket.on("create-send-transport", async (callback) => {
         const peer = room.peers.get(socket.id)
         if(!peer) return callback({ error: `Peer Not Found`});
         
+        //Create WebRTC Transport
         const transport = await router.createWebRtcTransport({
             listenIPs: [
                 {
@@ -81,8 +82,10 @@ socket.on("create-send-transport", async (callback) => {
             PreferUdp: true,
         })
 
+        //Send Transport in Peer
         peer.sendTransport = transport
 
+        //Handle Transport Lifecycle
         transport.on("dtlsstatechange", (state) => {
             if( state === "closed"){
                 console.log("Send Transport Closed")
@@ -121,14 +124,65 @@ socket.on("connect-send-transport", async({ dtlsParameters }, callback) => {
         
         const transport = peer.sendTransport;
         if(!transport)  return callback({ error: `Send Transport Not Found`});
-
+        
         await transport.connect({ dtlsParameters })
-
+        
         console.log(`Send Transport Connected For ${socket.id}`)
         callback({ success: true })
-
+        
     } catch(error) {
         console.error(`Error connecting send transport: ${error}`);
+        callback({ error: error.message })
+    }
+})
+
+
+socket.on("produce", async ({ kind, rtpParameters }, callback ) => {
+    try{
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+        
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+        
+        const peer = room.peers.get(socket.id)
+        if(!peer || !peer.sendTransport) return callback({ error: `Send Transport Not Found`});
+        
+        //Create Producer
+        const producer = await peer.sendTransport.produce({
+            kind, rtpParameters
+        })
+
+        //Store Producer
+        peer.producers.set(producer.id, producer)
+
+        console.log(`Prodeucer created: ${producer.id} ${kind}`);
+        
+        //Handle Producer Close
+        producer.on("transportclose", () => {
+            console.log(`Producer Transport Closed`);
+            producer.close()
+            peer.producers.delete(producer.id)
+        })
+        
+        producer.on("close", () => {
+            console.log("Producer Closed")
+            peer.producers.delete(producer.id)            
+        })
+
+        //Notify other peers
+        socket.to(roomID).emit("new-producer", {
+            producerID: producer.id,
+            peerID: socket.id,
+            kind,
+        })
+
+        //Send Producer ID back to client
+        callback({
+            id: producer.id,
+        })
+    } catch (error) {
+        console.error(`Producer Error: ${error}`);
         callback({ error: error.message })
     }
 })
