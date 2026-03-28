@@ -21,7 +21,7 @@ export const useSFU = (socket) => {
 
     //Init of useEffect
 
-    useEffect(() => {
+    useEffect( async () => {
         if(!socket) return
 
         const init = async () => {
@@ -38,12 +38,11 @@ export const useSFU = (socket) => {
                     }
                 })
 
-                setIsConnected(true)
             } catch (error) {
                 console.error(`SFU init ${error}`)
             }
         }
-
+        
         const handlerRouterCapabilities = async (rtpCapabilities) => {
             try {
                 if (deviceRef.current) {
@@ -51,22 +50,26 @@ export const useSFU = (socket) => {
                     return
                 }
                 const device = new Device()
-
+                
                 await device.load({
                     routerRtpCapabilities: rtpCapabilities
                 })
+                console.log(`RtpCapabilities: ${rtpCapabilities}`);
+                
                 deviceRef.current = device
-
+                
                 setIsDeviceLoaded(true)
+                setIsConnected(true)
                 console.log(`Device Loaded`);
 
             } catch (error) {
+                setError(error)
                 console.error(`Device load failed`);
             }
         }
-        
+
         socket.on("router-rtp-capabilities", handlerRouterCapabilities)
-        init()
+        await init()
         
         return () => {
             socket.off("router-rtp-capabilities", handlerRouterCapabilities)
