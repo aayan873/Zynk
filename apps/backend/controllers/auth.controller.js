@@ -77,19 +77,30 @@ const Login = async (req, res)=>{
       });
     }
 
-    const token = jwt.sign({ id: user._id, email: user.email },
-                process.env.JWT_SECRET,
-              { expiresIn: "1d" } );
+    const accessToken = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-    return res.status(201).json({
+    const refreshToken = jwt.sign(
+      { id: user._id, email: user.email, type: "refresh" },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+
+    return res.status(200).json({
       success: true,
       message: "Login successful",
-        token,
+      token: accessToken,
+      refreshToken,
       user: {
         username: user.username,
         email: user.email,
       },
     });
+
 
 
     }
