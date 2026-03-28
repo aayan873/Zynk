@@ -22,7 +22,7 @@ export const registerRoomSocket = (io, socket) => {
             const peers = roomManager.getAllPeers(roomID)
 
             const hostPeer = peers.find(
-                p => p.user.userId === hostId
+                p => p.user._id === hostId
             )
 
             if (!hostPeer) {
@@ -48,7 +48,7 @@ export const registerRoomSocket = (io, socket) => {
             if (!meeting) {
                 return
             }
-            if (meeting.hostId !== user.userId) {
+            if (meeting.hostId !== user._id) {
                 console.log("Unauthorized host-decision attempt")
                 return
             }

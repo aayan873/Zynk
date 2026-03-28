@@ -3,12 +3,13 @@ import {useAuth} from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Root = () => {
-    const {user} = useAuth();
+    const { auth } = useAuth();
+    const user = auth?.user
     const navigate = useNavigate(); 
     
-   useEffect(() => {
+    useEffect(() => {
         if(user){
-       navigate('/dashboard');           
+            navigate('/dashboard');           
         }else{
             navigate('/login');
         }
