@@ -1,5 +1,6 @@
 import * as mediasoup from mediasoup
 import { getWorker } from "./workerPool.js"
+import redis from "../config/redis.js"
 
 class RoomManager{
     constructor() {
@@ -34,6 +35,13 @@ class RoomManager{
         }
 
         this.rooms.set(roomID, room)
+
+        // Store room in redis
+        await redis.hset(`room:${roomID}`, {
+            roomID,
+            type,
+            createdAt: Date.now()
+        })
 
         console.log(`Room Created: ${roomID}`)
         return room;
@@ -85,6 +93,14 @@ class RoomManager{
 
         room.peers.set(socket.id, peer)
 
+        redis.sadd(`room:${roomID}:peers`, socket.id);
+
+        redis.hset(`peer:${socket.id}`, {
+            userID: user.id,
+            roomID,
+            joinedAt: Date.now()
+        })
+
         return peer
     }
 
@@ -102,8 +118,10 @@ class RoomManager{
         if(room.peers.size === 0){
             await this.deleteRoom(roomID)
         }
-    }
 
+        await redis.srem(`room:${roomID}:peers`, socketID)
+        await redis.del(`peer:${socket.id}`)
+    }
 
     getPeer(roomID, socketID){
         const room = this.rooms.get(roomID)
