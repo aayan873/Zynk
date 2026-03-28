@@ -62,10 +62,65 @@ export const useSFU = (socket) => {
                 setIsConnected(true)
                 console.log(`Device Loaded`);
 
+                //Creating Send Transport
+                await createSendTransport()
+
             } catch (error) {
                 setError(error)
                 console.error(`Device load failed`);
             }
+        }
+
+
+        const createSendTransport = async () => {
+            if(!deviceRef.current){
+                console.error(`Device Not Loaded`);
+                return
+            }
+
+            socket.emit("create-send-transport", async(params) => {
+                if(!params.error){
+                    console.error(`Transport Creation Failed: ${params.error}`);
+                    return
+                }
+
+                try {
+                    const device = deviceRef.current
+
+                    //Create Send Transport
+                    const transport = device.createSendTransport(params)
+
+                    //Connect Event (DTLS Handshake)
+                    transport.on("connect", ({ dtlsParameters }, callback, errback) => {
+                        socket.emit("connect-send-transport", { dtlsParameters }, (res) => {
+                            if(res?.error){
+                                console.error(`DTLS connect Failed: ${res.error}`);
+                                errback(res.error)
+                            } else {
+                                callback()
+                            }
+                        })
+                    })
+
+                    //Produce Event (when sending track)
+                    transport.on("produce", ({ kind, rtpParameters }, callback, errback) => {
+                        socket.emit("produce", { kind, rtpParameters }, (res) => {
+                            if(res?.error){
+                                console.error(`Produce Failed: ${res.error}`);
+                                errback(res.error)
+                            } else {
+                                callback({ id: res.id })
+                            }
+                        })
+                    })
+
+                    sendTransportRef.current = transport
+                    console.log(`Send Transport Created`);
+                    
+                } catch (error){
+                    console.error(`Error creating send transport: ${error}`)
+                }
+            })
         }
 
         socket.on("router-rtp-capabilities", handlerRouterCapabilities)
