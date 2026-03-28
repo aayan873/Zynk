@@ -1,24 +1,28 @@
-import { error, log } from "console"
+import { error } from "console"
 import roomManager from "../sfu/roomManager.js"
-
+import { Meeting } from "../models/Meeting.model.js"
 
 export const registerSocketEvents = (io, socket) => {
 
     //Join or Create a Room
     socket.on("join-room", async ({ roomID }, callback) => {
-        try{
+        try {
             const user = socket.user    //! From Auth Middleware
+            if (!roomID) { return callback({ error: `roomID is required` }) }
 
-            if(!roomID){
-                return callback({ error: `roomID is required`})
+            const meeting = await Meeting.findOne({ roomId: roomID })
+
+            if (!meeting) { return callback({ error: "Room does not exist" }) }
+
+            if (!meeting.participants.includes(user.userId)) {
+                meeting.participants.push(user.userId)
+                await meeting.save()
             }
 
             const room = await roomManager.createRoom(roomID)
-
             const peer = roomManager.addPeer(roomID, socket, user)
 
             socket.roomID = roomID
-            
             socket.join(roomID)
 
             const router = roomManager.getRouter(roomID)
@@ -35,11 +39,11 @@ export const registerSocketEvents = (io, socket) => {
             io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
 
             console.log(`Peer ${socket.id} joined room ${roomID}`)
-            callback({ success: true})
+            callback({ success: true })
 
-        } catch(error) {
+        } catch (error) {
             console.error(`join-room error: ${error}`);
-            callback({ error: "join failed"})
+            callback({ error: "join failed" })
         }
     })
 }
@@ -86,9 +90,9 @@ socket.on("disconnect", async () => {
 
         io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
 
-        console.log(`Peer ${socket.id} disconnected from ${roomID}`);    
+        console.log(`Peer ${socket.id} disconnected from ${roomID}`);
 
-    } catch(error){
+    } catch (error) {
         console.error(`Disconnect Error: ${error}`);
     }
 })
@@ -124,7 +128,7 @@ socket.on("create-send-transport", async (callback) => {
 
         //Handle Transport Lifecycle
         transport.on("dtlsstatechange", (state) => {
-            if( state === "closed"){
+            if (state === "closed") {
                 console.log("Send Transport Closed")
                 transport.close()
             }
@@ -140,7 +144,7 @@ socket.on("create-send-transport", async (callback) => {
             iceCandidates: transport.iceCandidates,
             dtlsParameters: transport.dtlsParameters,
         })
-        
+
     } catch (error) {
         console.error(`Error creating sent transport ${error}`);
         callback({ error: error.message })
@@ -148,43 +152,43 @@ socket.on("create-send-transport", async (callback) => {
 })
 
 
-socket.on("connect-send-transport", async({ dtlsParameters }, callback) => {
-    try{
+socket.on("connect-send-transport", async ({ dtlsParameters }, callback) => {
+    try {
         const roomID = socket.roomID
-        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
-        
+        if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
         const room = roomManager.getRoom(roomID)
-        if(!room) return callback({ error: `Room Not Found`});
-        
+        if (!room) return callback({ error: `Room Not Found` });
+
         const peer = room.peers.get(socket.id)
-        if(!peer) return callback({ error: `Peer Not Found`});
-        
+        if (!peer) return callback({ error: `Peer Not Found` });
+
         const transport = peer.sendTransport;
-        if(!transport)  return callback({ error: `Send Transport Not Found`});
-        
+        if (!transport) return callback({ error: `Send Transport Not Found` });
+
         await transport.connect({ dtlsParameters })
-        
+
         console.log(`Send Transport Connected For ${socket.id}`)
         callback({ success: true })
-        
-    } catch(error) {
+
+    } catch (error) {
         console.error(`Error connecting send transport: ${error}`);
         callback({ error: error.message })
     }
 })
 
 
-socket.on("produce", async ({ kind, rtpParameters }, callback ) => {
-    try{
+socket.on("produce", async ({ kind, rtpParameters }, callback) => {
+    try {
         const roomID = socket.roomID
-        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
-        
+        if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
         const room = roomManager.getRoom(roomID)
-        if(!room) return callback({ error: `Room Not Found`});
-        
+        if (!room) return callback({ error: `Room Not Found` });
+
         const peer = room.peers.get(socket.id)
-        if(!peer || !peer.sendTransport) return callback({ error: `Send Transport Not Found`});
-        
+        if (!peer || !peer.sendTransport) return callback({ error: `Send Transport Not Found` });
+
         //Create Producer
         const producer = await peer.sendTransport.produce({
             kind, rtpParameters
@@ -193,18 +197,18 @@ socket.on("produce", async ({ kind, rtpParameters }, callback ) => {
         //Store Producer
         peer.producers.set(producer.id, producer)
 
-        console.log(`Producer created: ${producer.id} ${kind}`);
-        
+        console.log(`Prodeucer created: ${producer.id} ${kind}`);
+
         //Handle Producer Close
         producer.on("transportclose", () => {
             console.log(`Producer Transport Closed`);
             producer.close()
             peer.producers.delete(producer.id)
         })
-        
+
         producer.on("close", () => {
             console.log("Producer Closed")
-            peer.producers.delete(producer.id)            
+            peer.producers.delete(producer.id)
         })
 
         //Notify other peers
@@ -227,18 +231,18 @@ socket.on("produce", async ({ kind, rtpParameters }, callback ) => {
 
 
 socket.on("resume-producer", async ({ producerID }, callback) => {
-    try{
+    try {
         const roomID = socket.roomID
-        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+        if (!roomID) return callback({ error: `RoomID Not Found in socket` })
 
         const room = roomManager.getRoom(roomID)
-        if(!room) return callback({ error: `Room Not Found`});
-            
+        if (!room) return callback({ error: `Room Not Found` });
+
         const peer = room.peers.get(socket.id)
-        if(!peer) return callback({ error: `Peer Not Found`});
+        if (!peer) return callback({ error: `Peer Not Found` });
 
         const producer = peer.producers.get(producerID)
-        if(!producer) return callback({ error: `Producer Not Found`});
+        if (!producer) return callback({ error: `Producer Not Found` });
 
         await producer.resume()
 
@@ -249,7 +253,7 @@ socket.on("resume-producer", async ({ producerID }, callback) => {
         console.log(`Producer Resumed: ${producerID}`);
         callback({ success: true })
 
-    } catch(error){
+    } catch (error) {
         console.error(`Resume Producer Error: ${error}`);
         callback({ error: error.message })
     }
@@ -258,18 +262,18 @@ socket.on("resume-producer", async ({ producerID }, callback) => {
 
 
 socket.on("pause-producer", async ({ producerID }, callback) => {
-    try{
+    try {
         const roomID = socket.roomID
-        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+        if (!roomID) return callback({ error: `RoomID Not Found in socket` })
 
         const room = roomManager.getRoom(roomID)
-        if(!room) return callback({ error: `Room Not Found`});
-            
+        if (!room) return callback({ error: `Room Not Found` });
+
         const peer = room.peers.get(socket.id)
-        if(!peer) return callback({ error: `Peer Not Found`});
+        if (!peer) return callback({ error: `Peer Not Found` });
 
         const producer = peer.producers.get(producerID)
-        if(!producer) return callback({ error: `Producer Not Found`});
+        if (!producer) return callback({ error: `Producer Not Found` });
 
         await producer.pause()
 
@@ -280,48 +284,26 @@ socket.on("pause-producer", async ({ producerID }, callback) => {
         console.log(`Producer Paused: ${producerID}`);
         callback({ success: true })
 
-    } catch(error){
+    } catch (error) {
         console.error(`Pause Producer Error: ${error}`);
         callback({ error: error.message })
     }
 })
 
-socket.on("close-producer", ({ producerID }, callback) => {
+
+
+socket.on("create-recv-transport", async () => {
     try {
         const roomID = socket.roomID
-        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
-        
+        if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
         const room = roomManager.getRoom(roomID)
-        if(!room) return callback({ error: `Room Not Found`});
+        if (!room) return callback({ error: `Room Not Found` });
 
-        const peer = room.peers.get(socket.id)
-        if(!peer) return callback({ error: `Peer Not Found`});
-
-        const producer = peer.producers.get(producerID)
-        if(!producer) return callback({ error: `Producer Not Found `});
-        
-        producer.close()
-        peer.producers.delete(producerID)
-        console.log(`Producer closed ${producerID}`);
-        callback({ success: true })
-
-    } catch (error) {
-        callback({ error: error.message })
-    }
-})
-
-socket.on("create-recv-transport", async (callback) => {
-    try{
-        const roomID = socket.roomID
-        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
-        
-        const room = roomManager.getRoom(roomID)
-        if(!room) return callback({ error: `Room Not Found`});
-            
         router = room.router
         const peer = room.peers.get(socket.id)
-        if(!peer) return callback({ error: `Peer Not Found`});
-        
+        if (!peer) return callback({ error: `Peer Not Found` });
+
         //Create WebRTC Transport
         const transport = await router.createWebRtcTransport({
             listenIPs: [
@@ -334,32 +316,32 @@ socket.on("create-recv-transport", async (callback) => {
             enableTcp: true,
             preferUdp: true,
         })
-        
-        if(!peer.recvTransports) {
+
+        if (!peer.recvTransports) {
             peer.recvTransports = new Map()
         }
         peer.recvTransports.set(transport.id, transport)
-        
+
         //Handle Transport Lifecycle
         transport.on("dtlsstatechange", (state) => {
-            if( state === "closed"){
+            if (state === "closed") {
                 console.log("Send Transport Closed")
                 transport.close()
             }
         })
-        
+
         transport.on("close", () => {
             console.log("Send transport fully closed");
             peer.recvTransports.delete(transport.id)
         })
-        
+
         callback({
             id: transport.id,
             iceParameters: transport.iceParameters,
             iceCandidates: transport.iceCandidates,
             dtlsParameters: transport.dtlsParameters,
         })
-        
+
     } catch (error) {
         console.error(`Error creating recv transport ${error}`);
         callback({ error: error.message })
@@ -368,26 +350,26 @@ socket.on("create-recv-transport", async (callback) => {
 
 
 
-socket.on("connect-recv-transport", async({ transportID, dtlsParameters }, callback) => {
-    try{
+socket.on("connect-recv-transport", async ({ transportID, dtlsParameters }, callback) => {
+    try {
         const roomID = socket.roomID
-        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
-        
+        if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
         const room = roomManager.getRoom(roomID)
-        if(!room) return callback({ error: `Room Not Found`});
-        
+        if (!room) return callback({ error: `Room Not Found` });
+
         const peer = room.peers.get(socket.id)
-        if(!peer) return callback({ error: `Peer Not Found`});
-        
+        if (!peer) return callback({ error: `Peer Not Found` });
+
         const transport = peer.recvTransports.get(transportID);
-        if(!transport)  return callback({ error: `Recv Transport Not Found`});
-        
+        if (!transport) return callback({ error: `Recv Transport Not Found` });
+
         await transport.connect({ dtlsParameters })
-        
+
         console.log(`Recv Transport Connected For ${socket.id}`)
         callback({ success: true })
-        
-    } catch(error) {
+
+    } catch (error) {
         console.error(`Error connecting recv transport: ${error}`);
         callback({ error: error.message })
     }
@@ -396,28 +378,28 @@ socket.on("connect-recv-transport", async({ transportID, dtlsParameters }, callb
 
 
 socket.on("consume", async ({ producerID, transportID, rtpCapabilities }, callback) => {
-    try{
+    try {
         const roomID = socket.roomID
-        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+        if (!roomID) return callback({ error: `RoomID Not Found in socket` })
 
         const room = roomManager.getRoom(roomID)
-        if(!room) return callback({ error: `Room Not Found`});
-            
+        if (!room) return callback({ error: `Room Not Found` });
+
         router = room.router
         const peer = room.peers.get(socket.id)
-        if(!peer) return callback({ error: `Peer Not Found`});
+        if (!peer) return callback({ error: `Peer Not Found` });
 
         const canConsume = router.canConsume({
             producerID, rtpCapabilities
         })
-        if(!canConsume){
+        if (!canConsume) {
             console.error(`Cannot consume this producer`)
             return callback({ error: "Cannot consume" })
         }
 
         const recvTransport = peer.recvTransports.get(transportID)
-        if(!recvTransport){
-            return callback({ error: "Recv Transport Not Found"})
+        if (!recvTransport) {
+            return callback({ error: "Recv Transport Not Found" })
         }
 
         const consumer = await recvTransport.consume({
@@ -426,7 +408,7 @@ socket.on("consume", async ({ producerID, transportID, rtpCapabilities }, callba
             paused: true
         })
 
-        if(!peer.consumers){
+        if (!peer.consumers) {
             peer.consumers = new Map()
         }
         peer.consumers.set(consumer.id, consumer)
@@ -449,7 +431,7 @@ socket.on("consume", async ({ producerID, transportID, rtpCapabilities }, callba
             kind: consumer.kind,
             rtpParameters: consumer.rtpParameters,
         })
-    } catch(error) {
+    } catch (error) {
         console.error(`Consumer Error: ${error}`);
         callback({ error: error.message })
     }
@@ -458,25 +440,25 @@ socket.on("consume", async ({ producerID, transportID, rtpCapabilities }, callba
 
 
 socket.on("resume-consumer", async ({ consumerID }, callback) => {
-    try{
+    try {
         const roomID = socket.roomID
-        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+        if (!roomID) return callback({ error: `RoomID Not Found in socket` })
 
         const room = roomManager.getRoom(roomID)
-        if(!room) return callback({ error: `Room Not Found`});
-            
+        if (!room) return callback({ error: `Room Not Found` });
+
         const peer = room.peers.get(socket.id)
-        if(!peer) return callback({ error: `Peer Not Found`});
+        if (!peer) return callback({ error: `Peer Not Found` });
 
         const consumer = peer.consumers.get(consumerID)
-        if(!consumer) return callback({ error: `Consumer Not Found`});
+        if (!consumer) return callback({ error: `Consumer Not Found` });
 
         await consumer.resume()
 
         console.log(`Consumer Resumed: ${consumerID}`);
         callback({ success: true })
-        
-    } catch(error){
+
+    } catch (error) {
         console.error(`Resume Consumer Error: ${error}`);
         callback({ error: error.message })
     }
