@@ -7,6 +7,7 @@ import Signup from './pages/Signup.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import  Root from './utils/Root.jsx'
 import ProtectedRoutes from './utils/ProtectedRoutes.jsx';
+import Logout from './pages/Logout.jsx';
 
 function App() {
   
@@ -27,7 +28,7 @@ function App() {
           }/>
 
 
-
+         <Route path='/logout' element={<Logout/>}/>
 
         <Route path='/unauthorized' element={<p className='font-bold text-3xl mt-20 ml-20 '>UnAuthorized Path</p>}/>
       </Routes>
