@@ -85,7 +85,7 @@ const Login = async (req, res)=>{
 
     const refreshToken = jwt.sign(
       { id: user._id, email: user.email, type: "refresh" },
-      process.env.JWT_REFRESH_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
@@ -114,5 +114,12 @@ const Login = async (req, res)=>{
 
 }
 
+const validateAuth = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    user: req.user,
+  });
+};
 
-export { Signup, Login}
+
+export { Signup, Login, validateAuth }

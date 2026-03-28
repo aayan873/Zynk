@@ -49,10 +49,6 @@ export const startServer = async ({ port }) => {
     app.use('/api/auth', authRoutes)
     app.use('/api/rooms', roomRoutes)
 
-    io.on("connection", (socket) => {
-        console.log(`Client connected: ${socket.id}`);
-    });
-
     await new Promise((resolve) => {
         server.listen(port, resolve);
     });

@@ -6,7 +6,7 @@ export const createRoom = async (req, res) => {
         const { title, type } = req.body;
 
 
-        const newHostId = req.user.userId;
+        const newHostId = req.user._id;
 
         if (!title) {
             return res.status(400).json({ error: "Every meeting must have a title!" });
@@ -63,7 +63,7 @@ export const getRoom = async (req, res) => {
 
 export const getHistory = async (req, res) => {
     try {
-        const userId = req.user.userId
+        const userId = req.user._id
 
         const meetings = await Meeting.find({
             $or: [
@@ -81,7 +81,7 @@ export const getHistory = async (req, res) => {
 export const endRoom = async (req, res) => {
     try {
         const { roomId } = req.params
-        const userId = req.user.userId
+        const userId = req.user._id
 
         const meeting = await Meeting.findOne({ roomId: roomId })
 

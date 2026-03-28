@@ -10,7 +10,7 @@ import ProtectedRoutes from "./utils/ProtectedRoutes.jsx";
 import Logout from "./pages/Logout.jsx";
 import Home from "./components/Home.jsx";
 import Room from "./components/Room.jsx";
-import History from "./components/HIstory.jsx";
+import History from "./components/History.jsx";
 
 function App() {
   const [count, setCount] = useState(0);
