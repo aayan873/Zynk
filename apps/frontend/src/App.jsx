@@ -10,7 +10,7 @@ import ProtectedRoutes from './utils/ProtectedRoutes.jsx';
 import Logout from './pages/Logout.jsx';
 
 function App() {
-  
+  const [count, setCount] = useState(0)
 
   return (
     <>
