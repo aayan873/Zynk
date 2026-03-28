@@ -225,6 +225,69 @@ socket.on("produce", async ({ kind, rtpParameters }, callback ) => {
 })
 
 
+
+socket.on("resume-producer", async ({ producerID }, callback) => {
+    try{
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+            
+        const peer = room.peers.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
+
+        const producer = peer.producers.get(producerID)
+        if(!producer) return callback({ error: `Producer Not Found`});
+
+        await producer.resume()
+
+        socket.to(roomID).emit("producer-resumed", {
+            producerID, peerID: socket.id
+        })
+
+        console.log(`Producer Resumed: ${producerID}`);
+        callback({ success: true })
+
+    } catch(error){
+        console.error(`Resume Producer Error: ${error}`);
+        callback({ error: error.message })
+    }
+})
+
+
+
+socket.on("pause-producer", async ({ producerID }, callback) => {
+    try{
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+            
+        const peer = room.peers.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
+
+        const producer = peer.producers.get(producerID)
+        if(!producer) return callback({ error: `Producer Not Found`});
+
+        await producer.pause()
+
+        socket.to(roomID).emit("producer-paused", {
+            producerID, peerID: socket.id
+        })
+
+        console.log(`Producer Paused: ${producerID}`);
+        callback({ success: true })
+
+    } catch(error){
+        console.error(`Pause Producer Error: ${error}`);
+        callback({ error: error.message })
+    }
+})
+
+
+
 socket.on("create-recv-transport", async () => {
     try{
         const roomID = socket.roomID
@@ -388,12 +451,11 @@ socket.on("resume-consumer", async ({ consumerID }, callback) => {
 
         await consumer.resume()
 
-        console.log(`Consumer Redieved: ${consumerID}`);
+        console.log(`Consumer Resumed: ${consumerID}`);
         callback({ success: true })
+        
     } catch(error){
         console.error(`Resume Consumer Error: ${error}`);
         callback({ error: error.message })
     }
 })
-
-
