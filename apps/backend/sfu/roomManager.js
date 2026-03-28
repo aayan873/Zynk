@@ -119,7 +119,7 @@ class RoomManager{
         }
 
         await redis.srem(`room:${roomID}:peers`, socketID)
-        await redis.del(`peer:${socket.id}`)
+        await redis.del(`peer:${socketID}`)
     }
 
     getPeer(roomID, socketID){
@@ -135,6 +135,25 @@ class RoomManager{
         if(!room)   return []
 
         return Array.from(room.peers.values())
+    }
+
+
+    getParticipantSummaries(roomID){
+        const room = this.rooms.get(roomID)
+        if(!room) return []
+
+        return Array.from(room.peers.values()).map((peer) => ({
+            socketId: peer.id,
+            user: peer.user
+                ? {
+                    _id: peer.user._id?.toString?.() || peer.user.id,
+                    username: peer.user.username,
+                    email: peer.user.email,
+                }
+                : null,
+            joinedAt: peer.joinedAt,
+            permission: peer.permission,
+        }))
     }
 
 

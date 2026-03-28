@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Device } from "mediasoup-client"
 
-export const useSFU = (socket, roomID) => {
+export const useSFU = (socket, roomID, shouldJoin = false) => {
     
     // State
     const [ localStream, setLocalStream ] = useState(null)
@@ -18,6 +18,7 @@ export const useSFU = (socket, roomID) => {
 
     const producersRef = useRef(new Map())
     const consumersRef = useRef(new Map())
+    const joinedRoomRef = useRef(null)
 
     //Init of useEffect
 
@@ -31,13 +32,6 @@ export const useSFU = (socket, roomID) => {
                     video: true
                 })
                 setLocalStream(stream)
-
-                if(!roomID) return
-                socket.emit("join-room", { roomID }, (res) => {
-                    if(res?.error){
-                        console.error(`Join failed ${res.error}`)
-                    }
-                })
 
             } catch (error) {
                 console.error(`SFU init ${error}`)
@@ -171,9 +165,25 @@ export const useSFU = (socket, roomID) => {
             socket.off("existing-producers", handleExistingProducers)
             socket.off("new-producer", handleNewProducer)
             socket.off("peer-left", handlePeerLeft)
+            joinedRoomRef.current = null
             cleanup()
         }
     }, [socket, roomID])
+
+    useEffect(() => {
+        if (!socket || !roomID || !shouldJoin) return
+        if (joinedRoomRef.current === roomID) return
+
+        socket.emit("join-room", { roomID }, (res) => {
+            if (res?.error) {
+                console.error(`Join failed ${res.error}`)
+                setError(new Error(res.error))
+                return
+            }
+
+            joinedRoomRef.current = roomID
+        })
+    }, [socket, roomID, shouldJoin])
 
     const cleanup = () => {
         sendTransportRef.current?.close()

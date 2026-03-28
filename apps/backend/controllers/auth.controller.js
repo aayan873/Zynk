@@ -39,6 +39,7 @@ const Signup = async (req, res)=>{
     message: "Signup successful",
     token,
     user: {
+      _id: newUser._id.toString(),
       username: newUser.username,
       email: newUser.email,
     },
@@ -96,6 +97,7 @@ const Login = async (req, res)=>{
       token: accessToken,
       refreshToken,
       user: {
+        _id: user._id.toString(),
         username: user.username,
         email: user.email,
       },

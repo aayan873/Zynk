@@ -27,8 +27,9 @@ export default function Home() {
 
     const joinMeeting = (e) => {
         e.preventDefault();
-        if (!code) return
-        navigate(`/room/${code}`)
+        const normalizedCode = code.trim().toLowerCase()
+        if (!normalizedCode) return
+        navigate(`/room/${normalizedCode}`)
     }
 
     return (

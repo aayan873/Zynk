@@ -29,9 +29,10 @@ function StreamAudio({ stream }) {
 
 export default function Room() {
     const { roomId } = useParams()
-    const { localStream, remoteStreams, publishTrack, isConnected } = useSFU(socket, roomId)
+    const { localStream, remoteStreams, publishTrack, isConnected } = useSFU(socket, roomId, status === "joined")
     const { auth } = useAuth()
     const [room, setRoom] = useState(null)
+    const [roomError, setRoomError] = useState("")
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
     const [published, setPublished] = useState(false)
@@ -54,9 +55,12 @@ export default function Room() {
     useEffect(() => {
         const fetchRoom = async () => {
             try {
+                setRoomError("")
                 const res = await axios.get(`/api/rooms/${roomId}`)
                 setRoom(res.data)
             } catch (err) {
+                setRoom(null)
+                setRoomError(err.response?.data?.error || "Failed to load room")
                 console.error(err)
             }
         }
@@ -76,14 +80,17 @@ export default function Room() {
         return () => socket.off("user-requesting-join")
     }, [isHost])
 
+    useEffect(() => {
+        if (room && isHost && status === "idle") {
+            setStatus("joined")
+        }
+    }, [room, isHost, status])
+
 
     // Recieve join-approved, join-rejected from the host
     useEffect(() => {
         socket.on("join-approved", () => {
             setStatus("joined")
-            socket.emit("join-room", { roomID: roomId }, (res) => {
-                if (res?.error) console.log(res.error)
-            })
         })
         socket.on("join-rejected", () => {
             alert("The host denied your entry.")
@@ -133,6 +140,17 @@ export default function Room() {
 
     const remoteVideoTiles = Array.from(remoteStreams.entries()).filter(([, data]) => data.kind === "video")
     const remoteAudioTracks = Array.from(remoteStreams.entries()).filter(([, data]) => data.kind === "audio")
+
+    if (roomError) {
+        return (
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white px-4">
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl px-6 py-8 text-center max-w-lg w-full">
+                    <h2 className="text-2xl font-semibold mb-3">Room unavailable</h2>
+                    <p className="text-gray-400">{roomError}</p>
+                </div>
+            </div>
+        )
+    }
 
     if (!room) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">Loading Room...</div>
 
@@ -215,7 +233,7 @@ export default function Room() {
                     <div className="space-y-4">
                         {requests.map((req) => (
                             <div key={req.socketId} className="flex items-center justify-between bg-gray-800 p-3 rounded-lg">
-                                <span className="font-medium text-gray-200 truncate">{req.user?.name || "Guest User"}</span>
+                                <span className="font-medium text-gray-200 truncate">{req.user?.username || req.user?.name || "Guest User"}</span>
                                 <div className="flex space-x-2">
                                     <button onClick={() => handleDecision(req.socketId, "reject")} className="px-3 py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-md text-sm font-semibold transition">
                                         Deny

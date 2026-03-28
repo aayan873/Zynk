@@ -4,7 +4,7 @@ import { startServer } from './server.js';
 
 dotenv.config();
 
-const port = process.env.APP_PORT || process.env.PORT || 5000;
+const port = process.env.APP_PORT || 5001;
 
 const initApp = async () => {
   await connectDB();

@@ -1,4 +1,3 @@
-import { error } from "console"
 import roomManager from "../sfu/roomManager.js"
 import { Meeting } from "../models/meeting.model.js"
 
@@ -8,37 +7,38 @@ export const registerSocketEvents = (io, socket) => {
     socket.on("join-room", async ({ roomID }, callback) => {
         try {
             const user = socket.user    //! From Auth Middleware
-            if (!roomID) { return callback({ error: `roomID is required` }) }
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase()
+            if (!normalizedRoomId) { return callback({ error: `roomID is required` }) }
 
-            const meeting = await Meeting.findOne({ roomId: roomID })
+            const meeting = await Meeting.findOne({ roomId: normalizedRoomId })
 
             if (!meeting) { return callback({ error: "Room does not exist" }) }
 
-            if (!meeting.participants.includes(user.userId)) {
-                meeting.participants.push(user.userId)
+            if (!meeting.participants.some((participantId) => String(participantId) === String(user._id))) {
+                meeting.participants.push(user._id)
                 await meeting.save()
             }
 
-            const room = await roomManager.createRoom(roomID)
-            const peer = roomManager.addPeer(roomID, socket, user)
+            await roomManager.createRoom(normalizedRoomId)
+            roomManager.addPeer(normalizedRoomId, socket, user)
 
-            socket.roomID = roomID
-            socket.join(roomID)
+            socket.roomID = normalizedRoomId
+            socket.join(normalizedRoomId)
 
-            const router = roomManager.getRouter(roomID)
+            const router = roomManager.getRouter(normalizedRoomId)
             socket.emit("router-rtp-capabilities", router.rtpCapabilities)
 
-            const producers = roomManager.getProducers(roomID, socket.id)
+            const producers = roomManager.getProducers(normalizedRoomId, socket.id)
             socket.emit("existing-producers", producers)
 
-            socket.to(roomID).emit("peer-joined", {
+            socket.to(normalizedRoomId).emit("peer-joined", {
                 peerID: socket.id,
                 user
             })
 
-            io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
+            io.to(normalizedRoomId).emit("participant-update", roomManager.getParticipantSummaries(normalizedRoomId))
 
-            console.log(`Peer ${socket.id} joined room ${roomID}`)
+            console.log(`Peer ${socket.id} joined room ${normalizedRoomId}`)
             callback({ success: true })
 
         } catch (error) {
@@ -52,43 +52,19 @@ export const registerSocketEvents = (io, socket) => {
     socket.on("disconnect", async () => {
         try {
             const roomID = socket.roomID
-            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+            if (!roomID) return
 
             const room = roomManager.getRoom(roomID)
-            if (!room) return callback({ error: `Room Not Found` });
+            if (!room) return
 
             const peer = room.peers.get(socket.id)
-            if (!peer) return callback({ error: `Peer Not Found` });
-
-            peer.producers.forEach((p) => {
-                try {
-                    p.close()
-                } catch (error) {
-                    console.error(`Produce close error: ${error}`);
-                }
-            })
-
-            peer.consumers.forEach((c) => {
-                try {
-                    c.close()
-                } catch (error) {
-                    console.error(`Consumer close error: ${error}`);
-                }
-            })
-
-            peer.transports.forEach((t) => {
-                try {
-                    t.close()
-                } catch (error) {
-                    console.error(`Transport close error: ${error}`);
-                }
-            })
+            if (!peer) return
 
             await roomManager.removePeer(roomID, socket.id)
 
             socket.to(roomID).emit("peer-left", { socketID: socket.id })
 
-            io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
+            io.to(roomID).emit("participant-update", roomManager.getParticipantSummaries(roomID))
 
             console.log(`Peer ${socket.id} disconnected from ${roomID}`);
 
@@ -112,7 +88,7 @@ export const registerSocketEvents = (io, socket) => {
 
             //Create WebRTC Transport
             const transport = await router.createWebRtcTransport({
-                listenIPs: [
+                listenIps: [
                     {
                         ip: "0.0.0.0",
                         announcedIp: process.env.ANNOUNCEDIP_IP || null     //! Add the public IP (AWS, etc) while deploying
@@ -120,7 +96,7 @@ export const registerSocketEvents = (io, socket) => {
                 ],
                 enableUdp: true,
                 enableTcp: true,
-                PreferUdp: true,
+                preferUdp: true,
             })
 
             //Send Transport in Peer
@@ -329,7 +305,7 @@ export const registerSocketEvents = (io, socket) => {
 
             //Create WebRTC Transport
             const transport = await router.createWebRtcTransport({
-                listenIPs: [
+                listenIps: [
                     {
                         ip: "0.0.0.0",
                         announcedIp: process.env.ANNOUNCEDIP_IP || null     //! Add the public IP (AWS, etc) while deploying

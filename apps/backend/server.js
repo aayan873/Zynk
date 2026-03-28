@@ -10,23 +10,33 @@ import { registerSocketEvents } from "./sockets/sfu.socket.js";
 import { registerRoomSocket } from "./sockets/room.socket.js";
 
 export const startServer = async ({ port }) => {
+    const allowedOrigins = ["http://localhost:5173", process.env.FRONTEND_URL].filter(Boolean);
+    const corsOptions = {
+        origin(origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+                return;
+            }
+
+            callback(new Error(`Origin ${origin} not allowed by CORS`));
+        },
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        credentials: true,
+    };
 
     const app = express();
     const server = http.createServer(app);
     const io = new Server(server, {
         cors: {
-            origin: ["http://localhost:5173", process.env.FRONTEND_URL],
-            credentials: true
-        }
+            origin: allowedOrigins,
+            credentials: true,
+        },
     });
 
+    app.use(cors(corsOptions));
+    app.options("/{*corsPreflight}", cors(corsOptions));
     app.use(express.urlencoded({ limit: "40kb", extended: true }));
     app.use(express.json());
-    app.use(cors({
-        origin: ["http://localhost:5173", process.env.FRONTEND_URL],
-        methods: ["GET", "POST", "PUT", "DELETE"],
-        credentials: true
-    }));
 
     io.use(socketAuth);
 
