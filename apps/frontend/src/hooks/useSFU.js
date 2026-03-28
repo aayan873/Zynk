@@ -79,7 +79,7 @@ export const useSFU = (socket) => {
             }
 
             socket.emit("create-send-transport", async(params) => {
-                if(!params.error){
+                if(params?.error){
                     console.error(`Transport Creation Failed: ${params.error}`);
                     return
                 }
@@ -124,10 +124,14 @@ export const useSFU = (socket) => {
         }
 
         socket.on("router-rtp-capabilities", handlerRouterCapabilities)
+        socket.on("existing-producers", handleExistingProducers)
+        socket.on("new-producer", handleNewProducer)
         init()
         
         return () => {
             socket.off("router-rtp-capabilities", handlerRouterCapabilities)
+            socket.off("existing-producers", handleExistingProducers)
+            socket.off("new-producer", handleNewProducer)
             cleanup()
         }
     }, [socket])
@@ -144,6 +148,111 @@ export const useSFU = (socket) => {
         producersRef.current.clear()
         consumersRef.current.clear()
     }
+
+
+
+    const consumeProducer = async (producerID, peerID, kind) => {
+        try {
+            const device = deviceRef.current
+            if(!device){
+                throw new Error(`Device Not Loaded`)
+            }
+
+            //Create Recv Transport (req to server)
+            socket.emit("create-recv-transport", async (params) => {
+                if(params?.error){
+                    console.error(`Recv Transport Error: ${params.error}`);
+                    return
+                }
+                
+                //Create Recv Transport (Client)
+                const transport = device.createRecvTransport(params)
+
+                recvTransportsRef.current.set(transport.id, transport)
+
+                //Connect Transport (DTLS)
+                transport.on("connect", ({ dtlsParameters }, callback, errback) => {
+                    socket.emit("connect-recv-transport", {transportID: transport.id, dtlsParameters }, (res) => {
+                        if(res?.error) {
+                            errback(res.error)
+                        } else {
+                            callback()
+                        }
+                    })
+                })
+
+                //Consume
+                socket.emit(
+                    "consume",
+                    {
+                        producerID,
+                        transportID: transport.id,
+                        rtpCapabilities: device.rtpCapabilities,
+                    },
+                    async (res) => {
+                        if (res?.error){
+                            console.error(`Consume Error: ${res.error}`);
+                            return
+                        }
+
+                        const consumer = await transport.consume({
+                            id: res.id,
+                            producerID: res.producerID,
+                            kind: res.kind,
+                            rtpParameters: res.rtpParameters
+                        })
+
+                        consumersRef.current.set(consumer.id, consumer)
+
+                        const stream = new MediaStream([consumer.track])
+
+                        setRemoteStreams((prev) => {
+                            const newMap = new Map(prev)
+                            newMap.set(consumer.id, {
+                                stream,
+                                peerID,
+                                kind
+                            })
+                            return newMap
+                        })
+
+                        //Resume consumer (Start Flow)
+                        socket.emit("resume-consumer", { consumerID: consumer.id })
+
+                        //Cleanup Handlers
+                        consumer.on("trackended", () => {
+                            console.warn(`Track Ended: ${consumer.id}`);    //When Media stops producing, No need to delete producer from consumersRef
+                        })
+
+                        consumer.on("transportclose", () => {
+                            console.warn(`Transport Closed: ${consumer.id}`)
+                            consumersRef.current.delete(consumer.id)    //When Producer leaves
+                        })
+                    }
+                )
+            })
+        } catch(error) {
+            console.error(`Consume Failed: ${error}`);
+        }
+    }
+
+
+
+    //Handling Existing Producers
+    const handleExistingProducers = async (producers) => {
+        console.log(`Existing Producers: ${producers}`);
+        
+        for(const { producerID, peerID, kind } of producers){
+            await consumeProducer(producerID, peerID, kind)
+        }
+    }
+
+    //Handling New Producer
+    const handleNewProducer = async ({ producerID, peerID, kind }) => {
+        console.log(`New Producer: ${producerID}`);
+        await consumeProducer(producerID, peerID, kind)
+    }
+
 
     //Public API
     const publishTrack = async (track, kind, source) => {
