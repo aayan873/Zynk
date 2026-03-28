@@ -193,7 +193,7 @@ socket.on("produce", async ({ kind, rtpParameters }, callback ) => {
         //Store Producer
         peer.producers.set(producer.id, producer)
 
-        console.log(`Prodeucer created: ${producer.id} ${kind}`);
+        console.log(`Producer created: ${producer.id} ${kind}`);
         
         //Handle Producer Close
         producer.on("transportclose", () => {
