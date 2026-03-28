@@ -123,15 +123,53 @@ export const useSFU = (socket) => {
             })
         }
 
+        
+        const handlePeerLeft = ({ socketID }) => {
+            console.log(`Peer Left: ${socket.id}`);
+            
+            //Remove from Remote Streams
+            setRemoteStreams((prev) => {
+                const updated = new Map(prev)
+
+                for (const [consumerID, data] of prev.entries()) {
+                    if(data.peerID === socketID) {
+                        const consumer = consumersRef.current.get(consumerID)
+
+                        if(consumer){
+                            consumer.close();
+                            consumersRef.current.delete(consumerID)
+                        }
+
+                        updated.delete(consumerID)
+                    }
+                }
+
+                return updated
+            })
+
+            //Cleanup Recv Transports
+            for (const [id, transport] of recvTransportsRef.current.entries()) {
+                try{
+                    transport.close()
+                } catch(error) {
+                    console.warn(`Error Closing Transport: ${error}`);
+                }
+
+                recvTransportsRef.current.delete(id)
+            }
+        }
+        
         socket.on("router-rtp-capabilities", handlerRouterCapabilities)
         socket.on("existing-producers", handleExistingProducers)
         socket.on("new-producer", handleNewProducer)
+        socket.on("peer-left", handlePeerLeft)
         init()
         
         return () => {
             socket.off("router-rtp-capabilities", handlerRouterCapabilities)
             socket.off("existing-producers", handleExistingProducers)
             socket.off("new-producer", handleNewProducer)
+            socket.off("peer-left", handlePeerLeft)
             cleanup()
         }
     }, [socket])
