@@ -64,14 +64,19 @@ const Login = async (req, res)=>{
         message: "Wrong password",
       });
     }
+
+    const token = jwt.sign({ id: user._id, email: user.email },
+                 process.env.JWT_SECRET,
+              { expiresIn: "1d" } );
    
     return res.status(201).json({
       success: true,
       message: "Login successful",
-    //    user: {
-    //     username: user.username,
-    //     email: user.email,
-    //   },
+        token,
+       user: {
+        username: user.username,
+        email: user.email,
+      },
     });
      
 

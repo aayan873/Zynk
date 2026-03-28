@@ -3,11 +3,11 @@ import {useAuth} from '../context/AuthContext';
 import { useNavigate } from "react-router-dom";
 
 const ProtectedRoutes = ({children})=>{
-    const {user} = useAuth();
-
+    const { auth } = useAuth();
+    
     const navigate = useNavigate();
-   
-    const token = localStorage.getItem("pos-token");
+    const user = auth?.user;
+    const token = auth?.token;
 
     useEffect(()=>{
        if(!user || !token){

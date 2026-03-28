@@ -12,12 +12,13 @@ const Signup = ()=>{
    const [loading,setLoading] = useState(false);
    const [confirmPassword, setConfirmPassword] = useState('');
 
+   const navigate = useNavigate(); 
 
     let handleSubmit = async (e)=>{
         e.preventDefault();
 
          if (password !== confirmPassword) {
-          alert.error("Passwords do not match");
+          toast.error("Passwords do not match");
            return;
           }
 
@@ -35,6 +36,7 @@ const Signup = ()=>{
         const data = await response.json();
         if (response.ok) {
             toast.success("Signup successful!");
+              console.log("Navigating...");
             navigate("/dashboard");
         } else {
             toast.error(data.message || "Signup failed");

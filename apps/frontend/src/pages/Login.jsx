@@ -3,10 +3,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast';
 import './Login.css';
+import { useAuth } from "../context/AuthContext";
 
-const login = ()=>{
+const Login = ()=>{
      
     const navigate = useNavigate();
+
+    const { login } = useAuth();
 
       const [email,setEmail] = useState("");
      const [password,setPassword] = useState("");
@@ -15,7 +18,7 @@ const login = ()=>{
    const [showResend, setShowResend] = useState(false);
    const [resendLoading, setResendLoading] = useState(false);
 
-  
+   
 
  let handleSubmit = async (e)=>{
         e.preventDefault();
@@ -32,7 +35,9 @@ const login = ()=>{
         });
         const data = await response.json();
         if (response.ok) {
+            login(data.user, data.token);
             toast.success("Login successful!");
+              console.log("Navigating...");
             navigate("/dashboard");
         } else {
             toast.error(data.message || "Login failed");
@@ -87,4 +92,4 @@ const login = ()=>{
 
 }
 
-export default login;
+export default Login;
