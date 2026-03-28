@@ -1,9 +1,12 @@
 import { useParams } from "react-router-dom"
 import { useEffect, useState, useRef } from "react"
 import { socket } from "../socket"
+import { useSFU } from "../hooks/useSFU.js"
 import axios from "axios"
 
+
 export default function Room() {
+    const { localStream, remoteStreams, publishTrack, isConnected } = useSFU(socket, roomId);
     const { roomId } = useParams()
     const [room, setRoom] = useState(null)
     const [status, setStatus] = useState("idle")
@@ -73,6 +76,17 @@ export default function Room() {
             socket.off("join-rejected")
         }
     }, [roomId])
+
+
+    useEffect(() => {
+        if (status !== "joined" || !isConnected || !localStream) return;
+
+        localStream.getTracks().forEach((track) => {
+            const kind = track.kind; // "audio" | "video"
+            publishTrack(track, kind, "camera");
+        });
+    }, [status, isConnected, localStream, publishTrack]);
+
 
 
     // Emit request-to-join to the host
