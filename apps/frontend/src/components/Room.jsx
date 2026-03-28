@@ -29,13 +29,13 @@ function StreamAudio({ stream }) {
 
 export default function Room() {
     const { roomId } = useParams()
-    const { localStream, remoteStreams, publishTrack, isConnected } = useSFU(socket, roomId, status === "joined")
     const { auth } = useAuth()
     const [room, setRoom] = useState(null)
     const [roomError, setRoomError] = useState("")
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
     const [published, setPublished] = useState(false)
+    const { localStream, remoteStreams, publishTrack, isConnected } = useSFU(socket, roomId, status === "joined")
 
     // Creating empty video element
     const videoRef = useRef(null)
