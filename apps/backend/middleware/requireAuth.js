@@ -4,7 +4,7 @@ import User from '../models/User.models.js';
 
 const requireAuth = async (req, res , next) =>{
     try{
-        const authHeader = req.headers.authorization;  //jwt token taken from headers
+      const authHeader = req.headers.authorization;  //jwt token taken from headers
 
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
@@ -27,7 +27,7 @@ const requireAuth = async (req, res , next) =>{
     next()
 
     }catch(error){
-      return res.status(500).json({success: false, message:"Internal server error in middleware"});
+      return res.status(401).json({success: false, message:"Invalid or Expired Token"});
     }
 }
 
