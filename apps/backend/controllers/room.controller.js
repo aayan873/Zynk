@@ -46,15 +46,51 @@ export const registerSocketEvents = (io, socket) => {
 
 //Disconnect a Room (Removal of Peer)
 socket.on("disconnect", () => {
-    const roomID = socket.roomID
-    if(!roomID) return
+    try{
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
 
-    roomManager.removePeer(roomID, socket.id)
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+        
+        const peer = room.peers.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
 
-    socket.to(roomID).emit("peer-left", { socketID: socket.id })
-    io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
+        peer.producers.forEach((p) => {
+            try{
+                p.close()
+            } catch(error){
+                console.error(`Produce close error: ${error}`);
+            }
+        })
+        
+        peer.consumers.forEach((c) => {
+            try{
+                c.close()
+            } catch(error){
+                console.error(`Consumer close error: ${error}`);
+            }
+        })
+        
+        peer.transports.forEach((t) => {
+            try{
+                t.close()
+            } catch(error){
+                console.error(`Transport close error: ${error}`);
+            }
+        })
 
-    console.log(`Peer ${socket.id} left room ${roomID}`)
+        roomManager.removePeer(roomID, socket.id)
+
+        socket.to(roomID).emit("peer-left", { socketID: socket.id })
+
+        io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
+
+        console.log(`Peer ${socket.id} disconnected from ${roomID}`);    
+
+    } catch(error){
+        console.error(`Disconnect Error: ${error}`);
+    }
 })
 
 
@@ -359,3 +395,5 @@ socket.on("resume-consumer", async ({ consumerID }, callback) => {
         callback({ error: error.message })
     }
 })
+
+
