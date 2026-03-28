@@ -21,7 +21,7 @@ export const useSFU = (socket) => {
 
     //Init of useEffect
 
-    useEffect( async () => {
+    useEffect(() => {
         if(!socket) return
 
         const init = async () => {
@@ -69,7 +69,7 @@ export const useSFU = (socket) => {
         }
 
         socket.on("router-rtp-capabilities", handlerRouterCapabilities)
-        await init()
+        init()
         
         return () => {
             socket.off("router-rtp-capabilities", handlerRouterCapabilities)
