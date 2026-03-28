@@ -57,8 +57,8 @@ const Login = async (req, res)=>{
         }
 
     const isMatch = await bcrypt.compare(password,user.password);
-       
-     if (!isMatch) {
+    
+    if (!isMatch) {
       return res.status(401).json({
         success: false,
         message: "Wrong password",
@@ -66,28 +66,28 @@ const Login = async (req, res)=>{
     }
 
     const token = jwt.sign({ id: user._id, email: user.email },
-                 process.env.JWT_SECRET,
+                process.env.JWT_SECRET,
               { expiresIn: "1d" } );
-   
+
     return res.status(201).json({
       success: true,
       message: "Login successful",
         token,
-       user: {
+      user: {
         username: user.username,
         email: user.email,
       },
     });
-     
+
 
     }
-     catch(error){
-    console.error("Login error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Login failed server error",
-    });
-     }
+    catch(error){
+      console.error("Login error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Login failed server error",
+      });
+    }
 
 }
 
