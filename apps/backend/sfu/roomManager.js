@@ -89,7 +89,7 @@ class RoomManager{
     }
 
 
-    removePeer(roomID, socketID){
+    async removePeer(roomID, socketID){
         const room = this.rooms.get(roomID)
         if(!room) return
 
@@ -100,7 +100,7 @@ class RoomManager{
         room.peers.delete(socketID)
 
         if(room.peers.size === 0){
-            this.deleteRoom(roomID)
+            await this.deleteRoom(roomID)
         }
     }
 

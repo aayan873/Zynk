@@ -45,7 +45,7 @@ export const registerSocketEvents = (io, socket) => {
 }
 
 //Disconnect a Room (Removal of Peer)
-socket.on("disconnect", () => {
+socket.on("disconnect", async () => {
     try{
         const roomID = socket.roomID
         if(!roomID) return callback({ error: `RoomID Not Found in socket`})
@@ -80,7 +80,7 @@ socket.on("disconnect", () => {
             }
         })
 
-        roomManager.removePeer(roomID, socket.id)
+        await roomManager.removePeer(roomID, socket.id)
 
         socket.to(roomID).emit("peer-left", { socketID: socket.id })
 
