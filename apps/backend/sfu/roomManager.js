@@ -1,4 +1,3 @@
-import * as mediasoup from "mediasoup"
 import { getWorker } from "./workerPool.js"
 import redis from "../config/redis.js"
 

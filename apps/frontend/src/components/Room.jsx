@@ -2,35 +2,53 @@ import { useParams } from "react-router-dom"
 import { useEffect, useState, useRef } from "react"
 import { socket } from "../socket"
 import { useSFU } from "../hooks/useSFU.js"
+import { useAuth } from "../context/AuthContext.jsx"
 import axios from "axios"
 
+function StreamVideo({ stream, muted = false, className = "" }) {
+    const ref = useRef(null)
+
+    useEffect(() => {
+        if (!ref.current) return
+        ref.current.srcObject = stream || null
+    }, [stream])
+
+    return <video ref={ref} autoPlay playsInline muted={muted} className={className} />
+}
+
+function StreamAudio({ stream }) {
+    const ref = useRef(null)
+
+    useEffect(() => {
+        if (!ref.current) return
+        ref.current.srcObject = stream || null
+    }, [stream])
+
+    return <audio ref={ref} autoPlay playsInline />
+}
 
 export default function Room() {
-    const { localStream, remoteStreams, publishTrack, isConnected } = useSFU(socket, roomId);
     const { roomId } = useParams()
+    const { localStream, remoteStreams, publishTrack, isConnected } = useSFU(socket, roomId)
+    const { auth } = useAuth()
     const [room, setRoom] = useState(null)
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
+    const [published, setPublished] = useState(false)
 
     // Creating empty video element
     const videoRef = useRef(null)
 
-    const currentUserId = "12424124"
+    const currentUserId = auth?.user?._id || auth?.user?.id
     const isHost = room?.hostId === currentUserId
 
 
-    // When idle get camera and plug to video elements
+    // Preview local camera in lobby
     useEffect(() => {
-        if (status === "idle") {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                .then((stream) => {
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream
-                    }
-                })
-                .catch(err => console.error("Could not access camera:", err))
+        if (videoRef.current) {
+            videoRef.current.srcObject = localStream || null
         }
-    }, [status])
+    }, [localStream])
 
     // Fetch room Details
     useEffect(() => {
@@ -80,12 +98,19 @@ export default function Room() {
 
     useEffect(() => {
         if (status !== "joined" || !isConnected || !localStream) return;
+        if (published) return;
 
         localStream.getTracks().forEach((track) => {
             const kind = track.kind; // "audio" | "video"
             publishTrack(track, kind, "camera");
         });
-    }, [status, isConnected, localStream, publishTrack]);
+
+        setPublished(true)
+    }, [status, isConnected, localStream, published, publishTrack]);
+
+    useEffect(() => {
+        if (status !== "joined") setPublished(false)
+    }, [status])
 
 
 
@@ -105,6 +130,9 @@ export default function Room() {
         socket.emit("host-decision", { roomID: roomId, targetSocketId, decision })
         setRequests(prev => prev.filter(req => req.socketId !== targetSocketId))
     }
+
+    const remoteVideoTiles = Array.from(remoteStreams.entries()).filter(([, data]) => data.kind === "video")
+    const remoteAudioTracks = Array.from(remoteStreams.entries()).filter(([, data]) => data.kind === "audio")
 
     if (!room) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">Loading Room...</div>
 
@@ -151,9 +179,32 @@ export default function Room() {
 
             {/* STATUS: JOINED (Currently empty, Module 4 will build the actual call here!) */}
             {status === "joined" && (
-                <div className="w-full h-[60vh] bg-gray-900 border border-gray-800 rounded-2xl flex items-center justify-center mt-4 shadow-2xl max-w-5xl">
-                    <h3 className="text-3xl font-light text-emerald-400">You are in the meeting </h3>
-                    {/* In Module 4, you will render the Video Grids right here! */}
+                <div className="w-full mt-4 shadow-2xl max-w-6xl px-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                            <div className="aspect-video bg-black">
+                                <StreamVideo stream={localStream} muted className="w-full h-full object-cover transform scale-x-[-1]" />
+                            </div>
+                            <div className="px-3 py-2 text-sm text-gray-300">You</div>
+                        </div>
+
+                        {remoteVideoTiles.map(([consumerId, data]) => (
+                            <div key={consumerId} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                                <div className="aspect-video bg-black">
+                                    <StreamVideo stream={data.stream} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="px-3 py-2 text-sm text-gray-300">Participant {data.peerID?.slice(0, 6) || "guest"}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {remoteVideoTiles.length === 0 && (
+                        <p className="text-center text-gray-400 mt-6">Waiting for other participants to publish video...</p>
+                    )}
+
+                    {remoteAudioTracks.map(([consumerId, data]) => (
+                        <StreamAudio key={consumerId} stream={data.stream} />
+                    ))}
                 </div>
             )}
 
