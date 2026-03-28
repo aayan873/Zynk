@@ -11,27 +11,40 @@ const Signup = async (req, res)=>{
     const ismatched = await User.findOne({email});
 
     if(ismatched){
-    return res.status(400).json({
-    success: false,
-    message: "User already exists",
-    });       
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });    
     }
 
-const hashedPassword = await bcrypt.hash(password, 10);
-    
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   const newUser = new User({
-        username,
-        email,
-        password : hashedPassword,
-        isVerified :false
-    });
+    username,
+    email,
+    password : hashedPassword,
+    isVerified :false
+  });
 
-    await newUser.save();
-    return res.status(201).json({
-      success: true,
-      message: "Signup successful",
-    });
+  await newUser.save();
+
+  const token = jwt.sign(
+    { id: newUser._id, email: newUser.email },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+
+  return res.status(201).json({
+    success: true,
+    message: "Signup successful",
+    token,
+    user: {
+      username: newUser.username,
+      email: newUser.email,
+    },
+  });
+
+
   } catch (err) {
     console.error("Signup error:", err);
     return res.status(500).json({
@@ -39,7 +52,6 @@ const hashedPassword = await bcrypt.hash(password, 10);
       message: "Signup failed server error",
     });
   }
-
 }
 
 
