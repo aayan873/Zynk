@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Device } from "mediasoup-client"
 
-export const useSFU = (socket) => {
+export const useSFU = (socket, roomID) => {
     
     // State
     const [ localStream, setLocalStream ] = useState(null)
@@ -32,7 +32,8 @@ export const useSFU = (socket) => {
                 })
                 setLocalStream(stream)
 
-                socket.emit("join-room", { roomID: "test-room" }, (res) => {
+                if(!roomID) return
+                socket.emit("join-room", { roomID }, (res) => {
                     if(res?.error){
                         console.error(`Join failed ${res.error}`)
                     }
@@ -172,7 +173,7 @@ export const useSFU = (socket) => {
             socket.off("peer-left", handlePeerLeft)
             cleanup()
         }
-    }, [socket])
+    }, [socket, roomID])
 
     const cleanup = () => {
         sendTransportRef.current?.close()
