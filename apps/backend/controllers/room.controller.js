@@ -1,3 +1,4 @@
+import { error } from "console"
 import roomManager from "../sfu/roomManager.js"
 
 
@@ -210,7 +211,7 @@ socket.on("create-recv-transport", async () => {
             ],
             enableUdp: true,
             enableTcp: true,
-            PreferUdp: true,
+            preferUdp: true,
         })
         
         if(!peer.recvTransports) {
@@ -267,6 +268,94 @@ socket.on("connect-recv-transport", async({ transportID, dtlsParameters }, callb
         
     } catch(error) {
         console.error(`Error connecting recv transport: ${error}`);
+        callback({ error: error.message })
+    }
+})
+
+
+
+socket.on("consume", async ({ producerID, transportID, rtpCapabilities }, callback) => {
+    try{
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+            
+        router = room.router
+        const peer = room.peers.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
+
+        const canConsume = router.canConsume({
+            producerID, rtpCapabilities
+        })
+        if(!canConsume){
+            console.error(`Cannot consume this producer`)
+            return callback({ error: "Cannot consume" })
+        }
+
+        const recvTransport = peer.recvTransports.get(transportID)
+        if(!recvTransport){
+            return callback({ error: "Recv Transport Not Found"})
+        }
+
+        const consumer = await recvTransport.consume({
+            producerID,
+            rtpCapabilities,
+            paused: true
+        })
+
+        if(!peer.consumers){
+            peer.consumers = new Map()
+        }
+        peer.consumers.set(consumer.id, consumer)
+
+        consumer.on("transportclose", () => {
+            consumer.close()
+            peer.consumers.delete(consumer.id)
+        })
+
+        consumer.on("producerclose", () => {
+            consumer.close()
+            peer.consumers.delete(consumer.id)
+
+            socket.emit("producer-closed", { producerID })
+        })
+
+        callback({
+            id: consumer.id,
+            producerID,
+            kind: consumer.kind,
+            rtpParameters: consumer.rtpParameters,
+        })
+    } catch(error) {
+        console.error(`Consumer Error: ${error}`);
+        callback({ error: error.message })
+    }
+})
+
+
+
+socket.on("resume-consumer", async ({ consumerID }, callback) => {
+    try{
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+            
+        const peer = room.peers.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
+
+        const consumer = peer.consumers.get(consumerID)
+        if(!consumer) return callback({ error: `Consumer Not Found`});
+
+        await consumer.resume()
+
+        console.log(`Consumer Redieved: ${consumerID}`);
+        callback({ success: true })
+    } catch(error){
+        console.error(`Resume Consumer Error: ${error}`);
         callback({ error: error.message })
     }
 })
