@@ -1,6 +1,6 @@
 import { error } from "console"
 import roomManager from "../sfu/roomManager.js"
-import { Meeting } from "../models/Meeting.model.js"
+import { Meeting } from "../models/meeting.model.js"
 
 export const registerSocketEvents = (io, socket) => {
 

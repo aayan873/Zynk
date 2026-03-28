@@ -5,6 +5,7 @@ import cors from "cors";
 import socketAuth from "./middleware/socketAuth.js";
 import { createWorker } from "./sfu/workerPool.js";
 import authRoutes from './routes/auth.routes.js';
+import roomRoutes from './routes/room.routes.js'
 import { registerSocketEvents } from "./sockets/sfu.socket.js";
 import { registerRoomSocket } from "./sockets/room.socket.js";
 
@@ -40,7 +41,8 @@ export const startServer = async ({ port }) => {
 
 
     await createWorker();
-    app.use('/api/auth', authRoutes);
+    app.use('/api/auth', authRoutes)
+    app.use('api/rooms', roomRoutes)
 
     io.on("connection", (socket) => {
     console.log(`Client connected: ${socket.id}`);

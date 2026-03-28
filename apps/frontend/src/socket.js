@@ -1,2 +1,9 @@
-import { io } from "socket.io-client"
-export const socket = io("http://localhost:5173")
+import { io } from "socket.io-client";
+
+const token = localStorage.getItem("pos-token");
+
+export const socket = io(process.env.BACKEND_URL, {
+    auth: {
+        token,
+    },
+});

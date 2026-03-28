@@ -1,4 +1,4 @@
-import { Meeting } from '../models/Meeting.model.js';
+import { Meeting } from '../models/meeting.model.js';
 import crypto from 'crypto';
 
 export const createRoom = async (req, res) => {
