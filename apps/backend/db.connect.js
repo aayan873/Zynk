@@ -8,11 +8,10 @@ const connectDB = async () => {
 
         await mongoose.connect(process.env.ATLAS_URI);
         console.log("MongoDB successfully connected");
-    }
-    catch(error){
+    } catch(error) {
         console.error("MongoDB connection failed:", error);
         process.exit(1);
     }
 }
 
-export default connectDB;
+export default connectDB
