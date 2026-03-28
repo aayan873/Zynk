@@ -186,3 +186,87 @@ socket.on("produce", async ({ kind, rtpParameters }, callback ) => {
         callback({ error: error.message })
     }
 })
+
+
+socket.on("create-recv-transport", async () => {
+    try{
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+        
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+            
+        router = room.router
+        const peer = room.peers.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
+        
+        //Create WebRTC Transport
+        const transport = await router.createWebRtcTransport({
+            listenIPs: [
+                {
+                    ip: "0.0.0.0",
+                    announcedIp: process.env.ANNOUNCEDIP_IP || null     //! Add the public IP (AWS, etc) while deploying
+                },
+            ],
+            enableUdp: true,
+            enableTcp: true,
+            PreferUdp: true,
+        })
+        
+        if(!peer.recvTransports) {
+            peer.recvTransports = new Map()
+        }
+        peer.recvTransports.set(transport.id, transport)
+        
+        //Handle Transport Lifecycle
+        transport.on("dtlsstatechange", (state) => {
+            if( state === "closed"){
+                console.log("Send Transport Closed")
+                transport.close()
+            }
+        })
+        
+        transport.on("close", () => {
+            console.log("Send transport fully closed");
+            peer.recvTransports.delete(transport.id)
+        })
+        
+        callback({
+            id: transport.id,
+            iceParameters: transport.iceParameters,
+            iceCandidates: transport.iceCandidates,
+            dtlsParameters: transport.dtlsParameters,
+        })
+        
+    } catch (error) {
+        console.error(`Error creating recv transport ${error}`);
+        callback({ error: error.message })
+    }
+})
+
+
+
+socket.on("connect-recv-transport", async({ transportID, dtlsParameters }, callback) => {
+    try{
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+        
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
+        
+        const peer = room.peers.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
+        
+        const transport = peer.recvTransports.get(transportID);
+        if(!transport)  return callback({ error: `Recv Transport Not Found`});
+        
+        await transport.connect({ dtlsParameters })
+        
+        console.log(`Recv Transport Connected For ${socket.id}`)
+        callback({ success: true })
+        
+    } catch(error) {
+        console.error(`Error connecting recv transport: ${error}`);
+        callback({ error: error.message })
+    }
+})
