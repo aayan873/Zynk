@@ -79,7 +79,7 @@ export const useSFU = (socket) => {
             }
 
             socket.emit("create-send-transport", async(params) => {
-                if(!params.error){
+                if(params?.error){
                     console.error(`Transport Creation Failed: ${params.error}`);
                     return
                 }
@@ -123,11 +123,53 @@ export const useSFU = (socket) => {
             })
         }
 
+        
+        const handlePeerLeft = ({ socketID }) => {
+            console.log(`Peer Left: ${socket.id}`);
+            
+            //Remove from Remote Streams
+            setRemoteStreams((prev) => {
+                const updated = new Map(prev)
+
+                for (const [consumerID, data] of prev.entries()) {
+                    if(data.peerID === socketID) {
+                        const consumer = consumersRef.current.get(consumerID)
+
+                        if(consumer){
+                            consumer.close();
+                            consumersRef.current.delete(consumerID)
+                        }
+
+                        updated.delete(consumerID)
+                    }
+                }
+
+                return updated
+            })
+
+            //Cleanup Recv Transports
+            for (const [id, transport] of recvTransportsRef.current.entries()) {
+                try{
+                    transport.close()
+                } catch(error) {
+                    console.warn(`Error Closing Transport: ${error}`);
+                }
+
+                recvTransportsRef.current.delete(id)
+            }
+        }
+        
         socket.on("router-rtp-capabilities", handlerRouterCapabilities)
+        socket.on("existing-producers", handleExistingProducers)
+        socket.on("new-producer", handleNewProducer)
+        socket.on("peer-left", handlePeerLeft)
         init()
         
         return () => {
             socket.off("router-rtp-capabilities", handlerRouterCapabilities)
+            socket.off("existing-producers", handleExistingProducers)
+            socket.off("new-producer", handleNewProducer)
+            socket.off("peer-left", handlePeerLeft)
             cleanup()
         }
     }, [socket])
@@ -145,13 +187,161 @@ export const useSFU = (socket) => {
         consumersRef.current.clear()
     }
 
-    //Public API
-    const publishTrack = async (track, kind) => {
-        console.log("Publish Track not implemented")    //! Implement Later
+
+
+    const consumeProducer = async (producerID, peerID, kind) => {
+        try {
+            const device = deviceRef.current
+            if(!device){
+                throw new Error(`Device Not Loaded`)
+            }
+
+            //Create Recv Transport (req to server)
+            socket.emit("create-recv-transport", async (params) => {
+                if(params?.error){
+                    console.error(`Recv Transport Error: ${params.error}`);
+                    return
+                }
+                
+                //Create Recv Transport (Client)
+                const transport = device.createRecvTransport(params)
+
+                recvTransportsRef.current.set(transport.id, transport)
+
+                //Connect Transport (DTLS)
+                transport.on("connect", ({ dtlsParameters }, callback, errback) => {
+                    socket.emit("connect-recv-transport", {transportID: transport.id, dtlsParameters }, (res) => {
+                        if(res?.error) {
+                            errback(res.error)
+                        } else {
+                            callback()
+                        }
+                    })
+                })
+
+                //Consume
+                socket.emit(
+                    "consume",
+                    {
+                        producerID,
+                        transportID: transport.id,
+                        rtpCapabilities: device.rtpCapabilities,
+                    },
+                    async (res) => {
+                        if (res?.error){
+                            console.error(`Consume Error: ${res.error}`);
+                            return
+                        }
+
+                        const consumer = await transport.consume({
+                            id: res.id,
+                            producerID: res.producerID,
+                            kind: res.kind,
+                            rtpParameters: res.rtpParameters
+                        })
+
+                        consumersRef.current.set(consumer.id, consumer)
+
+                        const stream = new MediaStream([consumer.track])
+
+                        setRemoteStreams((prev) => {
+                            const newMap = new Map(prev)
+                            newMap.set(consumer.id, {
+                                stream,
+                                peerID,
+                                kind
+                            })
+                            return newMap
+                        })
+
+                        //Resume consumer (Start Flow)
+                        socket.emit("resume-consumer", { consumerID: consumer.id })
+
+                        //Cleanup Handlers
+                        consumer.on("trackended", () => {
+                            console.warn(`Track Ended: ${consumer.id}`);    //When Media stops producing, No need to delete producer from consumersRef
+                        })
+
+                        consumer.on("transportclose", () => {
+                            console.warn(`Transport Closed: ${consumer.id}`)
+                            consumersRef.current.delete(consumer.id)    //When Producer leaves
+                        })
+                    }
+                )
+            })
+        } catch(error) {
+            console.error(`Consume Failed: ${error}`);
+        }
     }
 
-    const unpublishTrack = async (kind) => {
-        console.log("Unpublish Track not implemented")    //! Implement Later
+
+
+    //Handling Existing Producers
+    const handleExistingProducers = async (producers) => {
+        console.log(`Existing Producers: ${producers}`);
+        
+        for(const { producerID, peerID, kind } of producers){
+            await consumeProducer(producerID, peerID, kind)
+        }
+    }
+
+    //Handling New Producer
+    const handleNewProducer = async ({ producerID, peerID, kind }) => {
+        console.log(`New Producer: ${producerID}`);
+        await consumeProducer(producerID, peerID, kind)
+    }
+
+
+    //Public API
+    const publishTrack = async (track, kind, source) => {
+        try {
+            if(!sendTransportRef.current) {
+                throw new Error("Send transport not initialised")
+            }
+
+            if(!deviceRef.current){
+                throw new Error("Device not loaded")
+            }
+
+            const transport = sendTransportRef.current
+            const producer = await transport.produce({
+                track, 
+                appData: { kind, source }
+            })
+            console.log(`Producer created ${producer.id} ${kind} ${source}`);
+            
+            producersRef.current.set(producer.id, { 
+                producer,
+                kind,
+                source
+            })
+
+            producer.on("trackEnded", () => {
+                console.warn(`${kind} ${source} track ended`);
+                producer.close()
+                producersRef.current.delete(producer.id)
+            })
+
+            producer.on("transportClose", () =>{
+                console.warn(`${kind}, ${source} transport closed`);
+                producersRef.current.delete(producer.id)
+            })
+
+            return producer.id
+
+        } catch (error) {
+            console.error(`Publish track failed ${error}`);
+            setError(error)
+        }
+    }
+
+    const unpublishTrack = async (producerID) => {
+        const data = producersRef.current.get(producerID)
+        if(!data) return;
+        
+        data.producer.close()
+        socket.emit("close-producer", { producerID })
+        producersRef.current.delete(producerID)
     }
     return {
         localStream,
