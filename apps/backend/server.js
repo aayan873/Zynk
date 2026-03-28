@@ -13,16 +13,21 @@ export const startServer = async ({ port }) => {
 
     const app = express();
     const server = http.createServer(app);
-    const io = new Server(server);
+    const io = new Server(server, {
+        cors: {
+            origin: ["http://localhost:5173", process.env.FRONTEND_URL],
+            credentials: true
+        }
+    });
 
     app.use(express.urlencoded({ limit: "40kb", extended: true }));
     app.use(express.json());
     app.use(cors({
-        origin: ["http://localhost:5173",process.env.FRONTEND_URL],
+        origin: ["http://localhost:5173", process.env.FRONTEND_URL],
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true
     }));
-    
+
     io.use(socketAuth);
 
     io.on("connection", (socket) => {
@@ -45,7 +50,7 @@ export const startServer = async ({ port }) => {
     app.use('/api/rooms', roomRoutes)
 
     io.on("connection", (socket) => {
-    console.log(`Client connected: ${socket.id}`);
+        console.log(`Client connected: ${socket.id}`);
     });
 
     await new Promise((resolve) => {
