@@ -2,17 +2,19 @@ import { useParams } from "react-router-dom"
 import { useEffect, useState, useRef } from "react"
 import { socket } from "../socket"
 import axios from "axios"
+import { useAuth } from "../context/AuthContext"
 
 export default function Room() {
     const { roomId } = useParams()
     const [room, setRoom] = useState(null)
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
+    const { auth } = useAuth()
 
     // Creating empty video element
     const videoRef = useRef(null)
 
-    const currentUserId = "12424124"
+    const currentUserId = auth?.user?._id || auth?.user?.id
     const isHost = room?.hostId === currentUserId
 
 
@@ -33,7 +35,11 @@ export default function Room() {
     useEffect(() => {
         const fetchRoom = async () => {
             try {
-                const res = await axios.get(`/api/rooms/${roomId}`)
+                const res = await axios.get(`/api/rooms/${roomId}`, {
+                    headers: {
+                        Authorization: `Bearer ${auth?.token}`
+                    }
+                })
                 setRoom(res.data)
             } catch (err) {
                 console.error(err)
