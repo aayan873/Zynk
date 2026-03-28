@@ -288,7 +288,7 @@ socket.on("pause-producer", async ({ producerID }, callback) => {
 
 
 
-socket.on("create-recv-transport", async () => {
+socket.on("create-recv-transport", async (callback) => {
     try{
         const roomID = socket.roomID
         if(!roomID) return callback({ error: `RoomID Not Found in socket`})
