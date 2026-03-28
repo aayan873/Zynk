@@ -8,13 +8,16 @@ export const useSFU = (socket) => {
     const [ remoteStreams, setRemoteStreams ] = useState(new Map())
     const [ isConnected, setIsConnected ] = useState(false)
 
+    const [ isDeviceLoaded, setIsDeviceLoaded ] = useState(false)
+    const [ error, setError ] = useState(null)
+
     //Internal Refs
     const deviceRef = useRef(null)
     const sendTransportRef = useRef(null)
     const recvTransportsRef = useRef(new Map())
 
-    const producersRef = useState(new Map())
-    const consumersRef = useState(new Map())
+    const producersRef = useRef(new Map())
+    const consumersRef = useRef(new Map())
 
     //Init of useEffect
 
@@ -40,9 +43,33 @@ export const useSFU = (socket) => {
                 console.error(`SFU init ${error}`)
             }
         }
-        init()
 
+        const handlerRouterCapabilities = async (rtpCapabilities) => {
+            try {
+                if (deviceRef.current) {
+                    console.warn(`Device already initialized`);
+                    return
+                }
+                const device = new Device()
+
+                await device.load({
+                    routerRtpCapabilities: rtpCapabilities
+                })
+                deviceRef.current = device
+
+                setIsDeviceLoaded(true)
+                console.log(`Device Loaded`);
+
+            } catch (error) {
+                console.error(`Device load failed`);
+            }
+        }
+        
+        socket.on("router-rtp-capabilities", handlerRouterCapabilities)
+        init()
+        
         return () => {
+            socket.off("router-rtp-capabilities", handlerRouterCapabilities)
             cleanup()
         }
     }, [socket])
@@ -53,7 +80,7 @@ export const useSFU = (socket) => {
         recvTransportsRef.current.forEach((t) => t.close())
 
         producersRef.current.forEach((p) => p.close())
-        consumersRef.cuurent.forEach((c) => c.close())
+        consumersRef.current.forEach((c) => c.close())
 
         recvTransportsRef.current.clear()
         producersRef.current.clear()
