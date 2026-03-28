@@ -48,7 +48,7 @@ export const registerRoomSocket = (io, socket) => {
             if (!meeting) {
                 return
             }
-            if (meeting.hostId !== user._id) {
+            if (!meeting.hostId.equals(user._id)) {
                 console.log("Unauthorized host-decision attempt")
                 return
             }

@@ -14,8 +14,8 @@ export const registerSocketEvents = (io, socket) => {
 
             if (!meeting) { return callback({ error: "Room does not exist" }) }
 
-            if (!meeting.participants.includes(user.userId)) {
-                meeting.participants.push(user.userId)
+            if (!meeting.participants.includes(user._id)) {
+                meeting.participants.push(user._id)
                 await meeting.save()
             }
 
@@ -52,13 +52,13 @@ export const registerSocketEvents = (io, socket) => {
     socket.on("disconnect", async () => {
         try {
             const roomID = socket.roomID
-            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+            if (!roomID) return
 
             const room = roomManager.getRoom(roomID)
-            if (!room) return callback({ error: `Room Not Found` });
+            if (!room) return
 
             const peer = room.peers.get(socket.id)
-            if (!peer) return callback({ error: `Peer Not Found` });
+            if (!peer) return
 
             peer.producers.forEach((p) => {
                 try {
@@ -292,7 +292,7 @@ export const registerSocketEvents = (io, socket) => {
 
 
 
-    socket.on("create-recv-transport", async () => {
+    socket.on("create-recv-transport", async (callback) => {
         try {
             const roomID = socket.roomID
             if (!roomID) return callback({ error: `RoomID Not Found in socket` })
