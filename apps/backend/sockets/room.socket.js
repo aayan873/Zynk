@@ -1,4 +1,4 @@
-import { Meeting } from "../model/Meeting.model.js"
+import { Meeting } from "../models/meeting.model.js"
 
 import roomManager from "../sfu/roomManager.js"
 

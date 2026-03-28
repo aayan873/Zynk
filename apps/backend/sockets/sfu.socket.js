@@ -50,36 +50,36 @@ export const registerSocketEvents = (io, socket) => {
 
     //Disconnect a Room (Removal of Peer)
     socket.on("disconnect", async () => {
-        try{
+        try {
             const roomID = socket.roomID
-            if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
 
             const room = roomManager.getRoom(roomID)
-            if(!room) return callback({ error: `Room Not Found`});
-            
+            if (!room) return callback({ error: `Room Not Found` });
+
             const peer = room.peers.get(socket.id)
-            if(!peer) return callback({ error: `Peer Not Found`});
+            if (!peer) return callback({ error: `Peer Not Found` });
 
             peer.producers.forEach((p) => {
-                try{
+                try {
                     p.close()
-                } catch(error){
+                } catch (error) {
                     console.error(`Produce close error: ${error}`);
                 }
             })
-            
+
             peer.consumers.forEach((c) => {
-                try{
+                try {
                     c.close()
-                } catch(error){
+                } catch (error) {
                     console.error(`Consumer close error: ${error}`);
                 }
             })
-            
+
             peer.transports.forEach((t) => {
-                try{
+                try {
                     t.close()
-                } catch(error){
+                } catch (error) {
                     console.error(`Transport close error: ${error}`);
                 }
             })
@@ -99,17 +99,17 @@ export const registerSocketEvents = (io, socket) => {
 
 
     socket.on("create-send-transport", async (callback) => {
-        try{
+        try {
             const roomID = socket.roomID
-            if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
 
             const room = roomManager.getRoom(roomID)
-            if(!room) return callback({ error: `Room Not Found`});
-                
+            if (!room) return callback({ error: `Room Not Found` });
+
             router = room.router
             const peer = room.peers.get(socket.id)
-            if(!peer) return callback({ error: `Peer Not Found`});
-            
+            if (!peer) return callback({ error: `Peer Not Found` });
+
             //Create WebRTC Transport
             const transport = await router.createWebRtcTransport({
                 listenIPs: [

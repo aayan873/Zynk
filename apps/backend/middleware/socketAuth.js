@@ -7,9 +7,9 @@ const socketAuth = async (socket, next) => {
         const authHeader = socket.handshake?.headers?.authorization;
 
         const bearerToken =
-        authHeader && authHeader.startsWith("Bearer ")
-            ? authHeader.split(" ")[1]
-            : null;
+            authHeader && authHeader.startsWith("Bearer ")
+                ? authHeader.split(" ")[1]
+                : null;
 
         const token = tokenFromAuth || bearerToken;
 
