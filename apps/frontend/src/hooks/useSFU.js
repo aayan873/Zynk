@@ -288,14 +288,22 @@ export const useSFU = (socket) => {
                 console.warn(`${kind}, ${source} transport closed`);
                 producersRef.current.delete(producer.id)
             })
+
+            return producer.id
+
         } catch (error) {
             console.error(`Publish track failed ${error}`);
             setError(error)
         }
     }
 
-    const unpublishTrack = async (kind, source) => {
-        console.log("Unpublish Track not implemented")    //! Implement Later
+    const unpublishTrack = async (producerID) => {
+        const data = producersRef.current.get(producerID)
+        if(!data) return;
+        
+        data.producer.close()
+        socket.emit("close-producer", { producerID })
+        producersRef.current.delete(producerID)
     }
     return {
         localStream,

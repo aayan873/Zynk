@@ -1,4 +1,4 @@
-import { error } from "console"
+import { error, log } from "console"
 import roomManager from "../sfu/roomManager.js"
 
 
@@ -286,7 +286,29 @@ socket.on("pause-producer", async ({ producerID }, callback) => {
     }
 })
 
+socket.on("close-producer", ({ producerID }, callback) => {
+    try {
+        const roomID = socket.roomID
+        if(!roomID) return callback({ error: `RoomID Not Found in socket`})
+        
+        const room = roomManager.getRoom(roomID)
+        if(!room) return callback({ error: `Room Not Found`});
 
+        const peer = room.peers.get(socket.id)
+        if(!peer) return callback({ error: `Peer Not Found`});
+
+        const producer = peer.producers.get(producerID)
+        if(!producer) return callback({ error: `Producer Not Found `});
+        
+        producer.close()
+        peer.producers.delete(producerID)
+        console.log(`Producer closed ${producerID}`);
+        callback({ success: true })
+
+    } catch (error) {
+        callback({ error: error.message })
+    }
+})
 
 socket.on("create-recv-transport", async (callback) => {
     try{
