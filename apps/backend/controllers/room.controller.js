@@ -78,7 +78,7 @@ export const getHistory = async (req, res) => {
     }
 }
 
-export const endHistory = async (req, res) => {
+export const endRoom = async (req, res) => {
     try {
         const { roomId } = req.params
         const userId = req.user.userId
