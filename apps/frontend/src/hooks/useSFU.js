@@ -146,8 +146,43 @@ export const useSFU = (socket) => {
     }
 
     //Public API
-    const publishTrack = async (track, kind) => {
-        console.log("Publish Track not implemented")    //! Implement Later
+    const publishTrack = async (track, kind, source) => {
+        try {
+            if(!sendTransportRef.current) {
+                throw new Error("Send transport not initialised")
+            }
+
+            if(!deviceRef.current){
+                throw new Error("Device not loaded")
+            }
+            
+            const transport = sendTransportRef.current
+            const producer = await transport.produce({
+                track, 
+                appData: { kind, source }
+            })
+            console.log(`Producer created ${producer.id} ${kind} ${source}`);
+            
+            producersRef.current.set(producer.id, { 
+                producer,
+                kind,
+                source
+            })
+
+            producer.on("trackEnded", () => {
+                console.warn(`${kind} ${source} track ended`);
+                producer.close()
+                producersRef.current.delete(producer.id)
+            })
+
+            producer.on("transportClose", () =>{
+                console.warn(`${kind}, ${source} transport closed`);
+                producersRef.current.delete(producer.id)
+            })
+        } catch (error) {
+            console.error(`Publish track failed ${error}`);
+            setError(error)
+        }
     }
 
     const unpublishTrack = async (kind) => {
