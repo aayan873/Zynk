@@ -2,10 +2,12 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-// import { createWorker } from "./utils/workerPool.js";
+// import { createWorker } from "./sfu/workerPool.js";
+import authRoutes from './routes/auth.routes.js';
 
-export const startServer = async ({app, port }) => {
+export const startServer = async ({ port }) => {
 
+    const app = express();
     const server = http.createServer(app);
     const io = new Server(server);
 
@@ -15,10 +17,10 @@ export const startServer = async ({app, port }) => {
          origin: ["http://localhost:5173",process.env.FRONTEND_URL],
       methods: ["GET", "POST", "PUT", "DELETE"],
       credentials: true
-    }
-    ));
+    }));
 
     // await createWorker();
+    app.use('/api/auth', authRoutes);
 
     io.on("connection", (socket) => {
     console.log(`Client connected: ${socket.id}`);
@@ -30,5 +32,5 @@ export const startServer = async ({app, port }) => {
 
     console.log(`Server listening on ${port}`);
 
-    return {server, io };
+    return { app, server, io };
 }

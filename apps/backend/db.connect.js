@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-export const connectDB = async () => {
+const connectDB = async () => {
     try {
         await mongoose.connect(process.env.ATLAS_URI);
         console.log("MongoDB successfully connected");
@@ -10,3 +10,5 @@ export const connectDB = async () => {
         process.exit(1);
     }
 }
+
+export default connectDB;
