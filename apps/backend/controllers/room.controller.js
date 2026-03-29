@@ -42,8 +42,7 @@ export const getRoom = async (req, res) => {
     try {
         const { roomId } = req.params;
 
-        const meeting = await Meeting.findOne({ roomId: roomId })
-            .populate('hostId', 'name email');
+        const meeting = await Meeting.findOne({ roomId: roomId });
 
         if (!meeting) {
             return res.status(404).json({ error: "Room not found or link is broken." });
@@ -51,7 +50,7 @@ export const getRoom = async (req, res) => {
         res.status(200).json({
             title: meeting.title,
             type: meeting.type,
-            hostName: meeting.hostId.name,
+            hostId: meeting.hostId,
             isActive: meeting.endedAt === null
         });
 

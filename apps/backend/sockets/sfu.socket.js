@@ -2,6 +2,35 @@ import { error } from "console"
 import roomManager from "../sfu/roomManager.js"
 import { Meeting } from "../models/meeting.model.js"
 
+const getTransportListenInfos = () => {
+    const frontendUrl = process.env.FRONTEND_URL || ""
+    const isLocalFrontend =
+        frontendUrl.includes("localhost") || frontendUrl.includes("127.0.0.1")
+
+    const announcedAddress =
+        process.env.ANNOUNCED_IP || (isLocalFrontend ? "127.0.0.1" : undefined)
+
+    return [
+        {
+            protocol: "udp",
+            ip: "0.0.0.0",
+            announcedAddress
+        },
+        {
+            protocol: "tcp",
+            ip: "0.0.0.0",
+            announcedAddress
+        },
+    ]
+}
+
+const serializeParticipants = (roomID) =>
+    roomManager.getAllPeers(roomID).map((peer) => ({
+        id: peer.id,
+        user: peer.user,
+        joinedAt: peer.joinedAt
+    }))
+
 export const registerSocketEvents = (io, socket) => {
 
     //Join or Create a Room
@@ -20,7 +49,7 @@ export const registerSocketEvents = (io, socket) => {
             }
 
             const room = await roomManager.createRoom(roomID)
-            const peer = roomManager.addPeer(roomID, socket, user)
+            roomManager.addPeer(roomID, socket, user)
 
             socket.roomID = roomID
             socket.join(roomID)
@@ -36,7 +65,7 @@ export const registerSocketEvents = (io, socket) => {
                 user
             })
 
-            io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
+            io.to(roomID).emit("participant-update", serializeParticipants(roomID))
 
             console.log(`Peer ${socket.id} joined room ${roomID}`)
             callback({ success: true })
@@ -88,7 +117,7 @@ export const registerSocketEvents = (io, socket) => {
 
             socket.to(roomID).emit("peer-left", { socketID: socket.id })
 
-            io.to(roomID).emit("participant-update", roomManager.getAllPeers(roomID))
+            io.to(roomID).emit("participant-update", serializeParticipants(roomID))
 
             console.log(`Peer ${socket.id} disconnected from ${roomID}`);
 
@@ -106,21 +135,16 @@ export const registerSocketEvents = (io, socket) => {
             const room = roomManager.getRoom(roomID)
             if (!room) return callback({ error: `Room Not Found` });
 
-            router = room.router
+            const router = room.router
             const peer = room.peers.get(socket.id)
             if (!peer) return callback({ error: `Peer Not Found` });
 
             //Create WebRTC Transport
             const transport = await router.createWebRtcTransport({
-                listenIPs: [
-                    {
-                        ip: "0.0.0.0",
-                        announcedIp: process.env.ANNOUNCEDIP_IP || null     //! Add the public IP (AWS, etc) while deploying
-                    },
-                ],
+                listenInfos: getTransportListenInfos(),
                 enableUdp: true,
                 enableTcp: true,
-                PreferUdp: true,
+                preferUdp: true,
             })
 
             //Send Transport in Peer
@@ -300,18 +324,13 @@ export const registerSocketEvents = (io, socket) => {
             const room = roomManager.getRoom(roomID)
             if (!room) return callback({ error: `Room Not Found` });
 
-            router = room.router
+            const router = room.router
             const peer = room.peers.get(socket.id)
             if (!peer) return callback({ error: `Peer Not Found` });
 
             //Create WebRTC Transport
             const transport = await router.createWebRtcTransport({
-                listenIPs: [
-                    {
-                        ip: "0.0.0.0",
-                        announcedIp: process.env.ANNOUNCEDIP_IP || null     //! Add the public IP (AWS, etc) while deploying
-                    },
-                ],
+                listenInfos: getTransportListenInfos(),
                 enableUdp: true,
                 enableTcp: true,
                 preferUdp: true,
@@ -385,12 +404,13 @@ export const registerSocketEvents = (io, socket) => {
             const room = roomManager.getRoom(roomID)
             if (!room) return callback({ error: `Room Not Found` });
 
-            router = room.router
+            const router = room.router
             const peer = room.peers.get(socket.id)
             if (!peer) return callback({ error: `Peer Not Found` });
 
             const canConsume = router.canConsume({
-                producerID, rtpCapabilities
+                producerId: producerID,
+                rtpCapabilities
             })
             if (!canConsume) {
                 console.error(`Cannot consume this producer`)
@@ -403,7 +423,7 @@ export const registerSocketEvents = (io, socket) => {
             }
 
             const consumer = await recvTransport.consume({
-                producerID,
+                producerId: producerID,
                 rtpCapabilities,
                 paused: true
             })

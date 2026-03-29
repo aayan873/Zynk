@@ -3,9 +3,12 @@ import { useEffect, useState, useRef } from "react"
 import { socket } from "../socket"
 import axios from "axios"
 import { useAuth } from "../context/AuthContext"
+import { useSFU } from "../hooks/useSFU"
+import VideoTile from "./VideoTile"
 
 export default function Room() {
     const { roomId } = useParams()
+    const { localStream, remoteStreams, publishTrack, isConnected, isReady, isTransportReady } = useSFU(socket, roomId)
     const [room, setRoom] = useState(null)
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
@@ -13,6 +16,8 @@ export default function Room() {
 
     // Creating empty video element
     const videoRef = useRef(null)
+    const hasJoinedRef = useRef(false)
+    const publishedTrackIdsRef = useRef(new Set())
 
     const currentUserId = auth?.user?._id || auth?.user?.id
     const isHost = room?.hostId === currentUserId
@@ -48,6 +53,35 @@ export default function Room() {
         fetchRoom()
     }, [roomId])
 
+    useEffect(() => {
+        if (!room || !auth?.user || !isReady) return
+
+        if (isHost) {
+            if (hasJoinedRef.current) return
+
+            hasJoinedRef.current = true
+            setStatus("joined")
+            socket.emit("join-room", { roomID: roomId }, (res) => {
+                if (res?.error) {
+                    console.error(res.error)
+                    hasJoinedRef.current = false
+                    setStatus("idle")
+                }
+            })
+        }
+    }, [room, auth, isReady, isHost, roomId])
+
+    useEffect(() => {
+        if (status !== "joined" || !isConnected || !localStream || !isTransportReady ) return
+
+        localStream.getTracks().forEach((track) => {
+            if (publishedTrackIdsRef.current.has(track.id)) return
+
+            publishedTrackIdsRef.current.add(track.id)
+            publishTrack(track, track.kind, "camera")
+        })
+    }, [status, isConnected, localStream, isTransportReady, publishTrack])
+
 
     // Recieve user-requesting-join, from the user socket id and user details
     useEffect(() => {
@@ -65,9 +99,17 @@ export default function Room() {
     // Recieve join-approved, join-rejected from the host
     useEffect(() => {
         socket.on("join-approved", () => {
-            setStatus("joined")
+            if (hasJoinedRef.current) return
+
+            hasJoinedRef.current = true
             socket.emit("join-room", { roomID: roomId }, (res) => {
-                if (res?.error) console.log(res.error)
+                if (res?.error) {
+                    console.log(res.error)
+                    hasJoinedRef.current = false
+                    setStatus("idle")
+                    return
+                }
+                setStatus("joined")
             })
         })
         socket.on("join-rejected", () => {
@@ -80,6 +122,12 @@ export default function Room() {
         }
     }, [roomId])
 
+    useEffect(() => {
+        return () => {
+            hasJoinedRef.current = false
+            publishedTrackIdsRef.current.clear()
+        }
+    }, [])
 
     // Emit request-to-join to the host
     const handleJoin = () => {
@@ -143,9 +191,20 @@ export default function Room() {
 
             {/* STATUS: JOINED (Currently empty, Module 4 will build the actual call here!) */}
             {status === "joined" && (
-                <div className="w-full h-[60vh] bg-gray-900 border border-gray-800 rounded-2xl flex items-center justify-center mt-4 shadow-2xl max-w-5xl">
-                    <h3 className="text-3xl font-light text-emerald-400">You are in the meeting </h3>
-                    {/* In Module 4, you will render the Video Grids right here! */}
+                <div className="w-full max-w-6xl mt-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {localStream && (
+                            <VideoTile stream={localStream} isLocal />
+                        )}
+
+                        {Array.from(remoteStreams.entries()).map(([id, data]) => (
+                            <VideoTile
+                                key={id}
+                                stream={data.stream}
+                                peerId={data.peerID}
+                            />
+                        ))}
+                    </div>
                 </div>
             )}
 

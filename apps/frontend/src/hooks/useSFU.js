@@ -1,15 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { Device } from "mediasoup-client"
 
-export const useSFU = (socket) => {
-    
-    // State
-    const [ localStream, setLocalStream ] = useState(null)
-    const [ remoteStreams, setRemoteStreams ] = useState(new Map())
-    const [ isConnected, setIsConnected ] = useState(false)
-
-    const [ isDeviceLoaded, setIsDeviceLoaded ] = useState(false)
-    const [ error, setError ] = useState(null)
+export const useSFU = (socket, roomId) => {
+    const [localStream, setLocalStream] = useState(null)
+    const [remoteStreams, setRemoteStreams] = useState(new Map())
+    const [isConnected, setIsConnected] = useState(false)
+    const [isReady, setIsReady] = useState(false)
+    const [isTransportReady, setIsTransportReady] = useState(false)
+    const [error, setError] = useState(null)
 
     //Internal Refs
     const deviceRef = useRef(null)
@@ -18,11 +16,12 @@ export const useSFU = (socket) => {
 
     const producersRef = useRef(new Map())
     const consumersRef = useRef(new Map())
+    const pendingProducersRef = useRef([])
 
     //Init of useEffect
 
     useEffect(() => {
-        if(!socket) return
+        if (!socket) return
 
         const init = async () => {
             try {
@@ -31,43 +30,35 @@ export const useSFU = (socket) => {
                     video: true
                 })
                 setLocalStream(stream)
-
-                socket.emit("join-room", { roomID: "test-room" }, (res) => {
-                    if(res?.error){
-                        console.error(`Join failed ${res.error}`)
-                    }
-                })
-
             } catch (error) {
                 console.error(`SFU init ${error}`)
             }
         }
-        
+
         const handlerRouterCapabilities = async (rtpCapabilities) => {
             try {
-                if (deviceRef.current) {
-                    console.warn(`Device already initialized`);
-                    return
+                if (!deviceRef.current) {
+                    const device = new Device()
+                    await device.load({
+                        routerRtpCapabilities: rtpCapabilities
+                    })
+                    deviceRef.current = device
+                    setIsConnected(true)
+                    console.log(`Device Loaded`);
                 }
-                const device = new Device()
-                
-                await device.load({
-                    routerRtpCapabilities: rtpCapabilities
-                })
-                console.log(`RtpCapabilities: ${rtpCapabilities}`);
-                
-                deviceRef.current = device
-                
-                setIsDeviceLoaded(true)
-                setIsConnected(true)
-                console.log(`Device Loaded`);
 
-                //Creating Send Transport
                 await createSendTransport()
+
+                if (pendingProducersRef.current.length > 0) {
+                    for (const { producerID, peerID, kind } of pendingProducersRef.current) {
+                        await consumeProducer(producerID, peerID, kind)
+                    }
+                    pendingProducersRef.current = []
+                }
 
             } catch (error) {
                 setError(error)
-                console.error(`Device load failed`);
+                console.error(`Device load failed:`, error);
             }
         }
 
@@ -78,8 +69,13 @@ export const useSFU = (socket) => {
                 return
             }
 
-            socket.emit("create-send-transport", async(params) => {
-                if(params?.error){
+            if (sendTransportRef.current && !sendTransportRef.current.closed) {
+                setIsTransportReady(true)
+                return
+            }
+
+            socket.emit("create-send-transport", async (params) => {
+                if (params?.error) {
                     console.error(`Transport Creation Failed: ${params.error}`);
                     return
                 }
@@ -89,6 +85,7 @@ export const useSFU = (socket) => {
 
                     //Create Send Transport
                     const transport = device.createSendTransport(params)
+                    setIsTransportReady(true)
 
                     //Connect Event (DTLS Handshake)
                     transport.on("connect", ({ dtlsParameters }, callback, errback) => {
@@ -163,6 +160,7 @@ export const useSFU = (socket) => {
         socket.on("existing-producers", handleExistingProducers)
         socket.on("new-producer", handleNewProducer)
         socket.on("peer-left", handlePeerLeft)
+        setIsReady(true)
         init()
         
         return () => {
@@ -172,18 +170,17 @@ export const useSFU = (socket) => {
             socket.off("peer-left", handlePeerLeft)
             cleanup()
         }
-    }, [socket])
+    }, [socket, roomId])
 
     const cleanup = () => {
-        sendTransportRef.current?.close()
-
-        recvTransportsRef.current.forEach((t) => t.close())
-
-        producersRef.current.forEach((p) => p.close())
-        consumersRef.current.forEach((c) => c.close())
+        recvTransportsRef.current.forEach((t) => {
+            try { t.close() } catch (e) {}
+        })
+        consumersRef.current.forEach((c) => {
+            try { c.close() } catch (e) {}
+        })
 
         recvTransportsRef.current.clear()
-        producersRef.current.clear()
         consumersRef.current.clear()
     }
 
@@ -192,13 +189,13 @@ export const useSFU = (socket) => {
     const consumeProducer = async (producerID, peerID, kind) => {
         try {
             const device = deviceRef.current
-            if(!device){
+            if (!device) {
                 throw new Error(`Device Not Loaded`)
             }
 
             //Create Recv Transport (req to server)
             socket.emit("create-recv-transport", async (params) => {
-                if(params?.error){
+                if (params?.error) {
                     console.error(`Recv Transport Error: ${params.error}`);
                     return
                 }
@@ -235,27 +232,38 @@ export const useSFU = (socket) => {
 
                         const consumer = await transport.consume({
                             id: res.id,
-                            producerID: res.producerID,
+                            producerId: res.producerID,
                             kind: res.kind,
                             rtpParameters: res.rtpParameters
                         })
 
                         consumersRef.current.set(consumer.id, consumer)
 
-                        const stream = new MediaStream([consumer.track])
-
                         setRemoteStreams((prev) => {
                             const newMap = new Map(prev)
-                            newMap.set(consumer.id, {
-                                stream,
-                                peerID,
-                                kind
-                            })
+                            const existing = newMap.get(peerID)
+
+                            if (existing) {
+                                const stream = new MediaStream([
+                                    ...existing.stream.getTracks(),
+                                    consumer.track
+                                ])
+                                newMap.set(peerID, {
+                                    ...existing,
+                                    stream
+                                })
+                            } else {
+                                newMap.set(peerID, {
+                                    stream: new MediaStream([consumer.track]),
+                                    peerID,
+                                    kind
+                                })
+                            }
                             return newMap
                         })
 
                         //Resume consumer (Start Flow)
-                        socket.emit("resume-consumer", { consumerID: consumer.id })
+                        socket.emit("resume-consumer", { consumerID: consumer.id }, () => {})
 
                         //Cleanup Handlers
                         consumer.on("trackended", () => {
@@ -278,9 +286,14 @@ export const useSFU = (socket) => {
 
     //Handling Existing Producers
     const handleExistingProducers = async (producers) => {
-        console.log(`Existing Producers: ${producers}`);
-        
-        for(const { producerID, peerID, kind } of producers){
+        console.log(`Existing Producers:`, producers);
+
+        if (!deviceRef.current) {
+            pendingProducersRef.current.push(...producers)
+            return
+        }
+
+        for (const { producerID, peerID, kind } of producers) {
             await consumeProducer(producerID, peerID, kind)
         }
     }
@@ -348,6 +361,8 @@ export const useSFU = (socket) => {
         remoteStreams,
         publishTrack,
         unpublishTrack,
-        isConnected
+        isConnected,
+        isReady,
+        isTransportReady
     }
 }
