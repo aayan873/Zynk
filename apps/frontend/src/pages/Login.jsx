@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import './Login.css';
 import { useAuth } from "../context/AuthContext";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 const Login = ()=>{
 
     const navigate = useNavigate();
@@ -26,7 +28,7 @@ let handleSubmit = async (e)=>{
         // setError(null);
     
     try{
-        const response = await fetch("http://localhost:5000/api/auth/login",{
+        const response = await fetch(`${BACKEND_URL}/api/auth/login`,{
             method:"POST",
             headers:{
                 "Content-Type":"application/json"
