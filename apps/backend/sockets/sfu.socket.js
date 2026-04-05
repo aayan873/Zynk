@@ -263,7 +263,7 @@ export const registerSocketEvents = (io, socket) => {
 
             //Notify other peers
             socket.to(roomID).emit("new-producer", {
-                producerID: producer.id,
+                producerId: producer.id,
                 peerID: socket.id,
                 kind,
             })
@@ -280,7 +280,7 @@ export const registerSocketEvents = (io, socket) => {
 
 
 
-    socket.on("resume-producer", async ({ producerID }, callback) => {
+    socket.on("resume-producer", async ({ producerId }, callback) => {
         try {
             const roomID = socket.roomID
             if (!roomID) return callback({ error: `RoomID Not Found in socket` })
@@ -291,16 +291,16 @@ export const registerSocketEvents = (io, socket) => {
             const peer = room.peers.get(socket.id)
             if (!peer) return callback({ error: `Peer Not Found` });
 
-            const producer = peer.producers.get(producerID)
+            const producer = peer.producers.get(producerId)
             if (!producer) return callback({ error: `Producer Not Found` });
 
             await producer.resume()
 
             socket.to(roomID).emit("producer-resumed", {
-                producerID, peerID: socket.id
+                producerId, peerID: socket.id
             })
 
-            console.log(`Producer Resumed: ${producerID}`);
+            console.log(`Producer Resumed: ${producerId}`);
             callback({ success: true })
 
         } catch (error) {
@@ -311,7 +311,7 @@ export const registerSocketEvents = (io, socket) => {
 
 
 
-    socket.on("pause-producer", async ({ producerID }, callback) => {
+    socket.on("pause-producer", async ({ producerId }, callback) => {
         try {
             const roomID = socket.roomID
             if (!roomID) return callback({ error: `RoomID Not Found in socket` })
@@ -322,16 +322,16 @@ export const registerSocketEvents = (io, socket) => {
             const peer = room.peers.get(socket.id)
             if (!peer) return callback({ error: `Peer Not Found` });
 
-            const producer = peer.producers.get(producerID)
+            const producer = peer.producers.get(producerId)
             if (!producer) return callback({ error: `Producer Not Found` });
 
             await producer.pause()
 
             socket.to(roomID).emit("producer-paused", {
-                producerID, peerID: socket.id
+                producerId, peerID: socket.id
             })
 
-            console.log(`Producer Paused: ${producerID}`);
+            console.log(`Producer Paused: ${producerId}`);
             callback({ success: true })
 
         } catch (error) {
@@ -422,7 +422,7 @@ export const registerSocketEvents = (io, socket) => {
 
 
 
-    socket.on("consume", async ({ producerID, transportID, rtpCapabilities }, callback) => {
+    socket.on("consume", async ({ producerId, transportID, rtpCapabilities }, callback) => {
         try {
             const roomID = socket.roomID
             if (!roomID) return callback({ error: `RoomID Not Found in socket` })
@@ -435,7 +435,7 @@ export const registerSocketEvents = (io, socket) => {
             if (!peer) return callback({ error: `Peer Not Found` });
 
             const canConsume = router.canConsume({
-                producerId: producerID,
+                producerId: producerId,
                 rtpCapabilities
             })
             if (!canConsume) {
@@ -449,7 +449,7 @@ export const registerSocketEvents = (io, socket) => {
             }
 
             const consumer = await recvTransport.consume({
-                producerId: producerID,
+                producerId: producerId,
                 rtpCapabilities,
                 paused: true
             })
@@ -468,12 +468,12 @@ export const registerSocketEvents = (io, socket) => {
                 consumer.close()
                 peer.consumers.delete(consumer.id)
 
-                socket.emit("producer-closed", { producerID })
+                socket.emit("producer-closed", { producerId })
             })
 
             callback({
                 id: consumer.id,
-                producerID,
+                producerId,
                 kind: consumer.kind,
                 rtpParameters: consumer.rtpParameters,
             })

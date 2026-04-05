@@ -139,6 +139,6 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 
-# Cert Files
-./apps/backend/certs
-./apps/frontend/certs
+# Cert files
+/apps/backend/certs/**
+/apps/frontend/certs/**

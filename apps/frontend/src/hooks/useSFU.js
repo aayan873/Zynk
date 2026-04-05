@@ -50,8 +50,8 @@ export const useSFU = (socket, roomId) => {
                 await createSendTransport()
 
                 if (pendingProducersRef.current.length > 0) {
-                    for (const { producerID, peerID, kind } of pendingProducersRef.current) {
-                        await consumeProducer(producerID, peerID, kind)
+                    for (const { producerId, peerID, kind } of pendingProducersRef.current) {
+                        await consumeProducer(producerId, peerID, kind)
                     }
                     pendingProducersRef.current = []
                 }
@@ -186,7 +186,7 @@ export const useSFU = (socket, roomId) => {
 
 
 
-    const consumeProducer = async (producerID, peerID, kind) => {
+    const consumeProducer = async (producerId, peerID, kind) => {
         try {
             const device = deviceRef.current
             if (!device) {
@@ -220,7 +220,7 @@ export const useSFU = (socket, roomId) => {
                 socket.emit(
                     "consume",
                     {
-                        producerID,
+                        producerId,
                         transportID: transport.id,
                         rtpCapabilities: device.rtpCapabilities,
                     },
@@ -232,7 +232,7 @@ export const useSFU = (socket, roomId) => {
 
                         const consumer = await transport.consume({
                             id: res.id,
-                            producerId: res.producerID,
+                            producerId: res.producerId,
                             kind: res.kind,
                             rtpParameters: res.rtpParameters
                         })
@@ -293,15 +293,15 @@ export const useSFU = (socket, roomId) => {
             return
         }
 
-        for (const { producerID, peerID, kind } of producers) {
-            await consumeProducer(producerID, peerID, kind)
+        for (const { producerId, peerID, kind } of producers) {
+            await consumeProducer(producerId, peerID, kind)
         }
     }
 
     //Handling New Producer
-    const handleNewProducer = async ({ producerID, peerID, kind }) => {
-        console.log(`New Producer: ${producerID}`);
-        await consumeProducer(producerID, peerID, kind)
+    const handleNewProducer = async ({ producerId, peerID, kind }) => {
+        console.log(`New Producer: ${producerId}`);
+        await consumeProducer(producerId, peerID, kind)
     }
 
 
@@ -348,13 +348,13 @@ export const useSFU = (socket, roomId) => {
         }
     }
 
-    const unpublishTrack = async (producerID) => {
-        const data = producersRef.current.get(producerID)
+    const unpublishTrack = async (producerId) => {
+        const data = producersRef.current.get(producerId)
         if(!data) return;
         
         data.producer.close()
-        socket.emit("close-producer", { producerID })
-        producersRef.current.delete(producerID)
+        socket.emit("close-producer", { producerId })
+        producersRef.current.delete(producerId)
     }
     return {
         localStream,
