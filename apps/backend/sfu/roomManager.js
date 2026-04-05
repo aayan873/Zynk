@@ -120,7 +120,7 @@ class RoomManager{
         }
 
         await redis.srem(`room:${roomID}:peers`, socketID)
-        await redis.del(`peer:${socket.id}`)
+        await redis.del(`peer:${socketID}`)
     }
 
     getPeer(roomID, socketID){
@@ -164,7 +164,7 @@ class RoomManager{
             if(peerID === excludeSocketID)  continue;
             peer.producers.forEach((p) => {
                 producers.push({
-                    producerID: p.id,
+                    producerId: p.id,
                     peerID,
                     kind: p.kind
                 })
