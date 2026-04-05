@@ -124,35 +124,19 @@ export const useSFU = (socket, roomId) => {
         const handlePeerLeft = ({ socketID }) => {
             console.log(`Peer Left: ${socketID}`);
             
-            //Remove from Remote Streams
+            // Remove from Remote Streams
             setRemoteStreams((prev) => {
                 const updated = new Map(prev)
-
-                for (const [consumerID, data] of prev.entries()) {
-                    if(data.peerID === socketID) {
-                        const consumer = consumersRef.current.get(consumerID)
-
-                        if(consumer){
-                            consumer.close();
-                            consumersRef.current.delete(consumerID)
-                        }
-
-                        updated.delete(consumerID)
-                    }
-                }
-
+                updated.delete(socketID)
                 return updated
             })
 
-            //Cleanup Recv Transports
-            for (const [id, transport] of recvTransportsRef.current.entries()) {
-                try{
-                    transport.close()
-                } catch(error) {
-                    console.warn(`Error Closing Transport: ${error}`);
+            // Cleanup Consumers specifically attached to this peer
+            for (const [consumerID, consumer] of consumersRef.current.entries()) {
+                if (consumer.appData?.peerID === socketID) {
+                    try { consumer.close() } catch(e) {}
+                    consumersRef.current.delete(consumerID)
                 }
-
-                recvTransportsRef.current.delete(id)
             }
         }
         
@@ -266,6 +250,8 @@ export const useSFU = (socket, roomId) => {
                             kind: res.kind,
                             rtpParameters: res.rtpParameters
                         })
+
+                        consumer.appData = { peerID }
 
                         consumersRef.current.set(consumer.id, consumer)
 

@@ -134,7 +134,7 @@ export default function Room() {
         const onMeetingEnded = () => {
             alert("The host has ended the meeting.")
             leaveRoom()
-            navigate("/dashboard")
+            navigate("/home")
         }
         
         socket.on("meeting-ended", onMeetingEnded)
@@ -147,11 +147,11 @@ export default function Room() {
                 if (res?.error) {
                     console.error("End meeting error:", res.error)
                 }
-                navigate("/dashboard")
+                navigate("/home")
             })
         } else {
             leaveRoom()
-            navigate("/dashboard")
+            navigate("/home")
         }
     }
 
