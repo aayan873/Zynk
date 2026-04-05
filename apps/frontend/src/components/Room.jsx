@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useState, useRef } from "react"
 import { socket } from "../socket"
 import axios from "axios"
@@ -8,7 +8,8 @@ import VideoTile from "./VideoTile"
 
 export default function Room() {
     const { roomId } = useParams()
-    const { localStream, remoteStreams, publishTrack, isConnected, isReady, isTransportReady } = useSFU(socket, roomId)
+    const navigate = useNavigate()
+    const { localStream, remoteStreams, publishTrack, isConnected, isReady, isTransportReady, leaveRoom } = useSFU(socket, roomId)
     const [room, setRoom] = useState(null)
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
@@ -129,6 +130,31 @@ export default function Room() {
         }
     }, [])
 
+    useEffect(() => {
+        const onMeetingEnded = () => {
+            alert("The host has ended the meeting.")
+            leaveRoom()
+            navigate("/dashboard")
+        }
+        
+        socket.on("meeting-ended", onMeetingEnded)
+        return () => socket.off("meeting-ended", onMeetingEnded)
+    }, [navigate, leaveRoom])
+
+    const handleDisconnect = () => {
+        if (isHost) {
+            socket.emit("end-meeting", (res) => {
+                if (res?.error) {
+                    console.error("End meeting error:", res.error)
+                }
+                navigate("/dashboard")
+            })
+        } else {
+            leaveRoom()
+            navigate("/dashboard")
+        }
+    }
+
     // Emit request-to-join to the host
     const handleJoin = () => {
         setStatus("waiting")
@@ -192,6 +218,14 @@ export default function Room() {
             {/* STATUS: JOINED (Currently empty, Module 4 will build the actual call here!) */}
             {status === "joined" && (
                 <div className="w-full max-w-6xl mt-6">
+                    <div className="flex justify-end mb-4">
+                        <button 
+                            onClick={handleDisconnect} 
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg hover:shadow-red-500/20"
+                        >
+                            {isHost ? "End Meeting" : "Leave Meeting"}
+                        </button>
+                    </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {localStream && (
                             <VideoTile stream={localStream} isLocal />
