@@ -122,7 +122,7 @@ export const useSFU = (socket, roomId) => {
 
         
         const handlePeerLeft = ({ socketID }) => {
-            console.log(`Peer Left: ${socket.id}`);
+            console.log(`Peer Left: ${socketID}`);
             
             //Remove from Remote Streams
             setRemoteStreams((prev) => {
@@ -173,15 +173,45 @@ export const useSFU = (socket, roomId) => {
     }, [socket, roomId])
 
     const cleanup = () => {
+        // Destroy all producers/consumers/transports
         recvTransportsRef.current.forEach((t) => {
             try { t.close() } catch (e) {}
         })
         consumersRef.current.forEach((c) => {
             try { c.close() } catch (e) {}
         })
+        producersRef.current.forEach((p) => {
+            try { p.producer.close() } catch (e) {}
+        })
 
+        if (sendTransportRef.current && !sendTransportRef.current.closed) {
+            try { sendTransportRef.current.close() } catch(e) {}
+        }
+        
+        // Clear maps
         recvTransportsRef.current.clear()
         consumersRef.current.clear()
+        producersRef.current.clear()
+
+        // Clear refs
+        sendTransportRef.current = null
+        deviceRef.current = null
+
+        // Stop local streams naturally
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+        setLocalStream(null)
+        setRemoteStreams(new Map())
+        
+        setIsConnected(false)
+        setIsReady(false)
+        setIsTransportReady(false)
+    }
+
+    const leaveRoom = () => {
+        cleanup()
+        socket.emit("leave-meeting")
     }
 
 
@@ -363,6 +393,7 @@ export const useSFU = (socket, roomId) => {
         unpublishTrack,
         isConnected,
         isReady,
-        isTransportReady
+        isTransportReady,
+        leaveRoom
     }
 }
