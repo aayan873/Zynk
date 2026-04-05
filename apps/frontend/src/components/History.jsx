@@ -1,27 +1,17 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext.jsx"
 
 export default function History() {
     const [meetings, setMeetings] = useState([])
     const [loading, setLoading] = useState(true)
     const navigate = useNavigate()
-    const { auth } = useAuth()
 
     // Fetching the history from the backend
     useEffect(() => {
-        if (!auth?.token) {
-            setLoading(false)
-            return
-        }
         const fetchHistory = async () => {
             try {
-                const res = await axios.get("/api/rooms/history", {
-                    headers: {
-                        Authorization: `Bearer ${auth.token}`,
-                    },
-                })
+                const res = await axios.get("/api/rooms/history")
                 setMeetings(res.data)
             } catch (err) {
                 console.error("Failed to fetch history:", err)
@@ -30,7 +20,7 @@ export default function History() {
             }
         }
         fetchHistory()
-    }, [auth?.token])
+    }, [])
 
     // Func to calc the duration of the meeting
     const calculateDuration = (start, end) => {

@@ -31,6 +31,20 @@ const serializeParticipants = (roomID) =>
         joinedAt: peer.joinedAt
     }))
 
+const handlePeerLeaveRoom = async (io, socket, roomID) => {
+    if (!roomID) return;
+
+    await roomManager.removePeer(roomID, socket.id);
+
+    socket.leave(roomID);
+    socket.roomID = null;
+
+    socket.to(roomID).emit("peer-left", { socketID: socket.id });
+    io.to(roomID).emit("participant-update", serializeParticipants(roomID));
+
+    console.log(`Peer ${socket.id} left room ${roomID}`);
+};
+
 export const registerSocketEvents = (io, socket) => {
 
     //Join or Create a Room
@@ -80,49 +94,61 @@ export const registerSocketEvents = (io, socket) => {
     //Disconnect a Room (Removal of Peer)
     socket.on("disconnect", async () => {
         try {
-            const roomID = socket.roomID
-            if (!roomID) return
-
-            const room = roomManager.getRoom(roomID)
-            if (!room) return
-
-            const peer = room.peers.get(socket.id)
-            if (!peer) return
-
-            peer.producers.forEach((p) => {
-                try {
-                    p.close()
-                } catch (error) {
-                    console.error(`Produce close error: ${error}`);
-                }
-            })
-
-            peer.consumers.forEach((c) => {
-                try {
-                    c.close()
-                } catch (error) {
-                    console.error(`Consumer close error: ${error}`);
-                }
-            })
-
-            peer.transports.forEach((t) => {
-                try {
-                    t.close()
-                } catch (error) {
-                    console.error(`Transport close error: ${error}`);
-                }
-            })
-
-            await roomManager.removePeer(roomID, socket.id)
-
-            socket.to(roomID).emit("peer-left", { socketID: socket.id })
-
-            io.to(roomID).emit("participant-update", serializeParticipants(roomID))
-
-            console.log(`Peer ${socket.id} disconnected from ${roomID}`);
-
+            await handlePeerLeaveRoom(io, socket, socket.roomID)
         } catch (error) {
             console.error(`Disconnect Error: ${error}`);
+        }
+    })
+
+    //Leave Meeting manually
+    socket.on("leave-meeting", async () => {
+        try {
+            await handlePeerLeaveRoom(io, socket, socket.roomID)
+        } catch (error) {
+            console.error(`Leave Meeting Error: ${error}`);
+        }
+    })
+
+    //End Meeting (Host only)
+    socket.on("end-meeting", async (callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) {
+                if(callback) return callback({ error: "No room ID found" })
+                return
+            }
+
+            const user = socket.user
+            const meeting = await Meeting.findOne({ roomId: roomID })
+
+            if (!meeting || String(meeting.hostId) !== String(user._id)) {
+                if(callback) return callback({ error: "Unauthorized or room not found" })
+                return
+            }
+
+            // Update meeting in DB
+            meeting.endedAt = new Date()
+            await meeting.save()
+
+            // Emit to everyone that meeting ended
+            io.to(roomID).emit("meeting-ended")
+
+            // Delete room and all peer resources
+            await roomManager.deleteRoom(roomID)
+
+            // Make all sockets natively leave the Socket.IO room
+            const socketsInRoom = await io.in(roomID).fetchSockets()
+            socketsInRoom.forEach(s => {
+                s.leave(roomID)
+                s.roomID = null
+            })
+
+            console.log(`Meeting ${roomID} ended by host ${user._id}`)
+            if(callback) callback({ success: true })
+
+        } catch (error) {
+            console.error(`End Meeting Error: ${error}`);
+            if(callback) callback({ error: error.message })
         }
     })
 
