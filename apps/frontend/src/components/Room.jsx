@@ -4,8 +4,6 @@ import { socket } from "../socket"
 import { useSFU } from "../hooks/useSFU.js"
 import { useAuth } from "../context/AuthContext.jsx"
 import axios from "axios"
-import { useAuth } from "../context/AuthContext"
-import { useSFU } from "../hooks/useSFU"
 import VideoTile from "./VideoTile"
 
 function StreamVideo({ stream, muted = false, className = "" }) {

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
+import { useAuth } from "../context/AuthContext.jsx"
 
 export default function Home() {
     const [code, setCode] = useState("")
