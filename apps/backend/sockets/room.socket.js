@@ -6,12 +6,13 @@ export const registerRoomSocket = (io, socket) => {
     socket.on("request-to-join", async ({ roomID }, callback) => {
         try {
             const user = socket.user
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase()
 
-            if (!roomID) {
+            if (!normalizedRoomId) {
                 return callback({ error: "roomID is required" })
             }
 
-            const meeting = await Meeting.findOne({ roomId: roomID })
+            const meeting = await Meeting.findOne({ roomId: normalizedRoomId })
 
             if (!meeting) {
                 return callback({ error: "Room not found" })
@@ -19,7 +20,7 @@ export const registerRoomSocket = (io, socket) => {
 
             const hostId = meeting.hostId
 
-            const peers = roomManager.getAllPeers(roomID)
+            const peers = roomManager.getAllPeers(normalizedRoomId)
 
             const hostPeer = peers.find(
                 (p) => String(p.user._id) === String(hostId)
@@ -44,7 +45,8 @@ export const registerRoomSocket = (io, socket) => {
     socket.on("host-decision", async ({ roomID, targetSocketId, decision }) => {
         try {
             const user = socket.user
-            const meeting = await Meeting.findOne({ roomId: roomID })
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase()
+            const meeting = await Meeting.findOne({ roomId: normalizedRoomId })
             if (!meeting) {
                 return
             }

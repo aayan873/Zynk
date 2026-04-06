@@ -115,5 +115,12 @@ const Login = async (req, res) => {
 
 }
 
+const validateAuth = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    user: req.user,
+  });
+};
 
-export { Signup, Login }
+
+export { Signup, Login, validateAuth }

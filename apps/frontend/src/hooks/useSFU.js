@@ -152,6 +152,7 @@ export const useSFU = (socket, roomId) => {
             socket.off("existing-producers", handleExistingProducers)
             socket.off("new-producer", handleNewProducer)
             socket.off("peer-left", handlePeerLeft)
+            joinedRoomRef.current = null
             cleanup()
         }
     }, [socket, roomId])

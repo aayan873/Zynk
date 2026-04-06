@@ -1,4 +1,5 @@
 import { Meeting } from '../models/meeting.model.js';
+import User from '../models/user.model.js';
 import crypto from 'crypto';
 
 export const createRoom = async (req, res) => {
@@ -28,7 +29,7 @@ export const createRoom = async (req, res) => {
         res.status(201).json({
             message: "Room successfully created!",
             roomId: newMeeting.roomId,
-            joinLink: `http://localhost:5173/room/${newMeeting.roomId}`,
+            joinLink: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/room/${newMeeting.roomId}`,
             meetingDetails: newMeeting
         });
 
@@ -40,14 +41,19 @@ export const createRoom = async (req, res) => {
 
 export const getRoom = async (req, res) => {
     try {
-        const { roomId } = req.params;
+        const roomId = String(req.params.roomId || "").trim().toLowerCase();
 
         const meeting = await Meeting.findOne({ roomId: roomId });
 
         if (!meeting) {
             return res.status(404).json({ error: "Room not found or link is broken." });
         }
+
+        const host = await User.findById(meeting.hostId).select("username email");
+
         res.status(200).json({
+            roomId: meeting.roomId,
+            hostId: meeting.hostId,
             title: meeting.title,
             type: meeting.type,
             hostId: meeting.hostId,
@@ -82,13 +88,13 @@ export const endRoom = async (req, res) => {
         const { roomId } = req.params
         const userId = req.user._id
 
-        const meeting = await Meeting.findOne({ roomId: roomId })
+        const meeting = await Meeting.findOne({ roomId })
 
         if (!meeting) {
             return res.status(404).json({ error: "Room not found" })
         }
 
-        if (!meeting.hostId.equals(userId)) {
+        if (String(meeting.hostId) !== String(userId)) {
             return res.status(403).json({ error: "Only host can end meeting" })
         }
         meeting.endedAt = new Date()

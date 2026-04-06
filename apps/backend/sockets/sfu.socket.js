@@ -1,4 +1,3 @@
-import { error } from "console"
 import roomManager from "../sfu/roomManager.js"
 import { Meeting } from "../models/meeting.model.js"
 
@@ -51,9 +50,10 @@ export const registerSocketEvents = (io, socket) => {
     socket.on("join-room", async ({ roomID }, callback) => {
         try {
             const user = socket.user    //! From Auth Middleware
-            if (!roomID) { return callback({ error: `roomID is required` }) }
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase()
+            if (!normalizedRoomId) { return callback({ error: `roomID is required` }) }
 
-            const meeting = await Meeting.findOne({ roomId: roomID })
+            const meeting = await Meeting.findOne({ roomId: normalizedRoomId })
 
             if (!meeting) { return callback({ error: "Room does not exist" }) }
 
@@ -65,23 +65,23 @@ export const registerSocketEvents = (io, socket) => {
             const room = await roomManager.createRoom(roomID)
             roomManager.addPeer(roomID, socket, user)
 
-            socket.roomID = roomID
-            socket.join(roomID)
+            socket.roomID = normalizedRoomId
+            socket.join(normalizedRoomId)
 
-            const router = roomManager.getRouter(roomID)
+            const router = roomManager.getRouter(normalizedRoomId)
             socket.emit("router-rtp-capabilities", router.rtpCapabilities)
 
-            const producers = roomManager.getProducers(roomID, socket.id)
+            const producers = roomManager.getProducers(normalizedRoomId, socket.id)
             socket.emit("existing-producers", producers)
 
-            socket.to(roomID).emit("peer-joined", {
+            socket.to(normalizedRoomId).emit("peer-joined", {
                 peerID: socket.id,
                 user
             })
 
             io.to(roomID).emit("participant-update", serializeParticipants(roomID))
 
-            console.log(`Peer ${socket.id} joined room ${roomID}`)
+            console.log(`Peer ${socket.id} joined room ${normalizedRoomId}`)
             callback({ success: true })
 
         } catch (error) {
@@ -340,7 +340,30 @@ export const registerSocketEvents = (io, socket) => {
         }
     })
 
+    socket.on("close-producer", ({ producerID }, callback) => {
+        try {
+            const respond = typeof callback === "function" ? callback : () => {}
+            const roomID = socket.roomID
+            if(!roomID) return respond({ error: `RoomID Not Found in socket`})
+            
+            const room = roomManager.getRoom(roomID)
+            if(!room) return respond({ error: `Room Not Found`});
 
+            const peer = room.peers.get(socket.id)
+            if(!peer) return respond({ error: `Peer Not Found`});
+
+            const producer = peer.producers.get(producerID)
+            if(!producer) return respond({ error: `Producer Not Found `});
+            
+            producer.close()
+            peer.producers.delete(producerID)
+            console.log(`Producer closed ${producerID}`);
+            respond({ success: true })
+
+        } catch (error) {
+            if (typeof callback === "function") callback({ error: error.message })
+        }
+    })
 
     socket.on("create-recv-transport", async (callback) => {
         try {
@@ -487,26 +510,27 @@ export const registerSocketEvents = (io, socket) => {
 
     socket.on("resume-consumer", async ({ consumerID }, callback) => {
         try {
+            const respond = typeof callback === "function" ? callback : () => {}
             const roomID = socket.roomID
-            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+            if (!roomID) return respond({ error: `RoomID Not Found in socket` })
 
             const room = roomManager.getRoom(roomID)
-            if (!room) return callback({ error: `Room Not Found` });
+            if (!room) return respond({ error: `Room Not Found` });
 
             const peer = room.peers.get(socket.id)
-            if (!peer) return callback({ error: `Peer Not Found` });
+            if (!peer) return respond({ error: `Peer Not Found` });
 
             const consumer = peer.consumers.get(consumerID)
-            if (!consumer) return callback({ error: `Consumer Not Found` });
+            if (!consumer) return respond({ error: `Consumer Not Found` });
 
             await consumer.resume()
 
             console.log(`Consumer Resumed: ${consumerID}`);
-            callback({ success: true })
+            respond({ success: true })
 
         } catch (error) {
             console.error(`Resume Consumer Error: ${error}`);
-            callback({ error: error.message })
+            if (typeof callback === "function") callback({ error: error.message })
         }
     })
 }
