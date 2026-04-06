@@ -65,4 +65,46 @@ export const registerRoomSocket = (io, socket) => {
             console.error("host-decision error:", error)
         }
     })
+
+    socket.on("grant-permission", async ({ roomID, targetSocketIds, type }) => {
+        try {
+            const user = socket.user
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase()
+            const meeting = await Meeting.findOne({ roomId: normalizedRoomId })
+            
+            if (!meeting || String(meeting.hostId) !== String(user._id)) {
+                console.log("Unauthorized grant-permission attempt")
+                return
+            }
+
+            if (Array.isArray(targetSocketIds)) {
+                targetSocketIds.forEach(targetId => {
+                    io.to(targetId).emit("permission-granted", { type })
+                })
+            }
+        } catch (error) {
+            console.error("grant-permission error:", error)
+        }
+    })
+
+    socket.on("revoke-permission", async ({ roomID, targetSocketIds, type }) => {
+        try {
+            const user = socket.user
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase()
+            const meeting = await Meeting.findOne({ roomId: normalizedRoomId })
+            
+            if (!meeting || String(meeting.hostId) !== String(user._id)) {
+                console.log("Unauthorized revoke-permission attempt")
+                return
+            }
+
+            if (Array.isArray(targetSocketIds)) {
+                targetSocketIds.forEach(targetId => {
+                    io.to(targetId).emit("permission-revoked", { type })
+                })
+            }
+        } catch (error) {
+            console.error("revoke-permission error:", error)
+        }
+    })
 }
