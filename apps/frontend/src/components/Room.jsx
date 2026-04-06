@@ -9,7 +9,7 @@ import VideoTile from "./VideoTile"
 export default function Room() {
     const { roomId } = useParams()
     const navigate = useNavigate()
-    const { localStream, remoteStreams, publishTrack, isConnected, isReady, isTransportReady, leaveRoom } = useSFU(socket, roomId)
+    const { localStream, remoteStreams, publishTrack, toggleProducer, isConnected, isReady, isTransportReady, leaveRoom } = useSFU(socket, roomId)
     const [room, setRoom] = useState(null)
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
@@ -27,18 +27,12 @@ export default function Room() {
     const isReturningParticipant = room?.participants?.includes(currentUserId)
 
 
-    // When idle get camera and plug to video elements
+    // When idle plug localStream to video elements
     useEffect(() => {
-        if (status === "idle") {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                .then((stream) => {
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream
-                    }
-                })
-                .catch(err => console.error("Could not access camera:", err))
+        if (status === "idle" && localStream && videoRef.current) {
+            videoRef.current.srcObject = localStream
         }
-    }, [status])
+    }, [status, localStream])
 
     // Fetch room Details
     useEffect(() => {
@@ -174,6 +168,7 @@ export default function Room() {
             localStream.getAudioTracks().forEach(track => {
                 track.enabled = !isMicOn
             })
+            toggleProducer("audio", !isMicOn)
             setIsMicOn(!isMicOn)
         }
     }
@@ -183,6 +178,7 @@ export default function Room() {
             localStream.getVideoTracks().forEach(track => {
                 track.enabled = !isVideoOn
             })
+            toggleProducer("video", !isVideoOn)
             setIsVideoOn(!isVideoOn)
         }
     }
