@@ -22,6 +22,7 @@ export default function Room() {
 
     const currentUserId = auth?.user?._id || auth?.user?.id
     const isHost = room?.hostId === currentUserId
+    const isReturningParticipant = room?.participants?.includes(currentUserId)
 
 
     // When idle get camera and plug to video elements
@@ -57,7 +58,7 @@ export default function Room() {
     useEffect(() => {
         if (!room || !auth?.user || !isReady) return
 
-        if (isHost) {
+        if (isHost || isReturningParticipant) {
             if (hasJoinedRef.current) return
 
             hasJoinedRef.current = true
@@ -70,7 +71,7 @@ export default function Room() {
                 }
             })
         }
-    }, [room, auth, isReady, isHost, roomId])
+    }, [room, auth, isReady, isHost, isReturningParticipant, roomId])
 
     useEffect(() => {
         if (status !== "joined" || !isConnected || !localStream || !isTransportReady ) return

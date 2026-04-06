@@ -51,7 +51,8 @@ export const getRoom = async (req, res) => {
             title: meeting.title,
             type: meeting.type,
             hostId: meeting.hostId,
-            isActive: meeting.endedAt === null
+            isActive: meeting.endedAt === null,
+            participants: meeting.participants
         });
 
     } catch (error) {
