@@ -14,6 +14,8 @@ export default function Room() {
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
     const { auth } = useAuth()
+    const [isMicOn, setIsMicOn] = useState(true)
+    const [isVideoOn, setIsVideoOn] = useState(true)
 
     // Creating empty video element
     const videoRef = useRef(null)
@@ -80,7 +82,7 @@ export default function Room() {
             if (publishedTrackIdsRef.current.has(track.id)) return
 
             publishedTrackIdsRef.current.add(track.id)
-            publishTrack(track, track.kind, "camera")
+            publishTrack(track, track.kind, track.kind === "audio" ? "mic" : "camera")
         })
     }, [status, isConnected, localStream, isTransportReady, publishTrack])
 
@@ -167,6 +169,24 @@ export default function Room() {
         })
     }
 
+    const toggleMic = () => {
+        if (localStream) {
+            localStream.getAudioTracks().forEach(track => {
+                track.enabled = !isMicOn
+            })
+            setIsMicOn(!isMicOn)
+        }
+    }
+
+    const toggleVideo = () => {
+        if (localStream) {
+            localStream.getVideoTracks().forEach(track => {
+                track.enabled = !isVideoOn
+            })
+            setIsVideoOn(!isVideoOn)
+        }
+    }
+
     // Emit host-decision to the host
     const handleDecision = (targetSocketId, decision) => {
         socket.emit("host-decision", { roomID: roomId, targetSocketId, decision })
@@ -219,7 +239,19 @@ export default function Room() {
             {/* STATUS: JOINED (Currently empty, Module 4 will build the actual call here!) */}
             {status === "joined" && (
                 <div className="w-full max-w-6xl mt-6">
-                    <div className="flex justify-end mb-4">
+                    <div className="flex justify-end mb-4 gap-4">
+                        <button
+                            onClick={toggleMic}
+                            className={`font-bold py-2 px-6 rounded-xl transition-all shadow-lg text-white ${isMicOn ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-500 hover:shadow-red-500/20"}`}
+                        >
+                            {isMicOn ? "Mute Mic" : "Unmute Mic"}
+                        </button>
+                        <button
+                            onClick={toggleVideo}
+                            className={`font-bold py-2 px-6 rounded-xl transition-all shadow-lg text-white ${isVideoOn ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-500 hover:shadow-red-500/20"}`}
+                        >
+                            {isVideoOn ? "Stop Video" : "Start Video"}
+                        </button>
                         <button 
                             onClick={handleDisconnect} 
                             className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg hover:shadow-red-500/20"
