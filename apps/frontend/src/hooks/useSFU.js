@@ -372,11 +372,30 @@ export const useSFU = (socket, roomId) => {
         socket.emit("close-producer", { producerId })
         producersRef.current.delete(producerId)
     }
+
+    const toggleProducer = async (kind, isEnabled) => {
+        const data = Array.from(producersRef.current.values()).find(p => p.kind === kind)
+        if (!data) return
+
+        try {
+            if (isEnabled) {
+                await data.producer.resume()
+                socket.emit("resume-producer", { producerId: data.producer.id }, () => {})
+            } else {
+                await data.producer.pause()
+                socket.emit("pause-producer", { producerId: data.producer.id }, () => {})
+            }
+        } catch (error) {
+            console.error(`Toggle producer failed: ${error}`)
+        }
+    }
+
     return {
         localStream,
         remoteStreams,
         publishTrack,
         unpublishTrack,
+        toggleProducer,
         isConnected,
         isReady,
         isTransportReady,
