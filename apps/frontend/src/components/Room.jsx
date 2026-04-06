@@ -34,6 +34,27 @@ export default function Room() {
         }
     }, [status, localStream])
 
+    // Global Autoplay Unlocker: Resolves any strict browser autoplay issues frictionlessly
+    useEffect(() => {
+        const unlockAudioAndVideos = () => {
+            const AudioContext = window.AudioContext || window.webkitAudioContext
+            if (AudioContext) {
+                const ctx = new AudioContext()
+                ctx.resume()
+            }
+            
+            // Re-ignite any stalled video elements
+            const videos = document.querySelectorAll("video")
+            videos.forEach(v => {
+                if (!v.muted) v.play().catch(() => {})
+            })
+            
+            document.removeEventListener("click", unlockAudioAndVideos)
+        }
+        document.addEventListener("click", unlockAudioAndVideos)
+        return () => document.removeEventListener("click", unlockAudioAndVideos)
+    }, [])
+
     // Fetch room Details
     useEffect(() => {
         const fetchRoom = async () => {
@@ -51,7 +72,23 @@ export default function Room() {
         fetchRoom()
     }, [roomId])
 
+    useEffect(() => {
+        if (!room || !auth?.user || !isReady) return
 
+        if (isHost || isReturningParticipant) {
+            if (hasJoinedRef.current) return
+
+            hasJoinedRef.current = true
+            setStatus("joined")
+            socket.emit("join-room", { roomID: roomId }, (res) => {
+                if (res?.error) {
+                    console.error(res.error)
+                    hasJoinedRef.current = false
+                    setStatus("idle")
+                }
+            })
+        }
+    }, [room, auth, isReady, isHost, isReturningParticipant, roomId])
 
     useEffect(() => {
         if (status !== "joined" || !isConnected || !localStream || !isTransportReady ) return
@@ -136,29 +173,15 @@ export default function Room() {
         }
     }
 
-    // Emit request-to-join to the host or jump straight in if authorized
+    // Emit request-to-join to the host
     const handleJoin = () => {
-        if (isHost || isReturningParticipant) {
-            if (hasJoinedRef.current) return
-            hasJoinedRef.current = true
-            socket.emit("join-room", { roomID: roomId }, (res) => {
-                if (res?.error) {
-                    console.error(res.error)
-                    hasJoinedRef.current = false
-                    setStatus("idle")
-                } else {
-                    setStatus("joined")
-                }
-            })
-        } else {
-            setStatus("waiting")
-            socket.emit("request-to-join", { roomID: roomId }, (res) => {
-                if (res?.error) {
-                    console.log(res.error)
-                    setStatus("idle")
-                }
-            })
-        }
+        setStatus("waiting")
+        socket.emit("request-to-join", { roomID: roomId }, (res) => {
+            if (res?.error) {
+                console.log(res.error)
+                setStatus("idle")
+            }
+        })
     }
 
     const toggleMic = () => {
@@ -215,7 +238,7 @@ export default function Room() {
                     </div>
 
                     <button onClick={handleJoin} className="bg-blue-600 hover:bg-blue-500 text-lg font-bold py-4 px-12 rounded-xl transition-all shadow-lg hover:shadow-blue-500/20">
-                        {isHost || isReturningParticipant ? "Join Meeting" : "Ask to Join"}
+                        Ask to Join
                     </button>
                     <p className="text-gray-500 text-sm mt-4">Make sure your hair looks good!</p>
                 </div>
