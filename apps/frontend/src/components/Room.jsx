@@ -16,6 +16,8 @@ export default function Room() {
     const { auth } = useAuth()
     const [isMicOn, setIsMicOn] = useState(true)
     const [isVideoOn, setIsVideoOn] = useState(true)
+    const [hostGrantedMic, setHostGrantedMic] = useState(false)
+    const [hostGrantedVideo, setHostGrantedVideo] = useState(false)
 
     // Creating empty video element
     const videoRef = useRef(null)
@@ -73,6 +75,22 @@ export default function Room() {
     }, [roomId])
 
     useEffect(() => {
+        if (room) {
+            if (isHost) {
+                setHostGrantedMic(true)
+                setHostGrantedVideo(true)
+                setIsMicOn(true)
+                setIsVideoOn(true)
+            } else {
+                setHostGrantedMic(false)
+                setHostGrantedVideo(false)
+                setIsMicOn(false)
+                setIsVideoOn(false)
+            }
+        }
+    }, [room, isHost])
+
+    useEffect(() => {
         if (!room || !auth?.user || !isReady) return
 
         if (isHost || isReturningParticipant) {
@@ -96,10 +114,18 @@ export default function Room() {
         localStream.getTracks().forEach((track) => {
             if (publishedTrackIdsRef.current.has(track.id)) return
 
+            if (!isHost) {
+                track.enabled = false
+            }
+
             publishedTrackIdsRef.current.add(track.id)
-            publishTrack(track, track.kind, track.kind === "audio" ? "mic" : "camera")
+            publishTrack(track, track.kind, track.kind === "audio" ? "mic" : "camera").then(() => {
+                if (!isHost) {
+                    toggleProducer(track.kind, false)
+                }
+            })
         })
-    }, [status, isConnected, localStream, isTransportReady, publishTrack])
+    }, [status, isConnected, localStream, isTransportReady, publishTrack, isHost, toggleProducer])
 
 
     // Recieve user-requesting-join, from the user socket id and user details
@@ -140,6 +166,46 @@ export default function Room() {
             socket.off("join-rejected")
         }
     }, [roomId])
+
+    useEffect(() => {
+        const handlePermissionGranted = ({ type }) => {
+            if (type === "mic") {
+                setHostGrantedMic(true)
+                alert("Host has granted you permission to unmute your mic.")
+            } else if (type === "video") {
+                setHostGrantedVideo(true)
+                alert("Host has granted you permission to start your video.")
+            }
+        }
+
+        const handlePermissionRevoked = ({ type }) => {
+            if (type === "mic") {
+                setHostGrantedMic(false)
+                setIsMicOn(false)
+                if (localStream) {
+                    localStream.getAudioTracks().forEach(track => track.enabled = false)
+                }
+                toggleProducer("audio", false)
+                alert("Host has revoked your permission to use your mic.")
+            } else if (type === "video") {
+                setHostGrantedVideo(false)
+                setIsVideoOn(false)
+                if (localStream) {
+                    localStream.getVideoTracks().forEach(track => track.enabled = false)
+                }
+                toggleProducer("video", false)
+                alert("Host has revoked your permission to use your video.")
+            }
+        }
+
+        socket.on("permission-granted", handlePermissionGranted)
+        socket.on("permission-revoked", handlePermissionRevoked)
+
+        return () => {
+            socket.off("permission-granted", handlePermissionGranted)
+            socket.off("permission-revoked", handlePermissionRevoked)
+        }
+    }, [localStream, toggleProducer])
 
     useEffect(() => {
         return () => {
@@ -259,13 +325,15 @@ export default function Room() {
                     <div className="flex justify-end mb-4 gap-4">
                         <button
                             onClick={toggleMic}
-                            className={`font-bold py-2 px-6 rounded-xl transition-all shadow-lg text-white ${isMicOn ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-500 hover:shadow-red-500/20"}`}
+                            disabled={!hostGrantedMic}
+                            className={`font-bold py-2 px-6 rounded-xl transition-all shadow-lg text-white ${!hostGrantedMic ? "bg-gray-800 text-gray-500 cursor-not-allowed" : isMicOn ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-500 hover:shadow-red-500/20"}`}
                         >
                             {isMicOn ? "Mute Mic" : "Unmute Mic"}
                         </button>
                         <button
                             onClick={toggleVideo}
-                            className={`font-bold py-2 px-6 rounded-xl transition-all shadow-lg text-white ${isVideoOn ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-500 hover:shadow-red-500/20"}`}
+                            disabled={!hostGrantedVideo}
+                            className={`font-bold py-2 px-6 rounded-xl transition-all shadow-lg text-white ${!hostGrantedVideo ? "bg-gray-800 text-gray-500 cursor-not-allowed" : isVideoOn ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-500 hover:shadow-red-500/20"}`}
                         >
                             {isVideoOn ? "Stop Video" : "Start Video"}
                         </button>
