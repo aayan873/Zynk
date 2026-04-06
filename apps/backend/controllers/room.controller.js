@@ -43,7 +43,7 @@ export const getRoom = async (req, res) => {
     try {
         const roomId = String(req.params.roomId || "").trim().toLowerCase();
 
-        const meeting = await Meeting.findOne({ roomId });
+        const meeting = await Meeting.findOne({ roomId: roomId });
 
         if (!meeting) {
             return res.status(404).json({ error: "Room not found or link is broken." });
@@ -56,8 +56,9 @@ export const getRoom = async (req, res) => {
             hostId: meeting.hostId,
             title: meeting.title,
             type: meeting.type,
-            hostName: host?.username || "Unknown host",
-            isActive: meeting.endedAt === null
+            hostId: meeting.hostId,
+            isActive: meeting.endedAt === null,
+            participants: meeting.participants
         });
 
     } catch (error) {
@@ -69,7 +70,6 @@ export const getRoom = async (req, res) => {
 export const getHistory = async (req, res) => {
     try {
         const userId = req.user._id
-
         const meetings = await Meeting.find({
             $or: [
                 { hostId: userId },
@@ -85,7 +85,7 @@ export const getHistory = async (req, res) => {
 
 export const endRoom = async (req, res) => {
     try {
-        const roomId = String(req.params.roomId || "").trim().toLowerCase()
+        const { roomId } = req.params
         const userId = req.user._id
 
         const meeting = await Meeting.findOne({ roomId })

@@ -182,7 +182,7 @@ class RoomManager{
             if(peerID === excludeSocketID)  continue;
             peer.producers.forEach((p) => {
                 producers.push({
-                    producerID: p.id,
+                    producerId: p.id,
                     peerID,
                     kind: p.kind
                 })

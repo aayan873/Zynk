@@ -23,14 +23,14 @@ export const registerRoomSocket = (io, socket) => {
             const peers = roomManager.getAllPeers(normalizedRoomId)
 
             const hostPeer = peers.find(
-                p => String(p.user._id) === String(hostId)
+                (p) => String(p.user._id) === String(hostId)
             )
 
             if (!hostPeer) {
                 return callback({ error: "Host not in room" })
             }
 
-            io.to(hostPeer.socketId).emit("user-requesting-join", {
+            io.to(hostPeer.id).emit("user-requesting-join", {
                 socketId: socket.id,
                 user
             })

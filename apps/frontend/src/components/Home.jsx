@@ -1,6 +1,7 @@
 import { useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 
 export default function Home() {
     const [code, setCode] = useState("")
@@ -9,6 +10,7 @@ export default function Home() {
     const [type, setType] = useState("MEET")
 
     const navigate = useNavigate()
+    const { auth } = useAuth()
 
     const createMeeting = async (e) => {
         e.preventDefault(); // Stop the form from refreshing the page
@@ -17,6 +19,10 @@ export default function Home() {
             const res = await axios.post("/api/rooms/create", {
                 title: title || "My Awesome Meeting",
                 type: type
+            }, {
+                headers: {
+                    Authorization: `Bearer ${auth?.token}`
+                }
             })
             const roomId = res.data.roomId
             navigate(`/room/${roomId}`)

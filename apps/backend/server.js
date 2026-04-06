@@ -1,5 +1,7 @@
 import express from "express";
+import fs from "node:fs";
 import http from "http";
+import https from "https";
 import { Server } from "socket.io";
 import cors from "cors";
 import socketAuth from "./middleware/socketAuth.js";
@@ -25,7 +27,20 @@ export const startServer = async ({ port }) => {
     };
 
     const app = express();
-    const server = http.createServer(app);
+    const certFile = process.env.HTTPS_CERT_FILE;
+    const keyFile = process.env.HTTPS_KEY_FILE;
+    const useHttps = Boolean(certFile && keyFile);
+
+    const server = useHttps
+        ? https.createServer(
+            {
+                cert: fs.readFileSync(certFile),
+                key: fs.readFileSync(keyFile),
+            },
+            app
+        )
+        : http.createServer(app);
+        
     const io = new Server(server, {
         cors: {
             origin: allowedOrigins,

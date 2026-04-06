@@ -1,9 +1,12 @@
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useState, useRef } from "react"
 import { socket } from "../socket"
 import { useSFU } from "../hooks/useSFU.js"
 import { useAuth } from "../context/AuthContext.jsx"
 import axios from "axios"
+import { useAuth } from "../context/AuthContext"
+import { useSFU } from "../hooks/useSFU"
+import VideoTile from "./VideoTile"
 
 function StreamVideo({ stream, muted = false, className = "" }) {
     const ref = useRef(null)
@@ -29,19 +32,22 @@ function StreamAudio({ stream }) {
 
 export default function Room() {
     const { roomId } = useParams()
-    const { auth } = useAuth()
+    const navigate = useNavigate()
+    const { localStream, remoteStreams, publishTrack, isConnected, isReady, isTransportReady, leaveRoom } = useSFU(socket, roomId)
     const [room, setRoom] = useState(null)
     const [roomError, setRoomError] = useState("")
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
-    const [published, setPublished] = useState(false)
-    const { localStream, remoteStreams, publishTrack, isConnected } = useSFU(socket, roomId, status === "joined")
+    const { auth } = useAuth()
 
     // Creating empty video element
     const videoRef = useRef(null)
+    const hasJoinedRef = useRef(false)
+    const publishedTrackIdsRef = useRef(new Set())
 
     const currentUserId = auth?.user?._id || auth?.user?.id
     const isHost = room?.hostId === currentUserId
+    const isReturningParticipant = room?.participants?.includes(currentUserId)
 
 
     // Preview local camera in lobby
@@ -55,8 +61,11 @@ export default function Room() {
     useEffect(() => {
         const fetchRoom = async () => {
             try {
-                setRoomError("")
-                const res = await axios.get(`/api/rooms/${roomId}`)
+                const res = await axios.get(`/api/rooms/${roomId}`, {
+                    headers: {
+                        Authorization: `Bearer ${auth?.token}`
+                    }
+                })
                 setRoom(res.data)
             } catch (err) {
                 setRoom(null)
@@ -66,6 +75,35 @@ export default function Room() {
         }
         fetchRoom()
     }, [roomId])
+
+    useEffect(() => {
+        if (!room || !auth?.user || !isReady) return
+
+        if (isHost || isReturningParticipant) {
+            if (hasJoinedRef.current) return
+
+            hasJoinedRef.current = true
+            setStatus("joined")
+            socket.emit("join-room", { roomID: roomId }, (res) => {
+                if (res?.error) {
+                    console.error(res.error)
+                    hasJoinedRef.current = false
+                    setStatus("idle")
+                }
+            })
+        }
+    }, [room, auth, isReady, isHost, isReturningParticipant, roomId])
+
+    useEffect(() => {
+        if (status !== "joined" || !isConnected || !localStream || !isTransportReady ) return
+
+        localStream.getTracks().forEach((track) => {
+            if (publishedTrackIdsRef.current.has(track.id)) return
+
+            publishedTrackIdsRef.current.add(track.id)
+            publishTrack(track, track.kind, "camera")
+        })
+    }, [status, isConnected, localStream, isTransportReady, publishTrack])
 
 
     // Recieve user-requesting-join, from the user socket id and user details
@@ -90,7 +128,18 @@ export default function Room() {
     // Recieve join-approved, join-rejected from the host
     useEffect(() => {
         socket.on("join-approved", () => {
-            setStatus("joined")
+            if (hasJoinedRef.current) return
+
+            hasJoinedRef.current = true
+            socket.emit("join-room", { roomID: roomId }, (res) => {
+                if (res?.error) {
+                    console.log(res.error)
+                    hasJoinedRef.current = false
+                    setStatus("idle")
+                    return
+                }
+                setStatus("joined")
+            })
         })
         socket.on("join-rejected", () => {
             alert("The host denied your entry.")
@@ -102,6 +151,37 @@ export default function Room() {
         }
     }, [roomId])
 
+    useEffect(() => {
+        return () => {
+            hasJoinedRef.current = false
+            publishedTrackIdsRef.current.clear()
+        }
+    }, [])
+
+    useEffect(() => {
+        const onMeetingEnded = () => {
+            alert("The host has ended the meeting.")
+            leaveRoom()
+            navigate("/home")
+        }
+        
+        socket.on("meeting-ended", onMeetingEnded)
+        return () => socket.off("meeting-ended", onMeetingEnded)
+    }, [navigate, leaveRoom])
+
+    const handleDisconnect = () => {
+        if (isHost) {
+            socket.emit("end-meeting", (res) => {
+                if (res?.error) {
+                    console.error("End meeting error:", res.error)
+                }
+                navigate("/home")
+            })
+        } else {
+            leaveRoom()
+            navigate("/home")
+        }
+    }
 
     useEffect(() => {
         if (status !== "joined" || !isConnected || !localStream) return;
@@ -197,32 +277,28 @@ export default function Room() {
 
             {/* STATUS: JOINED (Currently empty, Module 4 will build the actual call here!) */}
             {status === "joined" && (
-                <div className="w-full mt-4 shadow-2xl max-w-6xl px-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                            <div className="aspect-video bg-black">
-                                <StreamVideo stream={localStream} muted className="w-full h-full object-cover transform scale-x-[-1]" />
-                            </div>
-                            <div className="px-3 py-2 text-sm text-gray-300">You</div>
-                        </div>
+                <div className="w-full max-w-6xl mt-6">
+                    <div className="flex justify-end mb-4">
+                        <button 
+                            onClick={handleDisconnect} 
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg hover:shadow-red-500/20"
+                        >
+                            {isHost ? "End Meeting" : "Leave Meeting"}
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {localStream && (
+                            <VideoTile stream={localStream} isLocal />
+                        )}
 
-                        {remoteVideoTiles.map(([consumerId, data]) => (
-                            <div key={consumerId} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                                <div className="aspect-video bg-black">
-                                    <StreamVideo stream={data.stream} className="w-full h-full object-cover" />
-                                </div>
-                                <div className="px-3 py-2 text-sm text-gray-300">Participant {data.peerID?.slice(0, 6) || "guest"}</div>
-                            </div>
+                        {Array.from(remoteStreams.entries()).map(([id, data]) => (
+                            <VideoTile
+                                key={id}
+                                stream={data.stream}
+                                peerId={data.peerID}
+                            />
                         ))}
                     </div>
-
-                    {remoteVideoTiles.length === 0 && (
-                        <p className="text-center text-gray-400 mt-6">Waiting for other participants to publish video...</p>
-                    )}
-
-                    {remoteAudioTracks.map(([consumerId, data]) => (
-                        <StreamAudio key={consumerId} stream={data.stream} />
-                    ))}
                 </div>
             )}
 

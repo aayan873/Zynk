@@ -3,6 +3,7 @@ import { Link,useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import './Signup.css';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 const Signup = ()=>{
     const [username,setUsername] = useState('');
@@ -26,7 +27,7 @@ const Signup = ()=>{
         setLoading(true);
 
          try{
-        const response = await fetch("/api/auth/signup",{
+        const response = await fetch(`${BACKEND_URL}/api/auth/signup`,{
             method:"POST",
             headers:{
                 "Content-Type":"application/json"
