@@ -368,8 +368,9 @@ export const registerSocketEvents = (io, socket) => {
         }
     })
 
-    socket.on("close-producer", ({ producerID }, callback) => {
+    socket.on("close-producer", ({ producerID, producerId }, callback) => {
         try {
+            const finalProducerId = producerId || producerID;
             const respond = typeof callback === "function" ? callback : () => {}
             const roomID = socket.roomID
             if(!roomID) return respond({ error: `RoomID Not Found in socket`})
@@ -380,12 +381,13 @@ export const registerSocketEvents = (io, socket) => {
             const peer = room.peers.get(socket.id)
             if(!peer) return respond({ error: `Peer Not Found`});
 
-            const producer = peer.producers.get(producerID)
+            const producer = peer.producers.get(finalProducerId)
             if(!producer) return respond({ error: `Producer Not Found `});
             
             producer.close()
-            peer.producers.delete(producerID)
-            console.log(`Producer closed ${producerID}`);
+            peer.producers.delete(finalProducerId)
+            socket.to(roomID).emit("producer-closed", { producerId: finalProducerId })
+            console.log(`Producer closed ${finalProducerId}`);
             respond({ success: true })
 
         } catch (error) {

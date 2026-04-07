@@ -383,6 +383,7 @@ export default function Room() {
                 stream: localScreenStream,
                 peerID: "local_screen",
                 isLocal: true,
+                isScreen: true,
                 userName: `${auth?.user?.name || "You"} (Screen)`
             }
         } else if (activeScreenSharePeerId && activeScreenSharePeerId !== "local") {
@@ -394,6 +395,7 @@ export default function Room() {
                     stream: data.screenStream,
                     peerID: `${activeScreenSharePeerId}_screen`,
                     isLocal: false,
+                    isScreen: true,
                     userName: `${name} (Screen)`
                 }
             }

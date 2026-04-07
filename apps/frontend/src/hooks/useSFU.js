@@ -186,12 +186,19 @@ export const useSFU = (socket, roomId) => {
                         const next = new Map(prev)
                         const existing = next.get(info.peerID)
                         if (existing) {
-                            existing.screenStream = null
-                            next.set(info.peerID, existing)
+                            next.set(info.peerID, { ...existing, screenStream: null })
                         }
                         return next
                     })
                     setActiveScreenSharePeerId(prev => prev === info.peerID ? null : prev)
+                }
+
+                // Cleanup associated consumer for this producer
+                for (const [consumerID, consumer] of consumersRef.current.entries()) {
+                    if (consumer.producerId === producerId) {
+                        try { consumer.close() } catch(e) {}
+                        consumersRef.current.delete(consumerID)
+                    }
                 }
 
                 producersInfoMapRef.current.delete(producerId)
@@ -328,7 +335,7 @@ export const useSFU = (socket, roomId) => {
 
                         setRemoteStreams((prev) => {
                             const newMap = new Map(prev)
-                            const existing = newMap.get(peerID) || { peerID }
+                            const existing = newMap.get(peerID) ? { ...newMap.get(peerID) } : { peerID }
 
                             if (source === "screen") {
                                 if (existing.screenStream) {
