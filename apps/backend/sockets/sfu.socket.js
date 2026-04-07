@@ -27,7 +27,8 @@ const serializeParticipants = (roomID) =>
     roomManager.getAllPeers(roomID).map((peer) => ({
         id: peer.id,
         user: peer.user,
-        joinedAt: peer.joinedAt
+        joinedAt: peer.joinedAt,
+        handRaised: peer.handRaised
     }))
 
 const handlePeerLeaveRoom = async (io, socket, roomID) => {
@@ -97,6 +98,32 @@ export const registerSocketEvents = (io, socket) => {
             await handlePeerLeaveRoom(io, socket, socket.roomID)
         } catch (error) {
             console.error(`Disconnect Error: ${error}`);
+        }
+    })
+
+    //Hand raising event
+    socket.on("toggle-hand", ({ isRaised }) => {
+        try {
+            const roomID = socket.roomID;
+            if (!roomID) return;
+
+            const room = roomManager.getRoom(roomID);
+            if (!room) return;
+
+            const peer = room.peers.get(socket.id);
+            if (!peer) return;
+
+            peer.handRaised = Boolean(isRaised);
+
+            socket.to(roomID).emit("hand-toggled", {
+                socketId: socket.id,
+                isRaised: peer.handRaised,
+                user: peer.user
+            });
+
+            io.to(roomID).emit("participant-update", serializeParticipants(roomID));
+        } catch (error) {
+            console.error(`Toggle Hand Error: ${error}`);
         }
     })
 
