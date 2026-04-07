@@ -8,11 +8,13 @@ export const useSFU = (socket, roomId) => {
     const [isReady, setIsReady] = useState(false)
     const [isTransportReady, setIsTransportReady] = useState(false)
     const [error, setError] = useState(null)
+    const [participantStates, setParticipantStates] = useState({})
 
     //Internal Refs
     const deviceRef = useRef(null)
     const sendTransportRef = useRef(null)
     const recvTransportsRef = useRef(new Map())
+    const producersInfoMapRef = useRef(new Map())
 
     const producersRef = useRef(new Map())
     const consumersRef = useRef(new Map())
@@ -131,6 +133,13 @@ export const useSFU = (socket, roomId) => {
                 return updated
             })
 
+            // Clean up state
+            setParticipantStates(prev => {
+                const next = { ...prev }
+                delete next[socketID]
+                return next
+            })
+
             // Cleanup Consumers specifically attached to this peer
             for (const [consumerID, consumer] of consumersRef.current.entries()) {
                 if (consumer.appData?.peerID === socketID) {
@@ -140,9 +149,43 @@ export const useSFU = (socket, roomId) => {
             }
         }
         
+        const handleProducerPaused = ({ producerId, peerID }) => {
+            const info = producersInfoMapRef.current.get(producerId);
+            if (info && peerID) {
+                setParticipantStates(prev => ({
+                    ...prev,
+                    [peerID]: { ...(prev[peerID] || {}), [info.kind]: false }
+                }))
+            }
+        }
+
+        const handleProducerResumed = ({ producerId, peerID }) => {
+            const info = producersInfoMapRef.current.get(producerId);
+            if (info && peerID) {
+                setParticipantStates(prev => ({
+                    ...prev,
+                    [peerID]: { ...(prev[peerID] || {}), [info.kind]: true }
+                }))
+            }
+        }
+
+        const handleProducerClosed = ({ producerId }) => {
+            const info = producersInfoMapRef.current.get(producerId);
+            if (info) {
+                setParticipantStates(prev => ({
+                    ...prev,
+                    [info.peerID]: { ...(prev[info.peerID] || {}), [info.kind]: false }
+                }))
+                producersInfoMapRef.current.delete(producerId)
+            }
+        }
+        
         socket.on("router-rtp-capabilities", handlerRouterCapabilities)
         socket.on("existing-producers", handleExistingProducers)
         socket.on("new-producer", handleNewProducer)
+        socket.on("producer-paused", handleProducerPaused)
+        socket.on("producer-resumed", handleProducerResumed)
+        socket.on("producer-closed", handleProducerClosed)
         socket.on("peer-left", handlePeerLeft)
         setIsReady(true)
         init()
@@ -151,6 +194,9 @@ export const useSFU = (socket, roomId) => {
             socket.off("router-rtp-capabilities", handlerRouterCapabilities)
             socket.off("existing-producers", handleExistingProducers)
             socket.off("new-producer", handleNewProducer)
+            socket.off("producer-paused", handleProducerPaused)
+            socket.off("producer-resumed", handleProducerResumed)
+            socket.off("producer-closed", handleProducerClosed)
             socket.off("peer-left", handlePeerLeft)
             cleanup()
         }
@@ -180,6 +226,7 @@ export const useSFU = (socket, roomId) => {
         // Clear refs
         sendTransportRef.current = null
         deviceRef.current = null
+        producersInfoMapRef.current.clear()
 
         // Stop local streams naturally
         if (localStream) {
@@ -187,6 +234,7 @@ export const useSFU = (socket, roomId) => {
         }
         setLocalStream(null)
         setRemoteStreams(new Map())
+        setParticipantStates({})
         
         setIsConnected(false)
         setIsReady(false)
@@ -310,6 +358,11 @@ export const useSFU = (socket, roomId) => {
         }
 
         for (const { producerId, peerID, kind } of producers) {
+            producersInfoMapRef.current.set(producerId, { peerID, kind })
+            setParticipantStates(prev => ({
+                ...prev,
+                [peerID]: { ...(prev[peerID] || {}), [kind]: true }
+            }))
             await consumeProducer(producerId, peerID, kind)
         }
     }
@@ -317,6 +370,11 @@ export const useSFU = (socket, roomId) => {
     //Handling New Producer
     const handleNewProducer = async ({ producerId, peerID, kind }) => {
         console.log(`New Producer: ${producerId}`);
+        producersInfoMapRef.current.set(producerId, { peerID, kind })
+        setParticipantStates(prev => ({
+            ...prev,
+            [peerID]: { ...(prev[peerID] || {}), [kind]: true }
+        }))
         await consumeProducer(producerId, peerID, kind)
     }
 
@@ -393,6 +451,7 @@ export const useSFU = (socket, roomId) => {
     return {
         localStream,
         remoteStreams,
+        participantStates,
         publishTrack,
         unpublishTrack,
         toggleProducer,
