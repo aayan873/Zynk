@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes.js';
 import roomRoutes from './routes/room.routes.js'
 import { registerSocketEvents } from "./sockets/sfu.socket.js";
 import { registerRoomSocket } from "./sockets/room.socket.js";
+import { registerChatSocket } from "./sockets/chat.socket.js";
 
 export const startServer = async ({ port }) => {
     const allowedOrigins = ["http://localhost:5173", process.env.FRONTEND_URL].filter(Boolean);
@@ -63,6 +64,9 @@ export const startServer = async ({ port }) => {
 
         // Room admission events: request-to-join, host-decision
         registerRoomSocket(io, socket);
+
+        // Chat events
+        registerChatSocket(io, socket);
 
         socket.on("disconnect", () => {
             console.log(`Client disconnected: ${socket.id}`);
