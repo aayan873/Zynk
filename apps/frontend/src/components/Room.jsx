@@ -5,6 +5,8 @@ import axios from "axios"
 import { useAuth } from "../context/AuthContext"
 import { useSFU } from "../hooks/useSFU"
 import VideoTile from "./VideoTile"
+import toast from "react-hot-toast"
+import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen } from "lucide-react"
 
 export default function Room() {
     const { roomId } = useParams()
@@ -21,6 +23,7 @@ export default function Room() {
     const [participants, setParticipants] = useState([])
     const [selectedParticipants, setSelectedParticipants] = useState([])
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+    const [isHandRaised, setIsHandRaised] = useState(false)
 
     // Creating empty video element
     const videoRef = useRef(null)
@@ -214,9 +217,16 @@ export default function Room() {
         const handleParticipantUpdate = (list) => {
             setParticipants(list)
         }
+        const handleHandToggled = ({ socketId, isRaised, user }) => {
+            if (isRaised) {
+                toast(`${user?.name || "Someone"} raised their hand`, { icon: <Hand className="w-4 h-4 text-yellow-500" /> })
+            }
+        }
         socket.on("participant-update", handleParticipantUpdate)
+        socket.on("hand-toggled", handleHandToggled)
         return () => {
             socket.off("participant-update", handleParticipantUpdate)
+            socket.off("hand-toggled", handleHandToggled)
         }
     }, [])
 
@@ -281,6 +291,12 @@ export default function Room() {
             toggleProducer("video", !isVideoOn)
             setIsVideoOn(!isVideoOn)
         }
+    }
+
+    const toggleHand = () => {
+        const newStatus = !isHandRaised
+        setIsHandRaised(newStatus)
+        socket.emit("toggle-hand", { isRaised: newStatus })
     }
 
     const handleBulkPermission = (type, action) => {
@@ -430,7 +446,7 @@ export default function Room() {
                             {/* HOST ADMISSION PANEL overlay */}
                             {isHost && requests.length > 0 && (
                                 <div className="absolute top-4 left-4 bg-gray-900/90 border border-gray-700 shadow-2xl rounded-2xl p-6 w-96 z-20 backdrop-blur-md">
-                                    <h3 className="text-lg font-bold border-b border-gray-800 pb-3 mb-4">🚪 Someone is knocking!</h3>
+                                    <h3 className="flex items-center gap-2 text-lg font-bold border-b border-gray-800 pb-3 mb-4"><DoorOpen className="w-5 h-5 text-gray-400" /> Someone is knocking!</h3>
                                     <div className="space-y-4 max-h-60 overflow-y-auto">
                                         {requests.map((req) => (
                                             <div key={req.socketId} className="flex items-center justify-between bg-gray-800 p-3 rounded-lg">
@@ -490,12 +506,17 @@ export default function Room() {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 shrink-0 text-gray-400">
-                                                    <span className={isMicActive ? "opacity-100 text-gray-300" : "opacity-50 text-red-400"} title={isMicActive ? "Mic on" : "Mic off"}>
-                                                        {isMicActive ? "🎤" : "🔇"}
+                                                <div className="flex items-center gap-2 shrink-0 text-gray-400">
+                                                    {p.handRaised && (
+                                                        <span className="text-yellow-400 mr-1" title="Hand raised">
+                                                            <Hand fill="currentColor" className="w-4 h-4" />
+                                                        </span>
+                                                    )}
+                                                    <span className={isMicActive ? "text-gray-300" : "text-red-400 opacity-50"} title={isMicActive ? "Mic on" : "Mic off"}>
+                                                        {isMicActive ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
                                                     </span>
-                                                    <span className={isCamActive ? "opacity-100 text-gray-300" : "opacity-50 text-red-400"} title={isCamActive ? "Cam on" : "Cam off"}>
-                                                        {isCamActive ? "📷" : "🚫"}
+                                                    <span className={isCamActive ? "text-gray-300" : "text-red-400 opacity-50"} title={isCamActive ? "Cam on" : "Cam off"}>
+                                                        {isCamActive ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
                                                     </span>
                                                 </div>
                                             </div>
@@ -529,18 +550,25 @@ export default function Room() {
                             <button
                                 onClick={toggleMic}
                                 disabled={!hostGrantedMic}
-                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg text-lg ${!hostGrantedMic ? "bg-gray-800 text-gray-600 cursor-not-allowed opacity-50" : isMicOn ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-red-600 hover:bg-red-500 text-white hover:shadow-red-500/20"}`}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg ${!hostGrantedMic ? "bg-gray-800 text-gray-600 cursor-not-allowed opacity-50" : isMicOn ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-red-600 hover:bg-red-500 text-white hover:shadow-red-500/20"}`}
                                 title={!hostGrantedMic ? "Host disabled mic" : (isMicOn ? "Turn off microphone" : "Turn on microphone")}
                             >
-                                {isMicOn ? "🎤" : "🔇"}
+                                {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
                             </button>
                             <button
                                 onClick={toggleVideo}
                                 disabled={!hostGrantedVideo}
-                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg text-lg ${!hostGrantedVideo ? "bg-gray-800 text-gray-600 cursor-not-allowed opacity-50" : isVideoOn ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-red-600 hover:bg-red-500 text-white hover:shadow-red-500/20"}`}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg ${!hostGrantedVideo ? "bg-gray-800 text-gray-600 cursor-not-allowed opacity-50" : isVideoOn ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-red-600 hover:bg-red-500 text-white hover:shadow-red-500/20"}`}
                                 title={!hostGrantedVideo ? "Host disabled video" : (isVideoOn ? "Turn off camera" : "Turn on camera")}
                             >
-                                {isVideoOn ? "📷" : "🚫"}
+                                {isVideoOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                            </button>
+                            <button
+                                onClick={toggleHand}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg ${isHandRaised ? "bg-yellow-500 hover:bg-yellow-400 text-white shadow-yellow-500/20" : "bg-gray-700 hover:bg-gray-600 text-white"}`}
+                                title={isHandRaised ? "Lower hand" : "Raise hand"}
+                            >
+                                {isHandRaised ? <Hand fill="currentColor" className="w-5 h-5" /> : <Hand className="w-5 h-5" />}
                             </button>
                             <button 
                                 onClick={handleDisconnect} 
@@ -552,10 +580,10 @@ export default function Room() {
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all text-lg ${isSidebarOpen ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${isSidebarOpen ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
                                 title="Participants"
                             >
-                                👥
+                                <Users className="w-5 h-5" />
                             </button>
                         </div>
                     </div>

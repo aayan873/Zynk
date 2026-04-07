@@ -83,6 +83,7 @@ class RoomManager{
             consumers: new Map(),
 
             joinedAt: Date.now(),
+            handRaised: false,
             permission: {
                 canVideo: true,
                 canAudio: true,
