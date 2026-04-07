@@ -29,7 +29,7 @@ export const handleEndPoll = async (io, roomID, pollId) => {
             activePollTimers.delete(timerId);
         }
 
-        
+
         io.to(roomID).emit("poll-ended", { pollId, finalPoll: poll });
 
     } catch (error) {
@@ -102,8 +102,40 @@ export const registerPollSocket = (io, socket) => {
     });
 
     socket.on("submit-poll-vote", async ({ roomID, optionId }, callback) => {
-        // To be implemented
-        if (callback) callback({ success: true });
+        try {
+            const user = socket.user;
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase();
+            const room = roomManager.getRoom(normalizedRoomId);
+
+            if (!room || !room.activePollId) {
+                if (callback) callback({ error: "No active poll in this room" });
+                return;
+            }
+
+            const pollIdStr = room.activePollId;
+            const poll = await Poll.findById(pollIdStr);
+
+            if (!poll || poll.status === "ended") {
+                if (callback) callback({ error: "Poll has already ended or does not exist" });
+                return;
+            }
+
+            const existingVoteIndex = poll.votes.findIndex(v => v.userId.toString() === user._id.toString());
+            
+            if (existingVoteIndex >= 0) {
+                poll.votes[existingVoteIndex].optionId = optionId;
+            } else {
+                poll.votes.push({ userId: user._id, optionId });
+            }
+
+            await poll.save();
+            
+            if (callback) callback({ success: true });
+
+        } catch (error) {
+            console.error("submit-poll-vote error:", error);
+            if (callback) callback({ error: "Failed to submit vote" });
+        }
     });
 
     socket.on("end-poll", async ({ roomID }, callback) => {
