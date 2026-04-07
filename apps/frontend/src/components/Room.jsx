@@ -529,8 +529,8 @@ export default function Room() {
                                         const pState = participantStates[p.id] || {};
                                         
                                         // For the host or local user, we know real states easily
-                                        const isMicActive = isMe ? isMicOn : !!pState.mic;
-                                        const isCamActive = isMe ? isVideoOn : !!pState.camera;
+                                        const isMicActive = isMe ? isMicOn : !!pState.audio;
+                                        const isCamActive = isMe ? isVideoOn : !!pState.video;
                                         const isScreenActive = activeScreenSharePeerId === p.id || (isMe && activeScreenSharePeerId === 'local');
 
                                         return (

@@ -492,21 +492,23 @@ export const useSFU = (socket, roomId) => {
         }
     }
 
-    const stopScreenShare = () => {
-        if (localScreenStream) {
-            localScreenStream.getTracks().forEach(track => {
-                track.stop()
-                const producerData = Array.from(producersRef.current.values()).find(
-                    p => p.source === "screen" && p.kind === track.kind
-                )
-                if (producerData) {
-                    unpublishTrack(producerData.producer.id)
-                }
-            })
-            setLocalScreenStream(null)
-            setActiveScreenSharePeerId((prev) => prev === "local" ? null : prev)
-        }
-    }
+    const stopScreenShare = useCallback(() => {
+        setLocalScreenStream(currentStream => {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop())
+            }
+            return null
+        })
+
+        // Safely wipe out all screen producers without relying on exact tracks
+        Array.from(producersRef.current.values()).forEach(p => {
+            if (p.source === "screen") {
+                unpublishTrack(p.producer.id)
+            }
+        })
+
+        setActiveScreenSharePeerId((prev) => prev === "local" ? null : prev)
+    }, [unpublishTrack])
 
     return {
         localStream,
