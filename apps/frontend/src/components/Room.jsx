@@ -7,7 +7,7 @@ import { useSFU } from "../hooks/useSFU"
 import VideoTile from "./VideoTile"
 import ChatSidebar from "./ChatSidebar"
 import toast from "react-hot-toast"
-import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, MessageSquare } from "lucide-react"
+import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, MessageSquare, BarChart } from "lucide-react"
 
 export default function Room() {
     const { roomId } = useParams()
@@ -635,6 +635,13 @@ export default function Room() {
                                 title="Chat"
                             >
                                 <MessageSquare className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === "poll" ? null : "poll")}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${activeSidebar === "poll" ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
+                                title="Poll"
+                            >
+                                <BarChart className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
