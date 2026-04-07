@@ -5,8 +5,10 @@ import axios from "axios"
 import { useAuth } from "../context/AuthContext"
 import { useSFU } from "../hooks/useSFU"
 import VideoTile from "./VideoTile"
+import ChatSidebar from "./ChatSidebar"
+import PollSidebar from "./PollSidebar"
 import toast from "react-hot-toast"
-import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, ScreenShare, ScreenShareOff } from "lucide-react"
+import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, ScreenShare, ScreenShareOff, MessageSquare, BarChart } from "lucide-react"
 
 export default function Room() {
     const { roomId } = useParams()
@@ -23,8 +25,12 @@ export default function Room() {
     const [hostGrantedScreen, setHostGrantedScreen] = useState(false)
     const [participants, setParticipants] = useState([])
     const [selectedParticipants, setSelectedParticipants] = useState([])
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+    const [activeSidebar, setActiveSidebar] = useState("people")
+    const [messages, setMessages] = useState([])
+    const [isChatEnabled, setIsChatEnabled] = useState(true)
     const [isHandRaised, setIsHandRaised] = useState(false)
+    const [activePoll, setActivePoll] = useState(null)
+    const [pollHistory, setPollHistory] = useState([])
 
     // Creating empty video element
     const videoRef = useRef(null)
@@ -248,6 +254,65 @@ export default function Room() {
             publishedTrackIdsRef.current.clear()
         }
     }, [])
+
+    useEffect(() => {
+        if (status !== "joined") return;
+
+        socket.emit("get-chat-data", { roomID: roomId }, (res) => {
+            if (res?.success) {
+                setIsChatEnabled(res.isChatEnabled)
+                setMessages(res.messages || [])
+            }
+        })
+
+        const handleChatStatus = ({ isEnabled }) => setIsChatEnabled(isEnabled)
+        const handleNewMessage = (msg) => setMessages(prev => [...prev, msg])
+
+        socket.on("chat-status-changed", handleChatStatus)
+        socket.on("new-message", handleNewMessage)
+
+        return () => {
+            socket.off("chat-status-changed", handleChatStatus)
+            socket.off("new-message", handleNewMessage)
+        }
+    }, [status, roomId])
+
+    const handleSendMessage = (text) => {
+        socket.emit("send-message", { roomID: roomId, text })
+    }
+
+    useEffect(() => {
+        if (status !== "joined") return;
+
+        socket.emit("get-poll-data", { roomID: roomId }, (res) => {
+            if (res?.success) {
+                setActivePoll(res.activePoll || null)
+                setPollHistory(res.history || [])
+            }
+        })
+
+        const handleNewPoll = (poll) => setActivePoll(poll)
+        
+        const handlePollEnded = ({ pollId, finalPoll }) => {
+            setActivePoll(null)
+            if (isHost && finalPoll) {
+                 setPollHistory(prev => [finalPoll, ...prev])
+            }
+            toast("The active poll has ended.", { icon: <BarChart className="w-4 h-4 text-blue-500" /> })
+        }
+
+        socket.on("new-poll", handleNewPoll)
+        socket.on("poll-ended", handlePollEnded)
+
+        return () => {
+            socket.off("new-poll", handleNewPoll)
+            socket.off("poll-ended", handlePollEnded)
+        }
+    }, [status, roomId, isHost])
+
+    const handleToggleChat = (isEnabled) => {
+        socket.emit("toggle-chat", { roomID: roomId, isEnabled })
+    }
 
     useEffect(() => {
         const onMeetingEnded = () => {
@@ -516,7 +581,7 @@ export default function Room() {
                         </div>
 
                         {/* Sidebar */}
-                        {isSidebarOpen && (
+                        {activeSidebar === "people" && (
                             <div className="w-80 bg-gray-900 rounded-2xl border border-gray-800 flex flex-col overflow-hidden shrink-0 shadow-lg">
                                 <div className="p-4 border-b border-gray-800 flex items-center justify-between">
                                     <h3 className="text-lg font-bold">People</h3>
@@ -594,6 +659,28 @@ export default function Room() {
                                 )}
                             </div>
                         )}
+
+                        {activeSidebar === "chat" && (
+                            <ChatSidebar 
+                                messages={messages}
+                                isChatEnabled={isChatEnabled}
+                                isHost={isHost}
+                                currentUserId={currentUserId}
+                                onSendMessage={handleSendMessage}
+                                onToggleChat={handleToggleChat}
+                            />
+                        )}
+
+                        {activeSidebar === "poll" && (
+                            <PollSidebar 
+                                roomID={roomId}
+                                socket={socket}
+                                activePoll={activePoll}
+                                pollHistory={pollHistory}
+                                isHost={isHost}
+                                currentUserId={currentUserId}
+                            />
+                        )}
                     </div>
 
                     {/* Bottom Control Bar */}
@@ -642,11 +729,25 @@ export default function Room() {
                         </div>
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${isSidebarOpen ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
+                                onClick={() => setActiveSidebar(activeSidebar === "people" ? null : "people")}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${activeSidebar === "people" ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
                                 title="Participants"
                             >
                                 <Users className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === "chat" ? null : "chat")}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${activeSidebar === "chat" ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
+                                title="Chat"
+                            >
+                                <MessageSquare className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === "poll" ? null : "poll")}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${activeSidebar === "poll" ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
+                                title="Poll"
+                            >
+                                <BarChart className="w-5 h-5" />
                             </button>
                         </div>
                     </div>

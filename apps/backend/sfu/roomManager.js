@@ -31,6 +31,9 @@ class RoomManager{
         const room = {
             router,
             peers: new Map(),
+            isChatEnabled: true,
+            messages: [],
+            activePollId: null
         }
 
         this.rooms.set(roomID, room)
