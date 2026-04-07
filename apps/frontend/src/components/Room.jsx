@@ -18,6 +18,8 @@ export default function Room() {
     const [isVideoOn, setIsVideoOn] = useState(true)
     const [hostGrantedMic, setHostGrantedMic] = useState(false)
     const [hostGrantedVideo, setHostGrantedVideo] = useState(false)
+    const [participants, setParticipants] = useState([])
+    const [selectedParticipants, setSelectedParticipants] = useState([])
 
     // Creating empty video element
     const videoRef = useRef(null)
@@ -208,6 +210,16 @@ export default function Room() {
     }, [localStream, toggleProducer])
 
     useEffect(() => {
+        const handleParticipantUpdate = (list) => {
+            setParticipants(list)
+        }
+        socket.on("participant-update", handleParticipantUpdate)
+        return () => {
+            socket.off("participant-update", handleParticipantUpdate)
+        }
+    }, [])
+
+    useEffect(() => {
         return () => {
             hasJoinedRef.current = false
             publishedTrackIdsRef.current.clear()
@@ -268,6 +280,22 @@ export default function Room() {
             toggleProducer("video", !isVideoOn)
             setIsVideoOn(!isVideoOn)
         }
+    }
+
+    const handleBulkPermission = (type, action) => {
+        if (selectedParticipants.length === 0) return
+        socket.emit(action === "grant" ? "grant-permission" : "revoke-permission", {
+            roomID: roomId,
+            targetSocketIds: selectedParticipants,
+            type
+        })
+        setSelectedParticipants([])
+    }
+
+    const handleSelectParticipant = (id) => {
+        setSelectedParticipants(prev => 
+            prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
+        )
     }
 
     // Emit host-decision to the host
@@ -362,7 +390,7 @@ export default function Room() {
 
             {/* HOST ADMISSION PANEL (Only shows for the Host) */}
             {isHost && requests.length > 0 && (
-                <div className="fixed bottom-8 right-8 bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl p-6 w-96 transform transition-all">
+                <div className="fixed bottom-8 right-8 bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl p-6 w-96 transform transition-all z-10">
                     <h3 className="text-lg font-bold border-b border-gray-800 pb-3 mb-4">🚪 Someone is knocking!</h3>
                     <div className="space-y-4">
                         {requests.map((req) => (
@@ -379,6 +407,46 @@ export default function Room() {
                             </div>
                         ))}
                     </div>
+                </div>
+            )}
+
+            {/* HOST PARTICIPANT PANEL */}
+            {isHost && (
+                <div className="fixed bottom-8 left-8 bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl p-6 w-96 transform transition-all z-10 max-h-[500px] flex flex-col">
+                    <h3 className="text-lg font-bold border-b border-gray-800 pb-3 mb-4 shrink-0">👥 Participants</h3>
+                    <div className="space-y-4 overflow-y-auto flex-1">
+                        {participants.filter(p => p.id !== socket.id).length === 0 ? (
+                            <p className="text-gray-500 text-sm text-center py-4">No other participants.</p>
+                        ) : (
+                            participants.filter(p => p.id !== socket.id).map((p) => (
+                                <div key={p.id} className="flex items-center justify-between bg-gray-800 p-3 rounded-lg">
+                                    <div className="flex items-center gap-3 truncate">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selectedParticipants.includes(p.id)} 
+                                            onChange={() => handleSelectParticipant(p.id)}
+                                            className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 shrink-0"
+                                        />
+                                        <span className="font-medium text-gray-200 truncate pr-2">{p.user?.name || "Guest"}</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                    {/* Bulk Action Buttons */}
+                    {selectedParticipants.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-800 flex flex-col gap-2 shrink-0">
+                            <span className="text-sm text-gray-400 font-medium">Selected: {selectedParticipants.length}</span>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button onClick={() => handleBulkPermission('mic', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded transition">Grant Mic</button>
+                                <button onClick={() => handleBulkPermission('video', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded transition">Grant Video</button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button onClick={() => handleBulkPermission('mic', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold py-2.5 rounded transition">Revoke Mic</button>
+                                <button onClick={() => handleBulkPermission('video', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold py-2.5 rounded transition">Revoke Video</button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
