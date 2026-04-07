@@ -5,6 +5,7 @@ import axios from "axios"
 import { useAuth } from "../context/AuthContext"
 import { useSFU } from "../hooks/useSFU"
 import VideoTile from "./VideoTile"
+import toast from "react-hot-toast"
 
 export default function Room() {
     const { roomId } = useParams()
@@ -21,6 +22,7 @@ export default function Room() {
     const [participants, setParticipants] = useState([])
     const [selectedParticipants, setSelectedParticipants] = useState([])
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+    const [isHandRaised, setIsHandRaised] = useState(false)
 
     // Creating empty video element
     const videoRef = useRef(null)
@@ -214,9 +216,16 @@ export default function Room() {
         const handleParticipantUpdate = (list) => {
             setParticipants(list)
         }
+        const handleHandToggled = ({ socketId, isRaised, user }) => {
+            if (isRaised) {
+                toast(`${user?.name || "Someone"} raised their hand`, { icon: '✋' })
+            }
+        }
         socket.on("participant-update", handleParticipantUpdate)
+        socket.on("hand-toggled", handleHandToggled)
         return () => {
             socket.off("participant-update", handleParticipantUpdate)
+            socket.off("hand-toggled", handleHandToggled)
         }
     }, [])
 
@@ -281,6 +290,12 @@ export default function Room() {
             toggleProducer("video", !isVideoOn)
             setIsVideoOn(!isVideoOn)
         }
+    }
+
+    const toggleHand = () => {
+        const newStatus = !isHandRaised
+        setIsHandRaised(newStatus)
+        socket.emit("toggle-hand", { isRaised: newStatus })
     }
 
     const handleBulkPermission = (type, action) => {
@@ -491,6 +506,11 @@ export default function Room() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0 text-gray-400">
+                                                    {p.handRaised && (
+                                                        <span className="opacity-100 mr-1" title="Hand raised">
+                                                            ✋
+                                                        </span>
+                                                    )}
                                                     <span className={isMicActive ? "opacity-100 text-gray-300" : "opacity-50 text-red-400"} title={isMicActive ? "Mic on" : "Mic off"}>
                                                         {isMicActive ? "🎤" : "🔇"}
                                                     </span>
@@ -541,6 +561,13 @@ export default function Room() {
                                 title={!hostGrantedVideo ? "Host disabled video" : (isVideoOn ? "Turn off camera" : "Turn on camera")}
                             >
                                 {isVideoOn ? "📷" : "🚫"}
+                            </button>
+                            <button
+                                onClick={toggleHand}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg text-lg ${isHandRaised ? "bg-yellow-500 hover:bg-yellow-400 text-white shadow-yellow-500/20" : "bg-gray-700 hover:bg-gray-600 text-white"}`}
+                                title={isHandRaised ? "Lower hand" : "Raise hand"}
+                            >
+                                {isHandRaised ? "🖐️" : "✋"}
                             </button>
                             <button 
                                 onClick={handleDisconnect} 
