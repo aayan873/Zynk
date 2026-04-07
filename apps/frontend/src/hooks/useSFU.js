@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { Device } from "mediasoup-client"
 
 export const useSFU = (socket, roomId) => {
