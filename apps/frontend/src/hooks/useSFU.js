@@ -104,8 +104,8 @@ export const useSFU = (socket, roomId) => {
                     })
 
                     //Produce Event (when sending track)
-                    transport.on("produce", ({ kind, rtpParameters }, callback, errback) => {
-                        socket.emit("produce", { kind, rtpParameters }, (res) => {
+                    transport.on("produce", ({ kind, rtpParameters, appData }, callback, errback) => {
+                        socket.emit("produce", { kind, rtpParameters, appData }, (res) => {
                             if(res?.error){
                                 console.error(`Produce Failed: ${res.error}`);
                                 errback(res.error)

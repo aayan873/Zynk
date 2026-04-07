@@ -559,7 +559,7 @@ export default function Room() {
                                                     {p.handRaised && (
                                                         <span className="text-yellow-400 mr-1" title="Hand raised">
                                                             <Hand fill="currentColor" className="w-4 h-4" />
-j                                                        </span>
+                                                        </span>
                                                     )}
                                                     <span className={isMicActive ? "text-gray-300" : "text-red-400 opacity-50"} title={isMicActive ? "Mic on" : "Mic off"}>
                                                         {isMicActive ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
