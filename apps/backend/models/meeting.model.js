@@ -28,6 +28,9 @@ const meetingSchema = new mongoose.Schema({
     },
     participants: [{
         type: String
+    }],
+    blacklistedParticipants: [{
+        type: String
     }]
 });
 

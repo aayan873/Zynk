@@ -320,9 +320,20 @@ export default function Room() {
             leaveRoom()
             navigate("/home")
         }
+
+        const onKicked = () => {
+            alert("You have been removed from the meeting by the host.")
+            leaveRoom()
+            navigate("/home")
+        }
         
         socket.on("meeting-ended", onMeetingEnded)
-        return () => socket.off("meeting-ended", onMeetingEnded)
+        socket.on("kicked-from-meeting", onKicked)
+        
+        return () => {
+            socket.off("meeting-ended", onMeetingEnded)
+            socket.off("kicked-from-meeting", onKicked)
+        }
     }, [navigate, leaveRoom])
 
     const handleDisconnect = () => {
@@ -396,6 +407,15 @@ export default function Room() {
     const handleDecision = (targetSocketId, decision) => {
         socket.emit("host-decision", { roomID: roomId, targetSocketId, decision })
         setRequests(prev => prev.filter(req => req.socketId !== targetSocketId))
+    }
+
+    const handleKickSelected = () => {
+        if (selectedParticipants.length === 0) return
+        socket.emit("remove-peer", {
+            roomID: roomId,
+            targetSocketIds: selectedParticipants
+        })
+        setSelectedParticipants([])
     }
 
     if (!room) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">Loading Room...</div>
@@ -654,6 +674,9 @@ export default function Room() {
                                             <button onClick={() => handleBulkPermission('mic', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-bold py-2 rounded transition">Revoke Mic</button>
                                             <button onClick={() => handleBulkPermission('video', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-bold py-2 rounded transition">Revoke Video</button>
                                             <button onClick={() => handleBulkPermission('screen', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-bold py-2 rounded transition">Revoke Screen</button>
+                                        </div>
+                                        <div className="mt-2">
+                                            <button onClick={handleKickSelected} className="w-full bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold py-2 rounded transition shadow-sm">Kick User(s)</button>
                                         </div>
                                     </div>
                                 )}
