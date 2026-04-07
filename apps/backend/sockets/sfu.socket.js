@@ -255,7 +255,7 @@ export const registerSocketEvents = (io, socket) => {
     })
 
 
-    socket.on("produce", async ({ kind, rtpParameters }, callback) => {
+    socket.on("produce", async ({ kind, rtpParameters, appData }, callback) => {
         try {
             const roomID = socket.roomID
             if (!roomID) return callback({ error: `RoomID Not Found in socket` })
@@ -268,13 +268,13 @@ export const registerSocketEvents = (io, socket) => {
 
             //Create Producer
             const producer = await peer.sendTransport.produce({
-                kind, rtpParameters
+                kind, rtpParameters, appData
             })
 
             //Store Producer
             peer.producers.set(producer.id, producer)
 
-            console.log(`Prodeucer created: ${producer.id} ${kind}`);
+            console.log(`Producer created: ${producer.id} ${kind}`);
 
             //Handle Producer Close
             producer.on("transportclose", () => {
@@ -293,6 +293,7 @@ export const registerSocketEvents = (io, socket) => {
                 producerId: producer.id,
                 peerID: socket.id,
                 kind,
+                appData,
             })
 
             //Send Producer ID back to client
