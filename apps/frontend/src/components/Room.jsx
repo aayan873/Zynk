@@ -9,7 +9,7 @@ import VideoTile from "./VideoTile"
 export default function Room() {
     const { roomId } = useParams()
     const navigate = useNavigate()
-    const { localStream, remoteStreams, publishTrack, toggleProducer, isConnected, isReady, isTransportReady, leaveRoom } = useSFU(socket, roomId)
+    const { localStream, remoteStreams, participantStates, publishTrack, toggleProducer, isConnected, isReady, isTransportReady, leaveRoom } = useSFU(socket, roomId)
     const [room, setRoom] = useState(null)
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
@@ -20,6 +20,7 @@ export default function Room() {
     const [hostGrantedVideo, setHostGrantedVideo] = useState(false)
     const [participants, setParticipants] = useState([])
     const [selectedParticipants, setSelectedParticipants] = useState([])
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
     // Creating empty video element
     const videoRef = useRef(null)
@@ -306,16 +307,62 @@ export default function Room() {
 
     if (!room) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">Loading Room...</div>
 
-    return (
-        <div className="min-h-screen bg-gray-950 text-white flex flex-col pt-12 items-center">
+    // Layout Logic
+    let mainStreamObj = null;
+    let otherStreamsObjs = [];
 
-            {/* Standard Header */}
-            <div className="text-center mb-8">
-                <h2 className="text-4xl font-bold tracking-tight">{room.title}</h2>
-                <span className="inline-block mt-3 px-3 py-1 bg-gray-800 text-gray-300 text-sm font-medium rounded-full border border-gray-700">
-                    {room.type}
-                </span>
-            </div>
+    if (status === "joined") {
+        const localStreamObj = {
+            stream: localStream,
+            peerID: "local",
+            isLocal: true,
+            userName: auth?.user?.name || "You"
+        }
+
+        if (isHost) {
+            mainStreamObj = localStreamObj;
+        } else {
+            otherStreamsObjs.push(localStreamObj);
+        }
+
+        Array.from(remoteStreams.entries()).forEach(([id, data]) => {
+            const participantInfo = participants.find(p => p.id === id);
+            const name = participantInfo?.user?.name || participantInfo?.user?._id?.slice(-6) || "Guest";
+
+            const streamData = {
+                stream: data.stream,
+                peerID: id,
+                isLocal: false,
+                userName: name,
+            }
+
+            if (participantInfo && participantInfo.user?._id === room?.hostId) {
+                mainStreamObj = streamData;
+            } else {
+                otherStreamsObjs.push(streamData);
+            }
+        })
+
+        if (!mainStreamObj && otherStreamsObjs.length > 0) {
+            mainStreamObj = otherStreamsObjs[0];
+            otherStreamsObjs = otherStreamsObjs.slice(1);
+        } else if (!mainStreamObj && localStream) {
+            mainStreamObj = localStreamObj;
+        }
+    }
+
+    return (
+        <div className={`min-h-screen bg-gray-950 text-white flex flex-col ${status === "joined" ? "h-screen overflow-hidden" : "pt-12 items-center"}`}>
+
+            {/* Standard Header only in idle/waiting */}
+            {status !== "joined" && (
+                <div className="text-center mb-8">
+                    <h2 className="text-4xl font-bold tracking-tight">{room.title}</h2>
+                    <span className="inline-block mt-3 px-3 py-1 bg-gray-800 text-gray-300 text-sm font-medium rounded-full border border-gray-700">
+                        {room.type}
+                    </span>
+                </div>
+            )}
 
             {/* STATUS: IDLE (The Lobby Screen) */}
             {status === "idle" && (
@@ -347,106 +394,171 @@ export default function Room() {
                 </div>
             )}
 
-            {/* STATUS: JOINED (Currently empty, Module 4 will build the actual call here!) */}
+            {/* STATUS: JOINED */}
             {status === "joined" && (
-                <div className="w-full max-w-6xl mt-6">
-                    <div className="flex justify-end mb-4 gap-4">
-                        <button
-                            onClick={toggleMic}
-                            disabled={!hostGrantedMic}
-                            className={`font-bold py-2 px-6 rounded-xl transition-all shadow-lg text-white ${!hostGrantedMic ? "bg-gray-800 text-gray-500 cursor-not-allowed" : isMicOn ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-500 hover:shadow-red-500/20"}`}
-                        >
-                            {isMicOn ? "Mute Mic" : "Unmute Mic"}
-                        </button>
-                        <button
-                            onClick={toggleVideo}
-                            disabled={!hostGrantedVideo}
-                            className={`font-bold py-2 px-6 rounded-xl transition-all shadow-lg text-white ${!hostGrantedVideo ? "bg-gray-800 text-gray-500 cursor-not-allowed" : isVideoOn ? "bg-gray-700 hover:bg-gray-600" : "bg-red-600 hover:bg-red-500 hover:shadow-red-500/20"}`}
-                        >
-                            {isVideoOn ? "Stop Video" : "Start Video"}
-                        </button>
-                        <button 
-                            onClick={handleDisconnect} 
-                            className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg hover:shadow-red-500/20"
-                        >
-                            {isHost ? "End Meeting" : "Leave Meeting"}
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {localStream && (
-                            <VideoTile stream={localStream} isLocal />
-                        )}
+                <div className="flex-1 flex flex-col overflow-hidden">
+                    {/* Main Content Area */}
+                    <div className="flex-1 flex overflow-hidden p-4 gap-4 relative">
+                        {/* Video Area */}
+                        <div className="flex-1 relative bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800">
+                            {mainStreamObj && (
+                                <VideoTile 
+                                    stream={mainStreamObj.stream} 
+                                    isLocal={mainStreamObj.isLocal} 
+                                    peerId={mainStreamObj.peerID} 
+                                    isMain={true}
+                                    userName={mainStreamObj.userName}
+                                />
+                            )}
 
-                        {Array.from(remoteStreams.entries()).map(([id, data]) => (
-                            <VideoTile
-                                key={id}
-                                stream={data.stream}
-                                peerId={data.peerID}
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* HOST ADMISSION PANEL (Only shows for the Host) */}
-            {isHost && requests.length > 0 && (
-                <div className="fixed bottom-8 right-8 bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl p-6 w-96 transform transition-all z-10">
-                    <h3 className="text-lg font-bold border-b border-gray-800 pb-3 mb-4">🚪 Someone is knocking!</h3>
-                    <div className="space-y-4">
-                        {requests.map((req) => (
-                            <div key={req.socketId} className="flex items-center justify-between bg-gray-800 p-3 rounded-lg">
-                                <span className="font-medium text-gray-200 truncate">{req.user?.name || "Guest User"}</span>
-                                <div className="flex space-x-2">
-                                    <button onClick={() => handleDecision(req.socketId, "reject")} className="px-3 py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-md text-sm font-semibold transition">
-                                        Deny
-                                    </button>
-                                    <button onClick={() => handleDecision(req.socketId, "admit")} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm transition">
-                                        Admit
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* HOST PARTICIPANT PANEL */}
-            {isHost && (
-                <div className="fixed bottom-8 left-8 bg-gray-900 border border-gray-700 shadow-2xl rounded-2xl p-6 w-96 transform transition-all z-10 max-h-[500px] flex flex-col">
-                    <h3 className="text-lg font-bold border-b border-gray-800 pb-3 mb-4 shrink-0">👥 Participants</h3>
-                    <div className="space-y-4 overflow-y-auto flex-1">
-                        {participants.filter(p => p.id !== socket.id).length === 0 ? (
-                            <p className="text-gray-500 text-sm text-center py-4">No other participants.</p>
-                        ) : (
-                            participants.filter(p => p.id !== socket.id).map((p) => (
-                                <div key={p.id} className="flex items-center justify-between bg-gray-800 p-3 rounded-lg">
-                                    <div className="flex items-center gap-3 truncate">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={selectedParticipants.includes(p.id)} 
-                                            onChange={() => handleSelectParticipant(p.id)}
-                                            className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 shrink-0"
+                            {/* PIP grid for other users */}
+                            {otherStreamsObjs.length > 0 && (
+                                <div className="absolute bottom-4 right-4 flex gap-2 overflow-x-auto max-w-full pb-2 z-10 px-2 py-2 bg-black/30 rounded-xl backdrop-blur-sm">
+                                    {otherStreamsObjs.map((obj) => (
+                                        <VideoTile
+                                            key={obj.peerID}
+                                            stream={obj.stream}
+                                            isLocal={obj.isLocal}
+                                            peerId={obj.peerID}
+                                            isMain={false}
+                                            userName={obj.userName}
                                         />
-                                        <span className="font-medium text-gray-200 truncate pr-2">{p.user?.name || "Guest"}</span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* HOST ADMISSION PANEL overlay */}
+                            {isHost && requests.length > 0 && (
+                                <div className="absolute top-4 left-4 bg-gray-900/90 border border-gray-700 shadow-2xl rounded-2xl p-6 w-96 z-20 backdrop-blur-md">
+                                    <h3 className="text-lg font-bold border-b border-gray-800 pb-3 mb-4">🚪 Someone is knocking!</h3>
+                                    <div className="space-y-4 max-h-60 overflow-y-auto">
+                                        {requests.map((req) => (
+                                            <div key={req.socketId} className="flex items-center justify-between bg-gray-800 p-3 rounded-lg">
+                                                <span className="font-medium text-gray-200 truncate">{req.user?.name || req.user?._id?.slice(-6) || "Guest User"}</span>
+                                                <div className="flex space-x-2 shrink-0">
+                                                    <button onClick={() => handleDecision(req.socketId, "reject")} className="px-3 py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-md text-sm font-semibold transition">
+                                                        Deny
+                                                    </button>
+                                                    <button onClick={() => handleDecision(req.socketId, "admit")} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-semibold shadow-sm transition">
+                                                        Admit
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                            ))
+                            )}
+                        </div>
+
+                        {/* Sidebar */}
+                        {isSidebarOpen && (
+                            <div className="w-80 bg-gray-900 rounded-2xl border border-gray-800 flex flex-col overflow-hidden shrink-0 shadow-lg">
+                                <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+                                    <h3 className="text-lg font-bold">People</h3>
+                                    <span className="text-xs font-semibold bg-gray-800 px-2 py-1 rounded-full text-gray-300">
+                                        {participants.length}
+                                    </span>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                    {participants.map((p) => {
+                                        const isMe = p.id === socket.id;
+                                        const name = isMe ? `${p.user?.name || "You"} (You)` : (p.user?.name || p.user?._id?.slice(-6) || "Guest");
+                                        const pState = participantStates[p.id] || {};
+                                        
+                                        // For the host or local user, we know real states easily
+                                        const isMicActive = isMe ? isMicOn : !!pState.mic;
+                                        const isCamActive = isMe ? isVideoOn : !!pState.camera;
+
+                                        return (
+                                            <div key={p.id} className="flex items-center justify-between bg-gray-800/50 hover:bg-gray-800 transition p-3 rounded-xl border border-gray-700/50">
+                                                <div className="flex items-center gap-3 truncate">
+                                                    {isHost && !isMe && (
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={selectedParticipants.includes(p.id)} 
+                                                            onChange={() => handleSelectParticipant(p.id)}
+                                                            className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 shrink-0"
+                                                        />
+                                                    )}
+                                                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                                                        {name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="flex flex-col truncate pr-2">
+                                                        <span className="font-semibold text-sm text-gray-200 truncate">{name}</span>
+                                                        {String(room.hostId) === String(p.user?._id) && (
+                                                            <span className="text-[10px] text-gray-400">Meeting host</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1 shrink-0 text-gray-400">
+                                                    <span className={isMicActive ? "opacity-100 text-gray-300" : "opacity-50 text-red-400"} title={isMicActive ? "Mic on" : "Mic off"}>
+                                                        {isMicActive ? "🎤" : "🔇"}
+                                                    </span>
+                                                    <span className={isCamActive ? "opacity-100 text-gray-300" : "opacity-50 text-red-400"} title={isCamActive ? "Cam on" : "Cam off"}>
+                                                        {isCamActive ? "📷" : "🚫"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                                {/* Bulk Action Buttons (Host only) */}
+                                {isHost && selectedParticipants.length > 0 && (
+                                    <div className="p-4 border-t border-gray-800 bg-gray-800/20">
+                                        <span className="text-xs text-gray-400 font-medium mb-3 block">Selected: {selectedParticipants.length}</span>
+                                        <div className="grid grid-cols-2 gap-2 mb-2">
+                                            <button onClick={() => handleBulkPermission('mic', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded transition">Grant Mic</button>
+                                            <button onClick={() => handleBulkPermission('video', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded transition">Grant Video</button>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button onClick={() => handleBulkPermission('mic', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold py-2 rounded transition">Revoke Mic</button>
+                                            <button onClick={() => handleBulkPermission('video', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold py-2 rounded transition">Revoke Video</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
-                    {/* Bulk Action Buttons */}
-                    {selectedParticipants.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-gray-800 flex flex-col gap-2 shrink-0">
-                            <span className="text-sm text-gray-400 font-medium">Selected: {selectedParticipants.length}</span>
-                            <div className="grid grid-cols-2 gap-2">
-                                <button onClick={() => handleBulkPermission('mic', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded transition">Grant Mic</button>
-                                <button onClick={() => handleBulkPermission('video', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded transition">Grant Video</button>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <button onClick={() => handleBulkPermission('mic', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold py-2.5 rounded transition">Revoke Mic</button>
-                                <button onClick={() => handleBulkPermission('video', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold py-2.5 rounded transition">Revoke Video</button>
-                            </div>
+
+                    {/* Bottom Control Bar */}
+                    <div className="h-20 bg-gray-900 border-t border-gray-800 flex items-center justify-between px-6 shrink-0">
+                        <div className="text-gray-400 font-medium tracking-wide">
+                            {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} | {roomId}
                         </div>
-                    )}
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={toggleMic}
+                                disabled={!hostGrantedMic}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg text-lg ${!hostGrantedMic ? "bg-gray-800 text-gray-600 cursor-not-allowed opacity-50" : isMicOn ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-red-600 hover:bg-red-500 text-white hover:shadow-red-500/20"}`}
+                                title={!hostGrantedMic ? "Host disabled mic" : (isMicOn ? "Turn off microphone" : "Turn on microphone")}
+                            >
+                                {isMicOn ? "🎤" : "🔇"}
+                            </button>
+                            <button
+                                onClick={toggleVideo}
+                                disabled={!hostGrantedVideo}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg text-lg ${!hostGrantedVideo ? "bg-gray-800 text-gray-600 cursor-not-allowed opacity-50" : isVideoOn ? "bg-gray-700 hover:bg-gray-600 text-white" : "bg-red-600 hover:bg-red-500 text-white hover:shadow-red-500/20"}`}
+                                title={!hostGrantedVideo ? "Host disabled video" : (isVideoOn ? "Turn off camera" : "Turn on camera")}
+                            >
+                                {isVideoOn ? "📷" : "🚫"}
+                            </button>
+                            <button 
+                                onClick={handleDisconnect} 
+                                className="bg-red-600 hover:bg-red-500 text-white font-bold px-6 py-2 h-12 rounded-full transition-all shadow-lg hover:shadow-red-500/20 ml-2"
+                            >
+                                {isHost ? "End Meeting" : "Leave"}
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all text-lg ${isSidebarOpen ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
+                                title="Participants"
+                            >
+                                👥
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
