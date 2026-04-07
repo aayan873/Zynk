@@ -39,8 +39,31 @@ export const handleEndPoll = async (io, roomID, pollId) => {
 
 export const registerPollSocket = (io, socket) => {
     socket.on("get-poll-data", async ({ roomID }, callback) => {
-        // To be implemented
-        if (callback) callback({ success: true });
+        try {
+            const user = socket.user;
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase();
+            const room = roomManager.getRoom(normalizedRoomId);
+            
+            let activePoll = null;
+            let history = [];
+
+            if (room && room.activePollId) {
+                activePoll = await Poll.findById(room.activePollId);
+            }
+
+            const meeting = await Meeting.findOne({ roomId: normalizedRoomId });
+            const isHost = meeting && String(meeting.hostId) === String(user._id);
+
+            // Fetch history only if the user is the host
+            if (isHost) {
+                history = await Poll.find({ roomId: normalizedRoomId, status: "ended" }).sort({ createdAt: -1 });
+            }
+
+            if (callback) callback({ success: true, activePoll, history });
+        } catch (error) {
+            console.error("get-poll-data error:", error);
+            if (callback) callback({ error: "Failed to fetch poll data" });
+        }
     });
 
     socket.on("create-poll", async ({ roomID, question, options, correctOptionId, timerDuration }, callback) => {
@@ -139,7 +162,31 @@ export const registerPollSocket = (io, socket) => {
     });
 
     socket.on("end-poll", async ({ roomID }, callback) => {
-        // To be implemented
-        if (callback) callback({ success: true });
+        try {
+            const user = socket.user;
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase();
+            
+            const meeting = await Meeting.findOne({ roomId: normalizedRoomId });
+            if (!meeting || String(meeting.hostId) !== String(user._id)) {
+                if (callback) callback({ error: "Only the host can end the poll manually" });
+                return;
+            }
+
+            const room = roomManager.getRoom(normalizedRoomId);
+            if (!room || !room.activePollId) {
+                if (callback) callback({ error: "No active poll to end" });
+                return;
+            }
+
+            const pollIdStr = room.activePollId;
+            
+            // Re-use our robust helper to close the poll, clear timer, and emit!
+            await handleEndPoll(io, normalizedRoomId, pollIdStr);
+
+            if (callback) callback({ success: true });
+        } catch (error) {
+            console.error("end-poll error:", error);
+            if (callback) callback({ error: "Failed to end poll" });
+        }
     });
 };
