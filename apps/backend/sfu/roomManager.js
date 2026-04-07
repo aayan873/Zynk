@@ -90,7 +90,8 @@ class RoomManager{
             permission: {
                 canVideo: true,
                 canAudio: true,
-                canChat: true
+                canChat: true,
+                canScreenShare: false
             }
         }
 
@@ -188,7 +189,8 @@ class RoomManager{
                 producers.push({
                     producerId: p.id,
                     peerID,
-                    kind: p.kind
+                    kind: p.kind,
+                    appData: p.appData
                 })
             })
         }

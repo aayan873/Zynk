@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 
-export default function VideoTile({ stream, isLocal = false, peerId, isMain = false, userName }) {
+export default function VideoTile({ stream, isLocal = false, isScreen = false, peerId, isMain = false, userName }) {
     const videoRef = useRef(null)
 
     useEffect(() => {
@@ -39,7 +39,7 @@ export default function VideoTile({ stream, isLocal = false, peerId, isMain = fa
                 autoPlay
                 playsInline
                 muted={isLocal}
-                className={`w-full h-full ${isMain ? "object-contain bg-gray-900" : "object-cover"} ${isLocal ? "scale-x-[-1]" : ""}`}
+                className={`w-full h-full ${isMain ? "object-contain bg-gray-900" : "object-cover"} ${isLocal && !isScreen ? "scale-x-[-1]" : ""}`}
             />
 
             {/* Label */}

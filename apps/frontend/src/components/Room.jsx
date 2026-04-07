@@ -8,12 +8,12 @@ import VideoTile from "./VideoTile"
 import ChatSidebar from "./ChatSidebar"
 import PollSidebar from "./PollSidebar"
 import toast from "react-hot-toast"
-import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, MessageSquare, BarChart } from "lucide-react"
+import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, ScreenShare, ScreenShareOff, MessageSquare, BarChart } from "lucide-react"
 
 export default function Room() {
     const { roomId } = useParams()
     const navigate = useNavigate()
-    const { localStream, remoteStreams, participantStates, publishTrack, toggleProducer, isConnected, isReady, isTransportReady, leaveRoom } = useSFU(socket, roomId)
+    const { localStream, localScreenStream, activeScreenSharePeerId, startScreenShare, stopScreenShare, remoteStreams, participantStates, publishTrack, toggleProducer, isConnected, isReady, isTransportReady, leaveRoom } = useSFU(socket, roomId)
     const [room, setRoom] = useState(null)
     const [status, setStatus] = useState("idle")
     const [requests, setRequests] = useState([])
@@ -22,6 +22,7 @@ export default function Room() {
     const [isVideoOn, setIsVideoOn] = useState(true)
     const [hostGrantedMic, setHostGrantedMic] = useState(false)
     const [hostGrantedVideo, setHostGrantedVideo] = useState(false)
+    const [hostGrantedScreen, setHostGrantedScreen] = useState(false)
     const [participants, setParticipants] = useState([])
     const [selectedParticipants, setSelectedParticipants] = useState([])
     const [activeSidebar, setActiveSidebar] = useState("people")
@@ -91,11 +92,13 @@ export default function Room() {
             if (isHost) {
                 setHostGrantedMic(true)
                 setHostGrantedVideo(true)
+                setHostGrantedScreen(true)
                 setIsMicOn(true)
                 setIsVideoOn(true)
             } else {
                 setHostGrantedMic(false)
                 setHostGrantedVideo(false)
+                setHostGrantedScreen(false)
                 setIsMicOn(false)
                 setIsVideoOn(false)
             }
@@ -187,6 +190,9 @@ export default function Room() {
             } else if (type === "video") {
                 setHostGrantedVideo(true)
                 alert("Host has granted you permission to start your video.")
+            } else if (type === "screen") {
+                setHostGrantedScreen(true)
+                alert("Host has granted you permission to share your screen.")
             }
         }
 
@@ -207,6 +213,12 @@ export default function Room() {
                 }
                 toggleProducer("video", false)
                 alert("Host has revoked your permission to use your video.")
+            } else if (type === "screen") {
+                setHostGrantedScreen(false)
+                if (localScreenStream) {
+                    stopScreenShare()
+                }
+                alert("Host has revoked your permission to share your screen.")
             }
         }
 
@@ -410,21 +422,56 @@ export default function Room() {
             const participantInfo = participants.find(p => p.id === id);
             const name = participantInfo?.user?.name || participantInfo?.user?._id?.slice(-6) || "Guest";
 
-            const streamData = {
-                stream: data.stream,
-                peerID: id,
-                isLocal: false,
-                userName: name,
-            }
-
-            if (participantInfo && participantInfo.user?._id === room?.hostId) {
-                mainStreamObj = streamData;
-            } else {
-                otherStreamsObjs.push(streamData);
+            if (data.stream) {
+                const streamData = {
+                    stream: data.stream,
+                    peerID: id,
+                    isLocal: false,
+                    userName: name,
+                }
+                
+                if (participantInfo && participantInfo.user?._id === room?.hostId && !isHost) {
+                    if (mainStreamObj) {
+                        otherStreamsObjs.push(mainStreamObj);
+                    }
+                    mainStreamObj = streamData;
+                } else {
+                    otherStreamsObjs.push(streamData);
+                }
             }
         })
 
-        if (!mainStreamObj && otherStreamsObjs.length > 0) {
+        // Determine active screen share
+        let screenShareObj = null;
+        if (activeScreenSharePeerId === "local" && localScreenStream) {
+            screenShareObj = {
+                stream: localScreenStream,
+                peerID: "local_screen",
+                isLocal: true,
+                isScreen: true,
+                userName: `${auth?.user?.name || "You"} (Screen)`
+            }
+        } else if (activeScreenSharePeerId && activeScreenSharePeerId !== "local") {
+            const data = remoteStreams.get(activeScreenSharePeerId)
+            if (data && data.screenStream) {
+                const pInfo = participants.find(p => p.id === activeScreenSharePeerId);
+                const name = pInfo?.user?.name || pInfo?.user?._id?.slice(-6) || "Guest";
+                screenShareObj = {
+                    stream: data.screenStream,
+                    peerID: `${activeScreenSharePeerId}_screen`,
+                    isLocal: false,
+                    isScreen: true,
+                    userName: `${name} (Screen)`
+                }
+            }
+        }
+
+        if (screenShareObj) {
+            if (mainStreamObj) {
+                otherStreamsObjs.unshift(mainStreamObj);
+            }
+            mainStreamObj = screenShareObj;
+        } else if (!mainStreamObj && otherStreamsObjs.length > 0) {
             mainStreamObj = otherStreamsObjs[0];
             otherStreamsObjs = otherStreamsObjs.slice(1);
         } else if (!mainStreamObj && localStream) {
@@ -486,6 +533,7 @@ export default function Room() {
                                 <VideoTile 
                                     stream={mainStreamObj.stream} 
                                     isLocal={mainStreamObj.isLocal} 
+                                    isScreen={mainStreamObj.isScreen}
                                     peerId={mainStreamObj.peerID} 
                                     isMain={true}
                                     userName={mainStreamObj.userName}
@@ -500,6 +548,7 @@ export default function Room() {
                                             key={obj.peerID}
                                             stream={obj.stream}
                                             isLocal={obj.isLocal}
+                                            isScreen={obj.isScreen}
                                             peerId={obj.peerID}
                                             isMain={false}
                                             userName={obj.userName}
@@ -547,8 +596,9 @@ export default function Room() {
                                         const pState = participantStates[p.id] || {};
                                         
                                         // For the host or local user, we know real states easily
-                                        const isMicActive = isMe ? isMicOn : !!pState.mic;
-                                        const isCamActive = isMe ? isVideoOn : !!pState.camera;
+                                        const isMicActive = isMe ? isMicOn : !!pState.audio;
+                                        const isCamActive = isMe ? isVideoOn : !!pState.video;
+                                        const isScreenActive = activeScreenSharePeerId === p.id || (isMe && activeScreenSharePeerId === 'local');
 
                                         return (
                                             <div key={p.id} className="flex items-center justify-between bg-gray-800/50 hover:bg-gray-800 transition p-3 rounded-xl border border-gray-700/50">
@@ -572,6 +622,9 @@ export default function Room() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 text-gray-400">
+                                                    <span className={isScreenActive ? "text-blue-400" : "hidden"} title="Sharing screen">
+                                                        <ScreenShare className="w-4 h-4" />
+                                                    </span>
                                                     {p.handRaised && (
                                                         <span className="text-yellow-400 mr-1" title="Hand raised">
                                                             <Hand fill="currentColor" className="w-4 h-4" />
@@ -592,13 +645,15 @@ export default function Room() {
                                 {isHost && selectedParticipants.length > 0 && (
                                     <div className="p-4 border-t border-gray-800 bg-gray-800/20">
                                         <span className="text-xs text-gray-400 font-medium mb-3 block">Selected: {selectedParticipants.length}</span>
-                                        <div className="grid grid-cols-2 gap-2 mb-2">
-                                            <button onClick={() => handleBulkPermission('mic', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded transition">Grant Mic</button>
-                                            <button onClick={() => handleBulkPermission('video', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded transition">Grant Video</button>
+                                        <div className="grid grid-cols-3 gap-2 mb-2">
+                                            <button onClick={() => handleBulkPermission('mic', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold py-2 rounded transition">Grant Mic</button>
+                                            <button onClick={() => handleBulkPermission('video', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold py-2 rounded transition">Grant Video</button>
+                                            <button onClick={() => handleBulkPermission('screen', 'grant')} className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold py-2 rounded transition">Grant Screen</button>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button onClick={() => handleBulkPermission('mic', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold py-2 rounded transition">Revoke Mic</button>
-                                            <button onClick={() => handleBulkPermission('video', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold py-2 rounded transition">Revoke Video</button>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <button onClick={() => handleBulkPermission('mic', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-bold py-2 rounded transition">Revoke Mic</button>
+                                            <button onClick={() => handleBulkPermission('video', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-bold py-2 rounded transition">Revoke Video</button>
+                                            <button onClick={() => handleBulkPermission('screen', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-bold py-2 rounded transition">Revoke Screen</button>
                                         </div>
                                     </div>
                                 )}
@@ -649,6 +704,14 @@ export default function Room() {
                                 title={!hostGrantedVideo ? "Host disabled video" : (isVideoOn ? "Turn off camera" : "Turn on camera")}
                             >
                                 {isVideoOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                            </button>
+                            <button
+                                onClick={localScreenStream ? stopScreenShare : startScreenShare}
+                                disabled={!hostGrantedScreen}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all shadow-lg ${!hostGrantedScreen ? "bg-gray-800 text-gray-600 cursor-not-allowed opacity-50" : localScreenStream ? "bg-blue-600 hover:bg-blue-500 text-white border-2 border-blue-400" : "bg-gray-700 hover:bg-gray-600 text-white"}`}
+                                title={!hostGrantedScreen ? "Host disabled screen sharing" : (localScreenStream ? "Stop screen sharing" : "Share screen")}
+                            >
+                                {localScreenStream ? <ScreenShareOff className="w-5 h-5" /> : <ScreenShare className="w-5 h-5" />}
                             </button>
                             <button
                                 onClick={toggleHand}

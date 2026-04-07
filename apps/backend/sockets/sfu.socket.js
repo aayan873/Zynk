@@ -255,7 +255,7 @@ export const registerSocketEvents = (io, socket) => {
     })
 
 
-    socket.on("produce", async ({ kind, rtpParameters }, callback) => {
+    socket.on("produce", async ({ kind, rtpParameters, appData }, callback) => {
         try {
             const roomID = socket.roomID
             if (!roomID) return callback({ error: `RoomID Not Found in socket` })
@@ -268,13 +268,13 @@ export const registerSocketEvents = (io, socket) => {
 
             //Create Producer
             const producer = await peer.sendTransport.produce({
-                kind, rtpParameters
+                kind, rtpParameters, appData
             })
 
             //Store Producer
             peer.producers.set(producer.id, producer)
 
-            console.log(`Prodeucer created: ${producer.id} ${kind}`);
+            console.log(`Producer created: ${producer.id} ${kind}`);
 
             //Handle Producer Close
             producer.on("transportclose", () => {
@@ -293,6 +293,7 @@ export const registerSocketEvents = (io, socket) => {
                 producerId: producer.id,
                 peerID: socket.id,
                 kind,
+                appData,
             })
 
             //Send Producer ID back to client
@@ -367,8 +368,9 @@ export const registerSocketEvents = (io, socket) => {
         }
     })
 
-    socket.on("close-producer", ({ producerID }, callback) => {
+    socket.on("close-producer", ({ producerID, producerId }, callback) => {
         try {
+            const finalProducerId = producerId || producerID;
             const respond = typeof callback === "function" ? callback : () => {}
             const roomID = socket.roomID
             if(!roomID) return respond({ error: `RoomID Not Found in socket`})
@@ -379,12 +381,13 @@ export const registerSocketEvents = (io, socket) => {
             const peer = room.peers.get(socket.id)
             if(!peer) return respond({ error: `Peer Not Found`});
 
-            const producer = peer.producers.get(producerID)
+            const producer = peer.producers.get(finalProducerId)
             if(!producer) return respond({ error: `Producer Not Found `});
             
             producer.close()
-            peer.producers.delete(producerID)
-            console.log(`Producer closed ${producerID}`);
+            peer.producers.delete(finalProducerId)
+            socket.to(roomID).emit("producer-closed", { producerId: finalProducerId })
+            console.log(`Producer closed ${finalProducerId}`);
             respond({ success: true })
 
         } catch (error) {

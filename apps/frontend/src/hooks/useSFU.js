@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { Device } from "mediasoup-client"
 
 export const useSFU = (socket, roomId) => {
     const [localStream, setLocalStream] = useState(null)
+    const [localScreenStream, setLocalScreenStream] = useState(null)
+    const [activeScreenSharePeerId, setActiveScreenSharePeerId] = useState(null)
     const [remoteStreams, setRemoteStreams] = useState(new Map())
     const [isConnected, setIsConnected] = useState(false)
     const [isReady, setIsReady] = useState(false)
@@ -52,8 +54,8 @@ export const useSFU = (socket, roomId) => {
                 await createSendTransport()
 
                 if (pendingProducersRef.current.length > 0) {
-                    for (const { producerId, peerID, kind } of pendingProducersRef.current) {
-                        await consumeProducer(producerId, peerID, kind)
+                    for (const p of pendingProducersRef.current) {
+                        await consumeProducer(p.producerId, p.peerID, p.kind, p.appData?.source)
                     }
                     pendingProducersRef.current = []
                 }
@@ -102,8 +104,8 @@ export const useSFU = (socket, roomId) => {
                     })
 
                     //Produce Event (when sending track)
-                    transport.on("produce", ({ kind, rtpParameters }, callback, errback) => {
-                        socket.emit("produce", { kind, rtpParameters }, (res) => {
+                    transport.on("produce", ({ kind, rtpParameters, appData }, callback, errback) => {
+                        socket.emit("produce", { kind, rtpParameters, appData }, (res) => {
                             if(res?.error){
                                 console.error(`Produce Failed: ${res.error}`);
                                 errback(res.error)
@@ -132,6 +134,8 @@ export const useSFU = (socket, roomId) => {
                 updated.delete(socketID)
                 return updated
             })
+
+            setActiveScreenSharePeerId((prev) => prev === socketID ? null : prev)
 
             // Clean up state
             setParticipantStates(prev => {
@@ -176,6 +180,27 @@ export const useSFU = (socket, roomId) => {
                     ...prev,
                     [info.peerID]: { ...(prev[info.peerID] || {}), [info.kind]: false }
                 }))
+                
+                if (info.source === "screen") {
+                    setRemoteStreams(prev => {
+                        const next = new Map(prev)
+                        const existing = next.get(info.peerID)
+                        if (existing) {
+                            next.set(info.peerID, { ...existing, screenStream: null })
+                        }
+                        return next
+                    })
+                    setActiveScreenSharePeerId(prev => prev === info.peerID ? null : prev)
+                }
+
+                // Cleanup associated consumer for this producer
+                for (const [consumerID, consumer] of consumersRef.current.entries()) {
+                    if (consumer.producerId === producerId) {
+                        try { consumer.close() } catch(e) {}
+                        consumersRef.current.delete(consumerID)
+                    }
+                }
+
                 producersInfoMapRef.current.delete(producerId)
             }
         }
@@ -232,7 +257,12 @@ export const useSFU = (socket, roomId) => {
         if (localStream) {
             localStream.getTracks().forEach(track => track.stop());
         }
+        if (localScreenStream) {
+            localScreenStream.getTracks().forEach(track => track.stop());
+        }
         setLocalStream(null)
+        setLocalScreenStream(null)
+        setActiveScreenSharePeerId(null)
         setRemoteStreams(new Map())
         setParticipantStates({})
         
@@ -248,7 +278,7 @@ export const useSFU = (socket, roomId) => {
 
 
 
-    const consumeProducer = async (producerId, peerID, kind) => {
+    const consumeProducer = async (producerId, peerID, kind, source) => {
         try {
             const device = deviceRef.current
             if (!device) {
@@ -299,30 +329,30 @@ export const useSFU = (socket, roomId) => {
                             rtpParameters: res.rtpParameters
                         })
 
-                        consumer.appData = { peerID }
+                        consumer.appData = { peerID, source }
 
                         consumersRef.current.set(consumer.id, consumer)
 
                         setRemoteStreams((prev) => {
                             const newMap = new Map(prev)
-                            const existing = newMap.get(peerID)
+                            const existing = newMap.get(peerID) ? { ...newMap.get(peerID) } : { peerID }
 
-                            if (existing) {
-                                const stream = new MediaStream([
-                                    ...existing.stream.getTracks(),
-                                    consumer.track
-                                ])
-                                newMap.set(peerID, {
-                                    ...existing,
-                                    stream
-                                })
+                            if (source === "screen") {
+                                if (existing.screenStream) {
+                                    existing.screenStream.addTrack(consumer.track)
+                                } else {
+                                    existing.screenStream = new MediaStream([consumer.track])
+                                    setActiveScreenSharePeerId(peerID)
+                                }
                             } else {
-                                newMap.set(peerID, {
-                                    stream: new MediaStream([consumer.track]),
-                                    peerID,
-                                    kind
-                                })
+                                if (existing.stream) {
+                                    existing.stream.addTrack(consumer.track)
+                                } else {
+                                    existing.stream = new MediaStream([consumer.track])
+                                }
                             }
+                            
+                            newMap.set(peerID, existing)
                             return newMap
                         })
 
@@ -357,25 +387,25 @@ export const useSFU = (socket, roomId) => {
             return
         }
 
-        for (const { producerId, peerID, kind } of producers) {
-            producersInfoMapRef.current.set(producerId, { peerID, kind })
+        for (const p of producers) {
+            producersInfoMapRef.current.set(p.producerId, { peerID: p.peerID, kind: p.kind, source: p.appData?.source })
             setParticipantStates(prev => ({
                 ...prev,
-                [peerID]: { ...(prev[peerID] || {}), [kind]: true }
+                [p.peerID]: { ...(prev[p.peerID] || {}), [p.kind]: true }
             }))
-            await consumeProducer(producerId, peerID, kind)
+            await consumeProducer(p.producerId, p.peerID, p.kind, p.appData?.source)
         }
     }
 
     //Handling New Producer
-    const handleNewProducer = async ({ producerId, peerID, kind }) => {
-        console.log(`New Producer: ${producerId}`);
-        producersInfoMapRef.current.set(producerId, { peerID, kind })
+    const handleNewProducer = async (p) => {
+        console.log(`New Producer: ${p.producerId}`);
+        producersInfoMapRef.current.set(p.producerId, { peerID: p.peerID, kind: p.kind, source: p.appData?.source })
         setParticipantStates(prev => ({
             ...prev,
-            [peerID]: { ...(prev[peerID] || {}), [kind]: true }
+            [p.peerID]: { ...(prev[p.peerID] || {}), [p.kind]: true }
         }))
-        await consumeProducer(producerId, peerID, kind)
+        await consumeProducer(p.producerId, p.peerID, p.kind, p.appData?.source)
     }
 
 
@@ -448,11 +478,54 @@ export const useSFU = (socket, roomId) => {
         }
     }
 
+    const startScreenShare = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: false
+            })
+            setLocalScreenStream(stream)
+            setActiveScreenSharePeerId("local")
+            
+            stream.getTracks().forEach(track => {
+                publishTrack(track, track.kind, "screen")
+                
+                track.onended = () => {
+                    stopScreenShare()
+                }
+            })
+        } catch (error) {
+            console.error(`Screen share failed: ${error}`)
+        }
+    }
+
+    const stopScreenShare = useCallback(() => {
+        setLocalScreenStream(currentStream => {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop())
+            }
+            return null
+        })
+
+        // Safely wipe out all screen producers without relying on exact tracks
+        Array.from(producersRef.current.values()).forEach(p => {
+            if (p.source === "screen") {
+                unpublishTrack(p.producer.id)
+            }
+        })
+
+        setActiveScreenSharePeerId((prev) => prev === "local" ? null : prev)
+    }, [unpublishTrack])
+
     return {
         localStream,
+        localScreenStream,
         remoteStreams,
+        activeScreenSharePeerId,
         participantStates,
         publishTrack,
+        startScreenShare,
+        stopScreenShare,
         unpublishTrack,
         toggleProducer,
         isConnected,
