@@ -466,6 +466,7 @@ export default function Room() {
                                 <VideoTile 
                                     stream={mainStreamObj.stream} 
                                     isLocal={mainStreamObj.isLocal} 
+                                    isScreen={mainStreamObj.isScreen}
                                     peerId={mainStreamObj.peerID} 
                                     isMain={true}
                                     userName={mainStreamObj.userName}
@@ -480,6 +481,7 @@ export default function Room() {
                                             key={obj.peerID}
                                             stream={obj.stream}
                                             isLocal={obj.isLocal}
+                                            isScreen={obj.isScreen}
                                             peerId={obj.peerID}
                                             isMain={false}
                                             userName={obj.userName}
