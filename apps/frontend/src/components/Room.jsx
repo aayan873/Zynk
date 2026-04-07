@@ -6,8 +6,9 @@ import { useAuth } from "../context/AuthContext"
 import { useSFU } from "../hooks/useSFU"
 import VideoTile from "./VideoTile"
 import ChatSidebar from "./ChatSidebar"
+import PollSidebar from "./PollSidebar"
 import toast from "react-hot-toast"
-import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, MessageSquare } from "lucide-react"
+import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, MessageSquare, BarChart } from "lucide-react"
 
 export default function Room() {
     const { roomId } = useParams()
@@ -27,6 +28,8 @@ export default function Room() {
     const [messages, setMessages] = useState([])
     const [isChatEnabled, setIsChatEnabled] = useState(true)
     const [isHandRaised, setIsHandRaised] = useState(false)
+    const [activePoll, setActivePoll] = useState(null)
+    const [pollHistory, setPollHistory] = useState([])
 
     // Creating empty video element
     const videoRef = useRef(null)
@@ -265,6 +268,35 @@ export default function Room() {
     const handleSendMessage = (text) => {
         socket.emit("send-message", { roomID: roomId, text })
     }
+
+    useEffect(() => {
+        if (status !== "joined") return;
+
+        socket.emit("get-poll-data", { roomID: roomId }, (res) => {
+            if (res?.success) {
+                setActivePoll(res.activePoll || null)
+                setPollHistory(res.history || [])
+            }
+        })
+
+        const handleNewPoll = (poll) => setActivePoll(poll)
+        
+        const handlePollEnded = ({ pollId, finalPoll }) => {
+            setActivePoll(null)
+            if (isHost && finalPoll) {
+                 setPollHistory(prev => [finalPoll, ...prev])
+            }
+            toast("The active poll has ended.", { icon: <BarChart className="w-4 h-4 text-blue-500" /> })
+        }
+
+        socket.on("new-poll", handleNewPoll)
+        socket.on("poll-ended", handlePollEnded)
+
+        return () => {
+            socket.off("new-poll", handleNewPoll)
+            socket.off("poll-ended", handlePollEnded)
+        }
+    }, [status, roomId, isHost])
 
     const handleToggleChat = (isEnabled) => {
         socket.emit("toggle-chat", { roomID: roomId, isEnabled })
@@ -583,6 +615,17 @@ export default function Room() {
                                 onToggleChat={handleToggleChat}
                             />
                         )}
+
+                        {activeSidebar === "poll" && (
+                            <PollSidebar 
+                                roomID={roomId}
+                                socket={socket}
+                                activePoll={activePoll}
+                                pollHistory={pollHistory}
+                                isHost={isHost}
+                                currentUserId={currentUserId}
+                            />
+                        )}
                     </div>
 
                     {/* Bottom Control Bar */}
@@ -635,6 +678,13 @@ export default function Room() {
                                 title="Chat"
                             >
                                 <MessageSquare className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === "poll" ? null : "poll")}
+                                className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${activeSidebar === "poll" ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-300"}`}
+                                title="Poll"
+                            >
+                                <BarChart className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
