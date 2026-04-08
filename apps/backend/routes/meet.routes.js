@@ -1,6 +1,6 @@
 import express from 'express';
 import requireAuth from '../middleware/requireAuth.js';
-import isTeacher from '../middleware/isTeacher.js';
+import { isTeacher } from '../middleware/isTeacher.js';
 import {
     scheduleMeet,
     updateScheduledMeet,
