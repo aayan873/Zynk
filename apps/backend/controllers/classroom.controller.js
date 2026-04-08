@@ -3,12 +3,13 @@ import { Classroom } from '../models/classroom.model.js';
 // 1. CREATE CLASSROOM (Teacher Only)
 export const createClassroom = async (req, res) => {
   try {
-    const { name, description, institute, semester, branches, inviteCode } = req.body;
+    const { name, description, institute, programme, semester, branches, inviteCode } = req.body;
 
     const classroom = new Classroom({
       name,
       description,
       institute,
+      programme,
       semester,
       branches,
       inviteCode,
