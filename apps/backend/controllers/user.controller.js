@@ -6,7 +6,11 @@ import jwt from 'jsonwebtoken';
 
 const Signup = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { email, password, role, institution } = req.body;
+
+        if (!role || !['Teacher', 'Student'].includes(role)) {
+             return res.status(400).json({ success: false, message: "Valid role ('Teacher' or 'Student') is required" });
+        }
 
         const ismatched = await User.findOne({ email });
 
@@ -20,10 +24,12 @@ const Signup = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = new User({
-            username,
             email,
             password: hashedPassword,
-            isVerified: false
+            role,
+            institution: institution || 'Independent',
+            isVerified: false,
+            profileCompleted: false
         });
 
         await newUser.save();
@@ -40,12 +46,12 @@ const Signup = async (req, res) => {
             token,
             user: {
                 _id: newUser._id,
-                username: newUser.username,
                 email: newUser.email,
+                role: newUser.role,
+                institution: newUser.institution,
+                profileCompleted: newUser.profileCompleted
             },
         });
-
-
     } catch (err) {
         console.error("Signup error:", err);
         return res.status(500).json({
