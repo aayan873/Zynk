@@ -18,6 +18,10 @@ export const registerRoomSocket = (io, socket) => {
                 return callback({ error: "Room not found" })
             }
 
+            if (meeting.blacklistedParticipants?.includes(String(user._id))) {
+                return callback({ error: "You have been removed from this meeting." })
+            }
+
             const hostId = meeting.hostId
 
             const peers = roomManager.getAllPeers(normalizedRoomId)

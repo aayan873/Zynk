@@ -8,7 +8,7 @@ import VideoTile from "./VideoTile"
 import ChatSidebar from "./ChatSidebar"
 import PollSidebar from "./PollSidebar"
 import toast from "react-hot-toast"
-import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, ScreenShare, ScreenShareOff, MessageSquare, BarChart } from "lucide-react"
+import { Mic, MicOff, Video, VideoOff, Hand, Users, DoorOpen, ScreenShare, ScreenShareOff, MessageSquare, BarChart, Copy, X } from "lucide-react"
 
 export default function Room() {
     const { roomId } = useParams()
@@ -31,6 +31,7 @@ export default function Room() {
     const [isHandRaised, setIsHandRaised] = useState(false)
     const [activePoll, setActivePoll] = useState(null)
     const [pollHistory, setPollHistory] = useState([])
+    const [showInviteOverlay, setShowInviteOverlay] = useState(true)
 
     // Creating empty video element
     const videoRef = useRef(null)
@@ -249,6 +250,12 @@ export default function Room() {
     }, [])
 
     useEffect(() => {
+        if (participants.length > 1) {
+            setShowInviteOverlay(false)
+        }
+    }, [participants.length])
+
+    useEffect(() => {
         return () => {
             hasJoinedRef.current = false
             publishedTrackIdsRef.current.clear()
@@ -320,9 +327,20 @@ export default function Room() {
             leaveRoom()
             navigate("/home")
         }
+
+        const onKicked = () => {
+            alert("You have been removed from the meeting by the host.")
+            leaveRoom()
+            navigate("/home")
+        }
         
         socket.on("meeting-ended", onMeetingEnded)
-        return () => socket.off("meeting-ended", onMeetingEnded)
+        socket.on("kicked-from-meeting", onKicked)
+        
+        return () => {
+            socket.off("meeting-ended", onMeetingEnded)
+            socket.off("kicked-from-meeting", onKicked)
+        }
     }, [navigate, leaveRoom])
 
     const handleDisconnect = () => {
@@ -376,6 +394,11 @@ export default function Room() {
         socket.emit("toggle-hand", { isRaised: newStatus })
     }
 
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(window.location.href)
+        toast.success("Invite link copied!")
+    }
+
     const handleBulkPermission = (type, action) => {
         if (selectedParticipants.length === 0) return
         socket.emit(action === "grant" ? "grant-permission" : "revoke-permission", {
@@ -396,6 +419,15 @@ export default function Room() {
     const handleDecision = (targetSocketId, decision) => {
         socket.emit("host-decision", { roomID: roomId, targetSocketId, decision })
         setRequests(prev => prev.filter(req => req.socketId !== targetSocketId))
+    }
+
+    const handleKickSelected = () => {
+        if (selectedParticipants.length === 0) return
+        socket.emit("remove-peer", {
+            roomID: roomId,
+            targetSocketIds: selectedParticipants
+        })
+        setSelectedParticipants([])
     }
 
     if (!room) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">Loading Room...</div>
@@ -578,6 +610,28 @@ export default function Room() {
                                     </div>
                                 </div>
                             )}
+
+                            {/* INVITE LINK OVERLAY */}
+                            {isHost && showInviteOverlay && (
+                                <div className="absolute bottom-6 left-6 bg-gray-900/90 border border-gray-700 shadow-2xl rounded-2xl p-5 w-80 z-20 backdrop-blur-md">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <h3 className="text-lg font-bold">Your meeting's ready</h3>
+                                        <button onClick={() => setShowInviteOverlay(false)} className="text-gray-400 hover:text-white transition">
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    <p className="text-sm text-gray-400 mb-4">
+                                        Share this meeting link with others you want in the meeting.
+                                    </p>
+                                    <button 
+                                        onClick={handleCopyLink} 
+                                        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl transition shadow-lg hover:shadow-blue-500/20"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                        Copy Invite Link
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Sidebar */}
@@ -654,6 +708,9 @@ export default function Room() {
                                             <button onClick={() => handleBulkPermission('mic', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-bold py-2 rounded transition">Revoke Mic</button>
                                             <button onClick={() => handleBulkPermission('video', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-bold py-2 rounded transition">Revoke Video</button>
                                             <button onClick={() => handleBulkPermission('screen', 'revoke')} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-bold py-2 rounded transition">Revoke Screen</button>
+                                        </div>
+                                        <div className="mt-2">
+                                            <button onClick={handleKickSelected} className="w-full bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold py-2 rounded transition shadow-sm">Kick User(s)</button>
                                         </div>
                                     </div>
                                 )}

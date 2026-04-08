@@ -58,6 +58,10 @@ export const registerSocketEvents = (io, socket) => {
 
             if (!meeting) { return callback({ error: "Room does not exist" }) }
 
+            if (meeting.blacklistedParticipants?.includes(String(user._id))) {
+                return callback({ error: "You have been removed from this meeting." })
+            }
+
             if (!meeting.participants.includes(user._id)) {
                 meeting.participants.push(user._id)
                 await meeting.save()
@@ -179,6 +183,48 @@ export const registerSocketEvents = (io, socket) => {
         }
     })
 
+    //Remove Peer (Kick User - Host only)
+    socket.on("remove-peer", async ({ targetSocketIds }, callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID || !targetSocketIds || !Array.isArray(targetSocketIds)) {
+                if(callback) return callback({ error: "Invalid data provided" })
+                return
+            }
+
+            const user = socket.user
+            const meeting = await Meeting.findOne({ roomId: roomID })
+
+            if (!meeting || String(meeting.hostId) !== String(user._id)) {
+                if(callback) return callback({ error: "Unauthorized or room not found" })
+                return
+            }
+
+            for (const targetSocketId of targetSocketIds) {
+                const peerToBeKicked = roomManager.getPeer(roomID, targetSocketId)
+                if (!peerToBeKicked) continue
+
+                // Add to blacklist if not already
+                if (!meeting.blacklistedParticipants.includes(String(peerToBeKicked.user._id))) {
+                    meeting.blacklistedParticipants.push(String(peerToBeKicked.user._id))
+                }
+
+                // Notify peer
+                io.to(targetSocketId).emit("kicked-from-meeting")
+
+                // Ensure peer leaves backend logic
+                await handlePeerLeaveRoom(io, peerToBeKicked.socket, roomID)
+            }
+            
+            await meeting.save()
+
+            if(callback) callback({ success: true })
+
+        } catch (error) {
+            console.error(`Remove Peer Error: ${error}`)
+            if(callback) callback({ error: error.message })
+        }
+    })
 
     socket.on("create-send-transport", async (callback) => {
         try {
