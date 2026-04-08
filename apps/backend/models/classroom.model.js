@@ -13,6 +13,10 @@ const classroomSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    programme: {
+      type: String,
+      required: true,
+    },
     semester: {
       type: String,
       required: true,
