@@ -8,7 +8,7 @@ const meetingSchema = new mongoose.Schema({
     },
     hostId: {
         type: String,
-        required: true,
+        ref: 'Teacher'
     },
     type: {
         type: String,
