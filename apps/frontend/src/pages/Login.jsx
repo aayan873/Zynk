@@ -40,7 +40,7 @@ let handleSubmit = async (e)=>{
             login(data.user, data.token);
             toast.success("Login successful!");
             console.log("Navigating...");
-            navigate("/dashboard");
+            navigate("/home");
         } else {
             toast.error(data.message || "Login failed");
         }

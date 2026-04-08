@@ -39,7 +39,13 @@ export default function Home() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-4 relative">
+            <button
+                onClick={() => navigate('/logout')}
+                className="absolute top-6 right-6 bg-red-600/80 hover:bg-red-500 text-white font-medium py-2 px-6 rounded-lg transition-all shadow-lg"
+            >
+                Logout
+            </button>
 
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-12 shadow-2xl">
 

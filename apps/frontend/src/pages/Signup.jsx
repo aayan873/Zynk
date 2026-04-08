@@ -38,7 +38,7 @@ const Signup = ()=>{
         if (response.ok) {
             toast.success("Signup successful!");
               console.log("Navigating...");
-            navigate("/dashboard");
+            navigate("/home");
         } else {
             toast.error(data.message || "Signup failed");
         }
