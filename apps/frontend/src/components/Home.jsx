@@ -16,7 +16,7 @@ export default function Home() {
         e.preventDefault(); // Stop the form from refreshing the page
         try {
             // 2. We use the real title and type now!
-            const res = await axios.post("/api/rooms/create", {
+            const res = await axios.post("/api/meets/create", {
                 title: title || "My Awesome Meeting",
                 type: type
             }, {

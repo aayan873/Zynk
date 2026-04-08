@@ -11,7 +11,7 @@ export default function History() {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const res = await axios.get("/api/rooms/history")
+                const res = await axios.get("/api/meets/history")
                 setMeetings(res.data)
             } catch (err) {
                 console.error("Failed to fetch history:", err)
