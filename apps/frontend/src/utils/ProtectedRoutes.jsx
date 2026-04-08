@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import axios from "axios";
 
 const ProtectedRoutes = ({ children }) => {
   const { auth, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = auth?.user;
   const token = auth?.token;
   const [checking, setChecking] = useState(true);
@@ -43,6 +44,14 @@ const ProtectedRoutes = ({ children }) => {
 
   if (checking) return null;
   if (!user || !token) return null;
+
+  if (!user.profileCompleted && location.pathname !== '/profile-setup') {
+      return <Navigate to="/profile-setup" replace />;
+  }
+
+  if (user.profileCompleted && location.pathname === '/profile-setup') {
+      return <Navigate to="/home" replace />;
+  }
 
   return children;
 };
