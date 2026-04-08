@@ -8,6 +8,7 @@ import socketAuth from "./middleware/socketAuth.js";
 import { createWorkers } from "./sfu/workerPool.js";
 import authRoutes from './routes/auth.routes.js';
 import roomRoutes from './routes/room.routes.js'
+import classroomRoutes from './routes/classroom.routes.js';
 import { registerSocketEvents } from "./sockets/sfu.socket.js";
 import { registerRoomSocket } from "./sockets/room.socket.js";
 import { registerChatSocket } from "./sockets/chat.socket.js";
@@ -81,6 +82,7 @@ export const startServer = async ({ port }) => {
     await createWorkers();
     app.use('/api/auth', authRoutes)
     app.use('/api/rooms', roomRoutes)
+    app.use('/api/classrooms', classroomRoutes)
 
     await new Promise((resolve) => {
         server.listen(port, resolve);
