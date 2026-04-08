@@ -19,6 +19,16 @@ const meetingSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    classroom: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Classroom',
+    },
+    scheduledFor: {
+        type: Date,
+    },
+    scheduledEndTime: {
+        type: Date,
+    },
     startedAt: {
         type: Date,
         default: Date.now,
