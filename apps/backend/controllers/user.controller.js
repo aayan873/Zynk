@@ -35,15 +35,22 @@ const Signup = async (req, res) => {
         await newUser.save();
 
         const token = jwt.sign(
-            { id: newUser._id, email: newUser.email },
+            { id: newUser._id, email: newUser.email, role: newUser.role },
             process.env.JWT_SECRET,
             { expiresIn: "1d" }
+        );
+
+        const refreshToken = jwt.sign(
+            { id: newUser._id, email: newUser.email, role: newUser.role, type: "refresh" },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
         );
 
         return res.status(201).json({
             success: true,
             message: "Signup successful",
             token,
+            refreshToken,
             user: {
                 _id: newUser._id,
                 email: newUser.email,
@@ -85,13 +92,13 @@ const Login = async (req, res) => {
         }
 
         const accessToken = jwt.sign(
-            { id: user._id, email: user.email },
+            { id: user._id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: "1d" }
         );
 
         const refreshToken = jwt.sign(
-            { id: user._id, email: user.email, type: "refresh" },
+            { id: user._id, email: user.email, role: user.role, type: "refresh" },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
@@ -104,8 +111,9 @@ const Login = async (req, res) => {
             refreshToken,
             user: {
                 _id: user._id,
-                username: user.username,
                 email: user.email,
+                role: user.role,
+                institution: user.institution,
                 profileCompleted: user.profileCompleted
             },
         });
