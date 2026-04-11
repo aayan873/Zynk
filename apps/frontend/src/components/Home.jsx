@@ -19,6 +19,8 @@ import {
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
+import Sidebar from './Sidebar.jsx';
+
 export default function Home() {
     const navigate = useNavigate();
     const { auth } = useAuth();
@@ -51,58 +53,8 @@ export default function Home() {
 
     return (
         <div className="flex h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
-            {/* Sidebar */}
-            <aside className="w-64 bg-[#14151a] border-r border-gray-800 flex flex-col justify-between hidden md:flex">
-                <div>
-                    <div className="p-6">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">ZynkEdu</h1>
-                        <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-semibold">Live Learning</p>
-                    </div>
-                    <nav className="mt-6 px-4 space-y-2">
-                        <a href="#" className="flex items-center space-x-3 px-4 py-3 bg-[#1e1f26] text-white rounded-lg transition relative">
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-500 rounded-r-full"></div>
-                            <HomeIcon size={20} className="text-indigo-400" />
-                            <span className="font-medium text-sm">Home</span>
-                        </a>
-                        <a href="#" className="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e1f26] rounded-lg transition">
-                            <LayoutDashboard size={20} />
-                            <span className="font-medium text-sm">Classrooms</span>
-                        </a>
-                        <a href="#" className="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e1f26] rounded-lg transition">
-                            <Bell size={20} />
-                            <span className="font-medium text-sm">Notifications</span>
-                        </a>
-                        <a href="#" className="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e1f26] rounded-lg transition">
-                            <Settings size={20} />
-                            <span className="font-medium text-sm">Settings</span>
-                        </a>
-                        <a href="/profile-setup" className="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e1f26] rounded-lg transition">
-                            <User size={20} />
-                            <span className="font-medium text-sm">Profile</span>
-                        </a>
-                    </nav>
-                </div>
-                
-                {/* User Profile Snippet */}
-                <div className="p-4 border-t border-gray-800">
-                    <div className="flex items-center justify-between bg-[#1a1b23] p-3 rounded-lg border border-gray-800/80">
-                        <div className="flex items-center space-x-3">
-                            <div className="w-9 h-9 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-sm shadow-sm">
-                                {user?.fullName?.charAt(0) || 'U'}
-                            </div>
-                            <div className="overflow-hidden">
-                                <p className="text-xs font-semibold truncate w-24 text-gray-200">{user?.fullName || 'Guest'}</p>
-                                <p className="text-[10px] text-gray-500 font-medium truncate">{user?.role || 'Welcome'}</p>
-                            </div>
-                        </div>
-                        <button onClick={handleLogout} className="text-gray-500 hover:text-red-400 transition" title="Logout">
-                            <LogOut size={16} />
-                        </button>
-                    </div>
-                </div>
-            </aside>
+            <Sidebar />
 
-            {/* Main Content Area */}
             <main className="flex-1 flex flex-col overflow-y-auto relative">
                 {/* Top Header */}
                 <header className="flex items-center justify-between px-10 py-5 border-b border-gray-800/50 sticky top-0 bg-[#0e0e11]/80 backdrop-blur-md z-10">

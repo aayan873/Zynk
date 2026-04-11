@@ -11,6 +11,7 @@ import Home from "./components/Home.jsx";
 import Room from "./components/Room.jsx";
 import History from "./components/History.jsx";
 import ProfileSetup from "./pages/ProfileSetup.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -36,6 +37,14 @@ function App() {
             element={
               <ProtectedRoutes>
                 <ProfileSetup />
+              </ProtectedRoutes>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoutes>
+                <ProfilePage />
               </ProtectedRoutes>
             }
           />
