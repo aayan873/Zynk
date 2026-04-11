@@ -6,7 +6,11 @@ import jwt from 'jsonwebtoken';
 
 const Signup = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { email, password, role, institution } = req.body;
+
+        if (!role || !['Teacher', 'Student'].includes(role)) {
+             return res.status(400).json({ success: false, message: "Valid role ('Teacher' or 'Student') is required" });
+        }
 
         const ismatched = await User.findOne({ email });
 
@@ -20,32 +24,41 @@ const Signup = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = new User({
-            username,
             email,
             password: hashedPassword,
-            isVerified: false
+            role,
+            institution: institution || 'Independent',
+            isVerified: false,
+            profileCompleted: false
         });
 
         await newUser.save();
 
         const token = jwt.sign(
-            { id: newUser._id, email: newUser.email },
+            { id: newUser._id, email: newUser.email, role: newUser.role },
             process.env.JWT_SECRET,
             { expiresIn: "1d" }
+        );
+
+        const refreshToken = jwt.sign(
+            { id: newUser._id, email: newUser.email, role: newUser.role, type: "refresh" },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
         );
 
         return res.status(201).json({
             success: true,
             message: "Signup successful",
             token,
+            refreshToken,
             user: {
                 _id: newUser._id,
-                username: newUser.username,
                 email: newUser.email,
+                role: newUser.role,
+                institution: newUser.institution,
+                profileCompleted: newUser.profileCompleted
             },
         });
-
-
     } catch (err) {
         console.error("Signup error:", err);
         return res.status(500).json({
@@ -79,13 +92,13 @@ const Login = async (req, res) => {
         }
 
         const accessToken = jwt.sign(
-            { id: user._id, email: user.email },
+            { id: user._id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: "1d" }
         );
 
         const refreshToken = jwt.sign(
-            { id: user._id, email: user.email, type: "refresh" },
+            { id: user._id, email: user.email, role: user.role, type: "refresh" },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
@@ -98,8 +111,10 @@ const Login = async (req, res) => {
             refreshToken,
             user: {
                 _id: user._id,
-                username: user.username,
                 email: user.email,
+                role: user.role,
+                institution: user.institution,
+                profileCompleted: user.profileCompleted
             },
         });
 

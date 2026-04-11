@@ -8,7 +8,7 @@ const meetingSchema = new mongoose.Schema({
     },
     hostId: {
         type: String,
-        required: true,
+        ref: 'Teacher'
     },
     type: {
         type: String,
@@ -18,6 +18,16 @@ const meetingSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
+    },
+    classroom: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Classroom',
+    },
+    scheduledFor: {
+        type: Date,
+    },
+    scheduledEndTime: {
+        type: Date,
     },
     startedAt: {
         type: Date,

@@ -39,8 +39,11 @@ let handleSubmit = async (e)=>{
         if (response.ok) {
             login(data.user, data.token);
             toast.success("Login successful!");
-            console.log("Navigating...");
-            navigate("/home");
+            if (!data.user.profileCompleted) {
+                navigate("/profile-setup");
+            } else {
+                navigate("/home");
+            }
         } else {
             toast.error(data.message || "Login failed");
         }

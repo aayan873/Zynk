@@ -10,6 +10,7 @@ import Logout from "./pages/Logout.jsx";
 import Home from "./components/Home.jsx";
 import Room from "./components/Room.jsx";
 import History from "./components/History.jsx";
+import ProfileSetup from "./pages/ProfileSetup.jsx";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -27,6 +28,14 @@ function App() {
             element={
               <ProtectedRoutes>
                 <Home />
+              </ProtectedRoutes>
+            }
+          />
+          <Route
+            path="/profile-setup"
+            element={
+              <ProtectedRoutes>
+                <ProfileSetup />
               </ProtectedRoutes>
             }
           />

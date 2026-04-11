@@ -75,7 +75,7 @@ export default function Room() {
     useEffect(() => {
         const fetchRoom = async () => {
             try {
-                const res = await axios.get(`/api/rooms/${roomId}`, {
+                const res = await axios.get(`/api/meets/${roomId}`, {
                     headers: {
                         Authorization: `Bearer ${auth?.token}`
                     }
