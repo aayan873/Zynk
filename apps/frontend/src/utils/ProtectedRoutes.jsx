@@ -24,7 +24,10 @@ const ProtectedRoutes = ({ children }) => {
       }
 
       try {
-        await axios.get("/api/auth/validate");
+        const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+        await axios.get(`${BACKEND_URL}/api/auth/validate`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         if (active) setChecking(false);
       } catch {
         logout();

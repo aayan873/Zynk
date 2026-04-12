@@ -6,19 +6,18 @@ import { Video, Clock, Calendar } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-export default function ClassroomStream({ classroomId }) {
-    const { auth } = useAuth();
+export default function ClassroomStream({ classroom, user, isTeacher, token }) {
     const navigate = useNavigate();
     const [meets, setMeets] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchStreamMeets = async () => {
-            if (!auth?.token || !classroomId) return;
+            if (!token || !classroom?._id) return;
             try {
-                const res = await axios.get(`${BACKEND_URL}/api/meets/upcoming/${classroomId}`, {
+                const res = await axios.get(`${BACKEND_URL}/api/meets/upcoming/${classroom._id}`, {
                     headers: {
-                        Authorization: `Bearer ${auth.token}`
+                        Authorization: `Bearer ${token}`
                     }
                 });
                 if (res.data.success) {
@@ -36,7 +35,7 @@ export default function ClassroomStream({ classroomId }) {
         // Polling every minute to update the "Live Now" status if needed (optional but good for UX)
         const interval = setInterval(fetchStreamMeets, 60000);
         return () => clearInterval(interval);
-    }, [auth?.token, classroomId]);
+    }, [token, classroom?._id]);
 
     if (loading) {
         return (
