@@ -119,8 +119,9 @@ export const getUpcomingMeetsForAllClassrooms = async (req, res) => {
 
         const meets = await Meeting.find({
             classroom: { $in: classroomIds },
-            scheduledFor: { $gte: now, $lte: endOfDay }
-        }).sort({ scheduledFor: 1 });
+            scheduledEndTime: { $gte: now },
+            scheduledFor: { $lte: endOfDay }
+        }).sort({ scheduledFor: 1 }).populate('classroom', 'name');
 
         res.status(200).json({ success: true, meets });
     } catch (error) {
@@ -144,8 +145,8 @@ export const getUpcomingMeets = async (req, res) => {
 
         const meets = await Meeting.find({
             classroom: classroomId,
-            scheduledFor: { $gte: now, $lte: endOfDay }
-        }).sort({ scheduledFor: 1 });
+            scheduledEndTime: { $gte: now }
+        }).sort({ scheduledFor: 1 }).populate('classroom', 'name');
 
         res.status(200).json({ success: true, meets });
     } catch (error) {
