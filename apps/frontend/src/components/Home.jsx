@@ -52,22 +52,15 @@ export default function Home() {
     };
 
     return (
-        <div className="flex h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
+        <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
             <Sidebar />
 
             <main className="flex-1 flex flex-col overflow-y-auto relative">
                 {/* Top Header */}
-                <header className="flex items-center justify-between px-10 py-5 border-b border-gray-800/50 sticky top-0 bg-[#0e0e11]/80 backdrop-blur-md z-10">
-                    <div className="relative w-full max-w-md">
-                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                        <input 
-                            type="text" 
-                            placeholder="Search lessons, students, or resources..." 
-                            className="w-full bg-[#14151a] border border-gray-800/80 rounded-full py-2 pl-11 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50 text-gray-300 placeholder-gray-500/80 transition-shadow"
-                        />
-                    </div>
+                 {user?.role === 'Teacher' && (
+                <header className="flex justify-end px-10 py-5 border-b border-gray-800/50 sticky top-0 bg-[#0e0e11]/80 backdrop-blur-md z-10">
                     <div className="flex items-center space-x-6 shrink-0">
-                        {user?.role === 'Teacher' && (
+                       
                             <button 
                                 onClick={handleInstantSession}
                                 disabled={creatingSession}
@@ -76,16 +69,8 @@ export default function Home() {
                                 <Zap size={14} className="text-indigo-100" />
                                 <span>{creatingSession ? 'Starting...' : 'Start Instant Session'}</span>
                             </button>
-                        )}
-                        <button className="text-gray-400 hover:text-white transition relative">
-                            <Bell size={18} />
-                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-500 rounded-full border border-[#0e0e11]"></span>
-                        </button>
-                        <button className="text-gray-400 hover:text-white transition">
-                            <HelpCircle size={18} />
-                        </button>
                     </div>
-                </header>
+                </header>    )}
 
                 {/* Dashboard Body */}
                 <div className="px-10 py-8 max-w-6xl w-full mx-auto space-y-10">

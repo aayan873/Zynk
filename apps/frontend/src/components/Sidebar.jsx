@@ -1,102 +1,76 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { Home as HomeIcon, User, LogOut, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
-import {
-  Home as HomeIcon,
-  LayoutDashboard,
-  Bell,
-  Settings,
-  User,
-  LogOut
-} from 'lucide-react';
 
 export default function Sidebar() {
-    const navigate = useNavigate();
-    const { auth } = useAuth();
+    const { auth, logout } = useAuth();
     const user = auth?.user;
-
-    const handleLogout = () => {
-        navigate('/logout');
-    };
+    const navigate = useNavigate();
 
     const navLinkClass = ({ isActive }) =>
-        isActive
-            ? "flex items-center space-x-3 px-4 py-3 bg-[#1e1f26] text-white rounded-lg transition relative"
-            : "flex items-center space-x-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e1f26] rounded-lg transition";
+        `flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            isActive
+                ? 'bg-indigo-500/20 text-indigo-300 shadow-[0_0_12px_-2px_rgba(99,102,241,0.4)]'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+        }`;
 
     return (
-        <aside className="w-64 bg-[#14151a] border-r border-gray-800 flex flex-col justify-between hidden md:flex shrink-0">
-            <div>
-                <div className="p-6">
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">ZynkEdu</h1>
-                    <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-semibold">Live Learning</p>
+        <nav className="w-full sticky top-0 z-50 bg-[#0e0e11]/80 backdrop-blur-md border-b border-gray-800/50">
+            <div className="flex items-center justify-between px-8 h-16">
+
+                {/* Left — Brand */}
+                <div
+                    className="flex flex-col cursor-pointer select-none"
+                    onClick={() => navigate('/home')}
+                >
+                    <span className="text-xl font-bold tracking-tight text-white leading-none">
+                        Zynk
+                    </span>
+                    <span className="text-[10px] font-semibold tracking-[0.18em] text-indigo-400 uppercase mt-0.5">
+                        Live Learning
+                    </span>
                 </div>
-                <nav className="mt-6 px-4 space-y-2">
+
+                {/* Right — Nav links + user */}
+                <div className="flex items-center gap-2">
                     <NavLink to="/home" className={navLinkClass}>
-                        {({ isActive }) => (
-                            <>
-                                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-500 rounded-r-full"></div>}
-                                <HomeIcon size={20} className={isActive ? "text-indigo-400" : ""} />
-                                <span className="font-medium text-sm">Home</span>
-                            </>
-                        )}
+                        <HomeIcon size={15} />
+                        <span>Home</span>
                     </NavLink>
-                    <NavLink to="/classrooms" className={navLinkClass}>
-                        {({ isActive }) => (
-                            <>
-                                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-500 rounded-r-full"></div>}
-                                <LayoutDashboard size={20} className={isActive ? "text-indigo-400" : ""} />
-                                <span className="font-medium text-sm">Classrooms</span>
-                            </>
-                        )}
-                    </NavLink>
-                    <NavLink to="/notifications" className={navLinkClass}>
-                        {({ isActive }) => (
-                            <>
-                                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-500 rounded-r-full"></div>}
-                                <Bell size={20} className={isActive ? "text-indigo-400" : ""} />
-                                <span className="font-medium text-sm">Notifications</span>
-                            </>
-                        )}
-                    </NavLink>
-                    <NavLink to="/settings" className={navLinkClass}>
-                        {({ isActive }) => (
-                            <>
-                                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-500 rounded-r-full"></div>}
-                                <Settings size={20} className={isActive ? "text-indigo-400" : ""} />
-                                <span className="font-medium text-sm">Settings</span>
-                            </>
-                        )}
-                    </NavLink>
+
                     <NavLink to="/profile" className={navLinkClass}>
-                        {({ isActive }) => (
-                            <>
-                                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-500 rounded-r-full"></div>}
-                                <User size={20} className={isActive ? "text-indigo-400" : ""} />
-                                <span className="font-medium text-sm">Profile</span>
-                            </>
-                        )}
+                        <User size={15} />
+                        <span>Profile</span>
                     </NavLink>
-                </nav>
-            </div>
-            
-            {/* User Profile Snippet */}
-            <div className="p-4 border-t border-gray-800">
-                <div className="flex items-center justify-between bg-[#1a1b23] p-3 rounded-lg border border-gray-800/80">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-9 h-9 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-sm shadow-sm text-white">
-                            {user?.fullName?.charAt(0) || 'U'}
+
+                    {/* Divider */}
+                    <div className="w-px h-5 bg-gray-700/60 mx-2" />
+
+                    {/* User pill */}
+                    <div className="flex items-center gap-2.5 bg-[#14151a] border border-gray-800/80 rounded-full pl-1 pr-3 py-1">
+                        <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold text-white uppercase">
+                            {user?.fullName?.[0] || user?.email?.[0] || 'U'}
                         </div>
-                        <div className="overflow-hidden">
-                            <p className="text-xs font-semibold truncate w-24 text-gray-200">{user?.fullName || 'Guest'}</p>
-                            <p className="text-[10px] text-gray-500 font-medium truncate">{user?.role || 'Welcome'}</p>
+                        <div className="flex flex-col leading-none">
+                            <span className="text-xs font-semibold text-gray-200">
+                                {user?.fullName || 'User'}
+                            </span>
+                            <span className="text-[10px] text-gray-500">
+                                {user?.role || 'Student'}
+                            </span>
                         </div>
                     </div>
-                    <button onClick={handleLogout} className="text-gray-500 hover:text-red-400 transition" title="Logout">
+
+                    {/* Logout */}
+                    <button
+                        onClick={() => navigate('/logout')}
+                        className="ml-1 p-2 rounded-full text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        title="Logout"
+                    >
                         <LogOut size={16} />
                     </button>
                 </div>
             </div>
-        </aside>
+        </nav>
     );
 }

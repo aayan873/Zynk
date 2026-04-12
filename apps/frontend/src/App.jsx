@@ -9,7 +9,6 @@ import ProtectedRoutes from "./utils/ProtectedRoutes.jsx";
 import Logout from "./pages/Logout.jsx";
 import Home from "./components/Home.jsx";
 import Room from "./components/Room.jsx";
-import History from "./components/History.jsx";
 import ProfileSetup from "./pages/ProfileSetup.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ClassroomPage from "./pages/ClassroomPage.jsx";
@@ -67,14 +66,7 @@ function App() {
             }
           />
 
-          <Route
-            path="/history"
-            element={
-              <ProtectedRoutes>
-                <History />
-              </ProtectedRoutes>
-            }
-          />
+         
 
           <Route path="/logout" element={<Logout />} />
 

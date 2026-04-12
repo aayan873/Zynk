@@ -102,7 +102,7 @@ export default function ClassroomPage() {
 
     if (!classroom) {
         return (
-            <div className="flex h-screen bg-[#0e0e11] text-gray-100">
+            <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100">
                 <Sidebar />
                 <main className="flex-1 flex flex-col items-center justify-center shadow-lg">
                     <h2 className="text-2xl font-bold text-gray-400">Classroom not found</h2>
@@ -118,7 +118,7 @@ export default function ClassroomPage() {
     }
 
     return (
-        <div className="flex h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
+        <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
             <Sidebar />
 
             <main className="flex-1 flex flex-col overflow-hidden relative">
