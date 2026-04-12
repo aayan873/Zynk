@@ -18,6 +18,7 @@ import {
 import toast from 'react-hot-toast';
 import ScheduleMeetModal from '../components/ScheduleMeetModal.jsx';
 import ClassroomStream from '../components/ClassroomStream.jsx';
+import ClassroomPeople from '../components/ClassroomPeople.jsx';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -217,6 +218,7 @@ export default function ClassroomPage() {
                                 activeTab === 'announcements' ? 'p-6 overflow-y-auto' :
                                 activeTab === 'chat' ? 'flex flex-col' :
                                 activeTab === 'stream' ? 'flex flex-col' :
+                                activeTab === 'people' ? 'flex flex-col' :
                                 'p-10 flex flex-col items-center justify-center text-center shadow-sm'
                             }`}>
                                 {activeTab === 'stream' ? (
@@ -238,6 +240,10 @@ export default function ClassroomPage() {
                                         user={user} 
                                         isTeacher={isTeacherState} 
                                         token={auth.token}
+                                    />
+                                ) : activeTab === 'people' ? (
+                                    <ClassroomPeople 
+                                        classroom={classroom} 
                                     />
                                 ) : (
                                     <>
