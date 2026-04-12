@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import ClassroomAnnouncements from '../components/ClassroomAnnouncements.jsx';
+import ClassroomChat from '../components/ClassroomChat.jsx';
 import { 
     BookOpen, 
     MessageSquare, 
@@ -200,6 +201,13 @@ export default function ClassroomPage() {
                                         classroom={classroom} 
                                         user={user} 
                                         isTeacher={user?.role === 'Teacher'} 
+                                    />
+                                ) : activeTab === 'chat' ? (
+                                    <ClassroomChat 
+                                        classroom={classroom} 
+                                        user={user} 
+                                        isTeacher={user?.role === 'Teacher'} 
+                                        token={auth.token}
                                     />
                                 ) : (
                                     <>
