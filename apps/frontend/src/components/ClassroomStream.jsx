@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
-import { Video, Clock, MonitorPlay, Calendar } from 'lucide-react';
+import { Video, Clock, Calendar } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -108,8 +108,8 @@ export default function ClassroomStream({ classroomId }) {
                                 </div>
                                 <h4 className="text-gray-200 font-bold text-xl mb-1">{meet.title}</h4>
                                 <p className="text-gray-500 text-sm mt-0.5 flex items-center gap-1.5 font-medium">
-                                    {meet.type === 'WEBINAR' ? <MonitorPlay size={14} /> : <Video size={14} />}
-                                    <span>{meet.type === 'WEBINAR' ? 'Webinar Session' : 'Interactive Meeting'}</span>
+                                    <Video size={14} />
+                                    <span>Interactive Meeting</span>
                                 </p>
                             </div>
                         </div>
