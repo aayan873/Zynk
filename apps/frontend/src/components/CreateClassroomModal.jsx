@@ -13,7 +13,6 @@ export default function CreateClassroomModal({ isOpen, onClose, onSuccess }) {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        institute: '',
         programme: '',
         semester: '',
         branches: ''
@@ -45,7 +44,7 @@ export default function CreateClassroomModal({ isOpen, onClose, onSuccess }) {
                 toast.success('Classroom created successfully!');
                 onSuccess(res.data.data);
                 onClose();
-                setFormData({ name: '', description: '', institute: '', programme: '', semester: '', branches: '' });
+                setFormData({ name: '', description: '', programme: '', semester: '', branches: '' });
             }
         } catch (error) {
             console.error("Failed to create classroom:", error);
@@ -99,51 +98,46 @@ export default function CreateClassroomModal({ isOpen, onClose, onSuccess }) {
 
                     <div className="grid grid-cols-2 gap-5">
                         <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Institute *</label>
-                            <input 
-                                required 
-                                name="institute" 
-                                value={formData.institute} 
-                                onChange={handleChange} 
-                                placeholder="University Name" 
-                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition"
-                            />
-                        </div>
-                        <div className="space-y-1">
                             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Programme *</label>
-                            <input 
+                            <select 
                                 required 
                                 name="programme" 
                                 value={formData.programme} 
                                 onChange={handleChange} 
-                                placeholder="e.g. B.Tech" 
-                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition"
-                            />
+                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white transition appearance-none"
+                            >
+                                <option value="" disabled hidden>Select Degree</option>
+                                {['B.Tech', 'M.Tech', 'BCA', 'MCA', 'BBA', 'MBA', 'B.Sc', 'M.Sc'].map(deg => (
+                                    <option key={deg} value={deg}>{deg}</option>
+                                ))}
+                            </select>
                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-5">
                         <div className="space-y-1">
                             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Semester *</label>
-                            <input 
+                            <select 
                                 required 
                                 name="semester" 
                                 value={formData.semester} 
                                 onChange={handleChange} 
-                                placeholder="e.g. Fall 2026" 
-                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition"
-                            />
+                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white transition appearance-none"
+                            >
+                                <option value="" disabled hidden>Select Semester</option>
+                                {['1', '2', '3', '4', '5', '6', '7', '8'].map(sem => (
+                                    <option key={sem} value={sem}>{sem}</option>
+                                ))}
+                            </select>
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Branches</label>
-                            <input 
-                                name="branches" 
-                                value={formData.branches} 
-                                onChange={handleChange} 
-                                placeholder="CS, IT (Comma split)" 
-                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition"
-                            />
-                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Branches</label>
+                        <input 
+                            name="branches" 
+                            value={formData.branches} 
+                            onChange={handleChange} 
+                            placeholder="CS, IT (Comma split)" 
+                            className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition"
+                        />
                     </div>
 
                     <div className="pt-4 flex justify-end gap-3">
