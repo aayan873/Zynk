@@ -38,6 +38,12 @@ const classroomSchema = new mongoose.Schema(
         ref: 'Student',
       },
     ],
+    announcements: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Announcement',
+      },
+    ],
     inviteCode: {
       type: String,
       unique: true,
