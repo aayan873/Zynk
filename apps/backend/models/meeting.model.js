@@ -12,7 +12,7 @@ const meetingSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ["MEET", "WEBINAR"],
+        enum: ["MEET"],
         required: true,
     },
     title: {

@@ -10,9 +10,12 @@ import {
     Video, 
     Megaphone,
     LogOut,
-    ExternalLink
+    ExternalLink,
+    CalendarPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ScheduleMeetModal from '../components/ScheduleMeetModal.jsx';
+import ClassroomStream from '../components/ClassroomStream.jsx';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -35,6 +38,8 @@ export default function ClassroomPage() {
     const [enrolling, setEnrolling] = useState(false);
     const [activeTab, setActiveTab] = useState('stream');
     const [isEnrolled, setIsEnrolled] = useState(false);
+    const [isTeacherState, setIsTeacherState] = useState(false);
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchClassroom = async () => {
@@ -50,7 +55,9 @@ export default function ClassroomPage() {
                     // Check enrollment status
                     const isTeacher = classData.teachers.some(t => (t.user?._id || t.user) === user?._id);
                     const isStudentEnrolled = classData.students.some(s => (s.user?._id || s.user) === user?._id);
-                    setIsEnrolled(isTeacher || isStudentEnrolled || user?.role === 'Teacher');
+                    const isUserTeacherRole = user?.role === 'Teacher';
+                    setIsEnrolled(isTeacher || isStudentEnrolled || isUserTeacherRole);
+                    setIsTeacherState(isTeacher || isUserTeacherRole);
                 }
             } catch (err) {
                 console.error("Failed to fetch classroom:", err);
@@ -171,41 +178,64 @@ export default function ClassroomPage() {
                         // Enrolled: Tabs UI
                         <div className="w-full h-full flex flex-col">
                             {/* Tabs Navigation */}
-                            <div className="flex space-x-1 border-b border-gray-800/80 mb-6 bg-[#0e0e11] sticky top-0 z-10 pt-2">
-                                {ENROLLMENT_TABS.map((tab) => {
-                                    const Icon = tab.icon;
-                                    const isActive = activeTab === tab.id;
-                                    return (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => setActiveTab(tab.id)}
-                                            className={`flex items-center space-x-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
-                                                isActive
-                                                    ? 'border-indigo-500 text-indigo-400'
-                                                    : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-700'
-                                            }`}
-                                        >
-                                            <Icon size={16} />
-                                            <span>{tab.label}</span>
-                                        </button>
-                                    );
-                                })}
+                            <div className="flex items-center justify-between border-b border-gray-800/80 mb-6 bg-[#0e0e11] sticky top-0 z-10 pt-2">
+                                <div className="flex space-x-1">
+                                    {ENROLLMENT_TABS.map((tab) => {
+                                        const Icon = tab.icon;
+                                        const isActive = activeTab === tab.id;
+                                        return (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id)}
+                                                className={`flex items-center space-x-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
+                                                    isActive
+                                                        ? 'border-indigo-500 text-indigo-400'
+                                                        : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-700'
+                                                }`}
+                                            >
+                                                <Icon size={16} />
+                                                <span>{tab.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {isTeacherState && (
+                                    <button
+                                        onClick={() => setIsScheduleModalOpen(true)}
+                                        className="mb-2 flex items-center space-x-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                                    >
+                                        <CalendarPlus size={16} />
+                                        <span>Schedule Meet</span>
+                                    </button>
+                                )}
                             </div>
 
                             {/* Tab Content Display */}
-                            <div className="flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl p-10 flex flex-col items-center justify-center text-center shadow-sm">
-                                <div className="text-gray-600 mb-4">
-                                    <Megaphone size={48} className="mx-auto opacity-20" />
+                            {activeTab === 'stream' ? (
+                                <div className="flex-1 w-full mx-auto max-w-4xl">
+                                    <ClassroomStream classroomId={id} />
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-300 mb-2 capitalize">{activeTab}</h3>
-                                <p className="text-gray-500 text-sm">
-                                    The {activeTab} section is currently under construction. Check back soon!
-                                </p>
-                            </div>
+                            ) : (
+                                <div className="flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl p-10 flex flex-col items-center justify-center text-center shadow-sm">
+                                    <div className="text-gray-600 mb-4">
+                                        <Megaphone size={48} className="mx-auto opacity-20" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-300 mb-2 capitalize">{activeTab}</h3>
+                                    <p className="text-gray-500 text-sm">
+                                        The {activeTab} section is currently under construction. Check back soon!
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
             </main>
+
+            <ScheduleMeetModal 
+                isOpen={isScheduleModalOpen}
+                onClose={() => setIsScheduleModalOpen(false)}
+                classroomId={id}
+            />
         </div>
     );
 }
