@@ -216,25 +216,33 @@ export default function ClassroomPage() {
                             <div className={`flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl overflow-hidden ${
                                 activeTab === 'announcements' ? 'p-6 overflow-y-auto' :
                                 activeTab === 'chat' ? 'flex flex-col' :
+                                activeTab === 'stream' ? 'flex flex-col' :
                                 'p-10 flex flex-col items-center justify-center text-center shadow-sm'
                             }`}>
-                                {activeTab === 'announcements' ? (
+                                {activeTab === 'stream' ? (
+                                    <ClassroomStream
+                                        classroom={classroom}
+                                        user={user}
+                                        isTeacher={isTeacherState}
+                                        token={auth.token}
+                                    />
+                                ) : activeTab === 'announcements' ? (
                                     <ClassroomAnnouncements 
                                         classroom={classroom} 
                                         user={user} 
-                                        isTeacher={user?.role === 'Teacher'} 
+                                        isTeacher={isTeacherState} 
                                     />
                                 ) : activeTab === 'chat' ? (
                                     <ClassroomChat 
                                         classroom={classroom} 
                                         user={user} 
-                                        isTeacher={user?.role === 'Teacher'} 
+                                        isTeacher={isTeacherState} 
                                         token={auth.token}
                                     />
                                 ) : (
                                     <>
                                         <div className="text-gray-600 mb-4">
-                                            <Megaphone size={48} className="mx-auto opacity-20" />
+                                            <BookOpen size={48} className="mx-auto opacity-20" />
                                         </div>
                                         <h3 className="text-xl font-bold text-gray-300 mb-2 capitalize">{activeTab}</h3>
                                         <p className="text-gray-500 text-sm">
@@ -243,19 +251,6 @@ export default function ClassroomPage() {
                                     </>
                                 )}
                             </div>
-                                </div>
-                            )}
-                            {activeTab !== 'stream' && activeTab !== 'announcements' && (
-                                <div className="flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl p-10 flex flex-col items-center justify-center text-center shadow-sm">
-                                    <div className="text-gray-600 mb-4">
-                                        <BookOpen size={48} className="mx-auto opacity-20" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-300 mb-2 capitalize">{activeTab}</h3>
-                                    <p className="text-gray-500 text-sm">
-                                        The {activeTab} section is currently under construction. Check back soon!
-                                    </p>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>
