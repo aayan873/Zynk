@@ -1,14 +1,14 @@
 import { Classroom } from '../models/classroom.model.js';
-
+import Student from '../models/student.model.js';
 // 1. CREATE CLASSROOM (Teacher Only)
 export const createClassroom = async (req, res) => {
   try {
-    const { name, description, institute, programme, semester, branches, inviteCode } = req.body;
+    const { name, description, programme, semester, branches, inviteCode } = req.body;
 
     const classroom = new Classroom({
       name,
       description,
-      institute,
+      institute: req.user.institution,
       programme,
       semester,
       branches,
@@ -112,8 +112,23 @@ export const getClassroom = async (req, res) => {
         return res.status(403).json({ success: false, message: 'Not authorized to view this classroom' });
       }
     } else if (role === 'Student') {
-      const isStudent = classroom.students.some((s) => s._id.toString() === userId.toString());
-      if (!isStudent) {
+      let isAuthorized = classroom.students.some((s) => s._id.toString() === userId.toString());
+      
+      if (!isAuthorized) {
+        const studentProfile = await Student.findOne({ user: userId });
+        if (studentProfile) {
+           const matchInstitute = classroom.institute === req.user.institution;
+           const matchProgramme = classroom.programme === studentProfile.programme;
+           const matchSemester = classroom.semester === studentProfile.semester;
+           const matchBranch = classroom.branches.includes(studentProfile.branch);
+
+           if (matchInstitute && matchProgramme && matchSemester && matchBranch) {
+               isAuthorized = true;
+           }
+        }
+      }
+
+      if (!isAuthorized) {
         return res.status(403).json({ success: false, message: 'Not authorized to view this classroom' });
       }
     }
@@ -139,7 +154,21 @@ export const getAllClassrooms = async (req, res) => {
     if (role === 'Teacher') {
         query.teachers = userId;
     } else if (role === 'Student') {
-        query.students = userId;
+        const studentProfile = await Student.findOne({ user: userId });
+        
+        if (studentProfile) {
+            query.$or = [
+                { students: userId },
+                {
+                    institute: req.user.institution,
+                    programme: studentProfile.programme,
+                    semester: studentProfile.semester,
+                    branches: { $in: [studentProfile.branch] }
+                }
+            ];
+        } else {
+            query.students = userId;
+        }
     }
 
     const classrooms = await Classroom.find(query)
