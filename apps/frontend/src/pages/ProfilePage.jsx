@@ -107,6 +107,31 @@ export default function ProfilePage() {
         );
     };
 
+    const renderSelectField = (label, name, options) => {
+        return (
+            <div className="flex flex-col space-y-1.5">
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</label>
+                {isEditing ? (
+                    <select
+                        name={name}
+                        value={formData[name] || ''}
+                        onChange={handleChange}
+                        className="bg-[#14151a] border border-gray-700 rounded-lg px-4 py-2.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-all appearance-none"
+                    >
+                        <option value="" disabled hidden>Select {label}</option>
+                        {options.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                    </select>
+                ) : (
+                    <div className="bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-2.5 text-gray-200">
+                        {profile[name] || <span className="text-gray-600 italic">Not provided</span>}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="flex h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
             <Sidebar />
@@ -213,10 +238,10 @@ export default function ProfilePage() {
                                 {role === 'Student' && (
                                     <>
                                         {renderField("Roll Number", "rollNumber")}
-                                        {renderField("Programme", "programme")}
+                                        {renderSelectField("Programme", "programme", ['B.Tech', 'M.Tech', 'BCA', 'MCA', 'BBA', 'MBA', 'B.Sc', 'M.Sc'])}
                                         <div className="grid grid-cols-2 gap-4">
-                                            {renderField("Semester", "semester", "number")}
-                                            {renderField("Batch Year", "batchYear", "number")}
+                                            {renderSelectField("Semester", "semester", ['1', '2', '3', '4', '5', '6', '7', '8'])}
+                                            {renderField("Batch Year", "batchYear", "text")}
                                         </div>
                                     </>
                                 )}

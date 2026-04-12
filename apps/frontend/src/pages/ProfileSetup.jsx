@@ -118,7 +118,12 @@ const ProfileSetup = () => {
                             </div>
                             <div className='form-group'>
                                 <label htmlFor="programme">Programme</label>
-                                <input type="text" value={programme} onChange={(e) => setProgramme(e.target.value)} required placeholder='e.g. B.Tech' />
+                                <select value={programme} onChange={(e) => setProgramme(e.target.value)} required style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #333', background: '#111', color: 'white'}}>
+                                    <option value="" disabled hidden>Select Programme</option>
+                                    {['B.Tech', 'M.Tech', 'BCA', 'MCA', 'BBA', 'MBA', 'B.Sc', 'M.Sc'].map(deg => (
+                                        <option key={deg} value={deg}>{deg}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div className='form-group'>
                                 <label htmlFor="branch">Branch / Department</label>
@@ -126,7 +131,12 @@ const ProfileSetup = () => {
                             </div>
                             <div className='form-group'>
                                 <label htmlFor="semester">Semester</label>
-                                <input type="text" value={semester} onChange={(e) => setSemester(e.target.value)} required placeholder='e.g. Semester 5' />
+                                <select value={semester} onChange={(e) => setSemester(e.target.value)} required style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #333', background: '#111', color: 'white'}}>
+                                    <option value="" disabled hidden>Select Semester</option>
+                                    {['1', '2', '3', '4', '5', '6', '7', '8'].map(sem => (
+                                        <option key={sem} value={sem}>{sem}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div className='form-group'>
                                 <label htmlFor="batchYear">Batch Year</label>
