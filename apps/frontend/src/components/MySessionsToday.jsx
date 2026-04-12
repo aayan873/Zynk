@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
-import { Video, Clock, MonitorPlay } from 'lucide-react';
+import { Video, Clock } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -92,10 +92,13 @@ export default function MySessionsToday() {
                                         {formatTime(meet.scheduledFor)} - {formatTime(meet.scheduledEndTime)}
                                     </span>
                                 </div>
+                                {meet.classroom?.name && (
+                                    <h5 className="text-indigo-400 font-semibold text-xs tracking-wide uppercase mb-1">{meet.classroom.name}</h5>
+                                )}
                                 <h4 className="text-gray-200 font-bold text-lg">{meet.title}</h4>
                                 <p className="text-gray-500 text-sm mt-0.5 flex items-center gap-1.5 font-medium">
-                                    {meet.type === 'WEBINAR' ? <MonitorPlay size={14} /> : <Video size={14} />}
-                                    <span>{meet.type === 'WEBINAR' ? 'Webinar Session' : 'Interactive Meeting'}</span>
+                                    <Video size={14} />
+                                    <span>Interactive Meeting</span>
                                 </p>
                             </div>
                         </div>

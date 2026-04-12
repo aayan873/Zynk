@@ -128,20 +128,6 @@ export default function ScheduleMeetModal({ isOpen, onClose, onSuccess, classroo
                         </div>
                     </div>
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Meet Type *</label>
-                        <select 
-                            required 
-                            name="type" 
-                            value={formData.type} 
-                            onChange={handleChange} 
-                            className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white transition appearance-none"
-                        >
-                            <option value="MEET">Interactive Meet</option>
-                            <option value="WEBINAR">Webinar (Host Broadcast)</option>
-                        </select>
-                    </div>
-
                     <div className="pt-4 flex justify-end gap-3">
                         <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition">Cancel</button>
                         <button type="submit" disabled={loading} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-all shadow-md disabled:opacity-50 flex items-center justify-center min-w-[120px]">
