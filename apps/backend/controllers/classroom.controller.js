@@ -183,3 +183,57 @@ export const getAllClassrooms = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };
+
+// 6. ENROLL CLASSROOM (Student Only)
+export const enrollClassroom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+    const role = req.user.role;
+
+    if (role !== 'Student') {
+      return res.status(403).json({ success: false, message: 'Only students can enroll in classrooms' });
+    }
+
+    const classroom = await Classroom.findOne({ _id: id, isActive: true });
+    if (!classroom) {
+      return res.status(404).json({ success: false, message: 'Classroom not found or inactive' });
+    }
+
+    // Check if already enrolled
+    const isEnrolled = classroom.students.includes(userId);
+    if (isEnrolled) {
+      return res.status(400).json({ success: false, message: 'Already enrolled in this classroom' });
+    }
+
+    // Demographic check
+    let isAuthorized = false;
+    const studentProfile = await Student.findOne({ user: userId });
+    
+    if (studentProfile) {
+      const matchInstitute = classroom.institute === req.user.institution;
+      const matchProgramme = classroom.programme === studentProfile.programme;
+      const matchSemester = classroom.semester === studentProfile.semester;
+      const matchBranch = classroom.branches.includes(studentProfile.branch);
+
+      if (matchInstitute && matchProgramme && matchSemester && matchBranch) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({ success: false, message: 'Not eligible to enroll in this classroom based on your profile' });
+    }
+
+    // Add student to classroom
+    classroom.students.push(userId);
+    await classroom.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Successfully enrolled in the classroom',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
