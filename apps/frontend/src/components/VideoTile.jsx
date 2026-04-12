@@ -6,34 +6,20 @@ export default function VideoTile({ stream, isLocal = false, isScreen = false, p
     useEffect(() => {
         const video = videoRef.current
         if (!video || !stream) return
-
         video.srcObject = stream
-
-        const tryPlay = () => {
-            video.play().catch(err => console.warn("Video play interrupted, waiting for context unlock:", err))
-        }
+        const tryPlay = () => video.play().catch(err => console.warn("Video play interrupted:", err))
         tryPlay()
-
-        // Listen for new tracks being added to this stream
-        const onTrackAdded = () => {
-            // Re-set srcObject to force the video element to pick up the new track
-            video.srcObject = stream
-            tryPlay()
-        }
+        const onTrackAdded = () => { video.srcObject = stream; tryPlay() }
         stream.addEventListener("addtrack", onTrackAdded)
-
-        return () => {
-            stream.removeEventListener("addtrack", onTrackAdded)
-        }
+        return () => stream.removeEventListener("addtrack", onTrackAdded)
     }, [stream, isLocal])
 
     return (
         <div className={`relative bg-black overflow-hidden transition-all ${
-            isMain 
-            ? "w-full h-full flex items-center justify-center rounded-2xl" 
-            : "w-48 sm:w-60 aspect-video rounded-xl border border-gray-800 shadow-lg shrink-0"
+            isMain
+                ? "w-full h-full flex items-center justify-center rounded-xl sm:rounded-2xl"
+                : "w-28 xs:w-36 sm:w-48 md:w-56 aspect-video rounded-lg sm:rounded-xl border border-gray-800 shadow-lg shrink-0"
         }`}>
-
             <video
                 ref={videoRef}
                 autoPlay
@@ -41,12 +27,9 @@ export default function VideoTile({ stream, isLocal = false, isScreen = false, p
                 muted={isLocal}
                 className={`w-full h-full ${isMain ? "object-contain bg-gray-900" : "object-cover"} ${isLocal && !isScreen ? "scale-x-[-1]" : ""}`}
             />
-
-            {/* Label */}
-            <div className="absolute bottom-2 left-2 text-xs font-medium bg-black/60 px-2 py-1 rounded text-white truncate max-w-[90%]">
+            <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 text-[10px] sm:text-xs font-medium bg-black/60 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-white truncate max-w-[90%]">
                 {userName || (isLocal ? "You" : peerId?.slice(0, 6))}
             </div>
-
         </div>
     )
 }
