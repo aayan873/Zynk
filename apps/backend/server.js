@@ -15,6 +15,7 @@ import { registerSocketEvents } from "./sockets/sfu.socket.js";
 import { registerRoomSocket } from "./sockets/room.socket.js";
 import { registerChatSocket } from "./sockets/chat.socket.js";
 import { registerPollSocket } from "./sockets/poll.socket.js";
+import { registerClassroomChatSocket } from "./sockets/classroomChat.socket.js";
 
 export const startServer = async ({ port }) => {
     const allowedOrigins = ["http://localhost:5173", process.env.FRONTEND_URL].filter(Boolean);
@@ -74,6 +75,9 @@ export const startServer = async ({ port }) => {
 
         // Poll events
         registerPollSocket(io, socket);
+
+        // Classroom Chat events
+        registerClassroomChatSocket(io, socket);
 
         socket.on("disconnect", () => {
             console.log(`Client disconnected: ${socket.id}`);
