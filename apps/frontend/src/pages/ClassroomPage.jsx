@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
-import Sidebar from '../components/Sidebar.jsx';
+import Navbar from '../components/Navbar.jsx';
 import ClassroomAnnouncements from '../components/ClassroomAnnouncements.jsx';
 import ClassroomChat from '../components/ClassroomChat.jsx';
 import { 
@@ -103,7 +103,7 @@ export default function ClassroomPage() {
     if (!classroom) {
         return (
             <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100">
-                <Sidebar />
+                <Navbar />
                 <main className="flex-1 flex flex-col items-center justify-center shadow-lg">
                     <h2 className="text-2xl font-bold text-gray-400">Classroom not found</h2>
                     <button 
@@ -119,7 +119,7 @@ export default function ClassroomPage() {
 
     return (
         <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
-            <Sidebar />
+            <Navbar />
 
             <main className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Classroom Header */}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
-import Sidebar from '../components/Sidebar.jsx';
+import Navbar from '../components/Navbar.jsx';
 import { Edit2, Save, X, Loader2, CheckCircle2, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -64,7 +64,7 @@ export default function ProfilePage() {
     if (loading) {
         return (
             <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
-                <Sidebar />
+                <Navbar />
                 <main className="flex-1 flex items-center justify-center">
                     <Loader2 className="animate-spin text-indigo-500 w-10 h-10" />
                 </main>
@@ -75,7 +75,7 @@ export default function ProfilePage() {
     if (!profile) {
         return (
             <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
-                <Sidebar />
+                <Navbar />
                 <main className="flex-1 flex items-center justify-center flex-col">
                     <h2 className="text-2xl text-gray-400">Profile not found</h2>
                 </main>
@@ -134,7 +134,7 @@ export default function ProfilePage() {
 
     return (
         <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
-            <Sidebar />
+            <Navbar />
 
             <main className="flex-1 flex flex-col overflow-y-auto relative p-10">
                 <div className="max-w-4xl w-full mx-auto space-y-8 mt-10">
