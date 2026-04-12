@@ -60,6 +60,8 @@ export const startServer = async ({ port }) => {
     app.use(express.json());
 
     io.use(socketAuth);
+    
+    app.set("io", io);
 
     io.on("connection", (socket) => {
         console.log(`Client connected: ${socket.id}`);
