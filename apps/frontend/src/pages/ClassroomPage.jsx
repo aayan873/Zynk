@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
 import Sidebar from '../components/Sidebar.jsx';
+import ClassroomAnnouncements from '../components/ClassroomAnnouncements.jsx';
 import { 
     BookOpen, 
     MessageSquare, 
@@ -193,14 +194,24 @@ export default function ClassroomPage() {
                             </div>
 
                             {/* Tab Content Display */}
-                            <div className="flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl p-10 flex flex-col items-center justify-center text-center shadow-sm">
-                                <div className="text-gray-600 mb-4">
-                                    <Megaphone size={48} className="mx-auto opacity-20" />
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-300 mb-2 capitalize">{activeTab}</h3>
-                                <p className="text-gray-500 text-sm">
-                                    The {activeTab} section is currently under construction. Check back soon!
-                                </p>
+                            <div className={`flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl ${activeTab !== 'announcements' ? 'p-10 flex flex-col items-center justify-center text-center shadow-sm' : 'p-6 overflow-y-auto'}`}>
+                                {activeTab === 'announcements' ? (
+                                    <ClassroomAnnouncements 
+                                        classroom={classroom} 
+                                        user={user} 
+                                        isTeacher={user?.role === 'Teacher'} 
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="text-gray-600 mb-4">
+                                            <Megaphone size={48} className="mx-auto opacity-20" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-300 mb-2 capitalize">{activeTab}</h3>
+                                        <p className="text-gray-500 text-sm">
+                                            The {activeTab} section is currently under construction. Check back soon!
+                                        </p>
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}

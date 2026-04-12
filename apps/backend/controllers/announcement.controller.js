@@ -6,11 +6,11 @@ import Student from '../models/student.model.js';
 export const createAnnouncement = async (req, res) => {
     try {
         const { classroomId } = req.params;
-        const { content } = req.body;
+        const { title, content } = req.body;
         const userId = req.user._id;
 
-        if (!content) {
-            return res.status(400).json({ success: false, message: 'Content is required.' });
+        if (!title || !content) {
+            return res.status(400).json({ success: false, message: 'Title and content are required.' });
         }
 
         const classroom = await Classroom.findById(classroomId);
@@ -31,6 +31,7 @@ export const createAnnouncement = async (req, res) => {
         const newAnnouncement = new Announcement({
             classroom: classroomId,
             author: userId,
+            title,
             content
         });
 
