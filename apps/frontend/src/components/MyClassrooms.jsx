@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Users, Calendar, ExternalLink, Plus } from 'lucide-react';
 import CreateClassroomModal from './CreateClassroomModal.jsx';
@@ -7,6 +8,7 @@ import CreateClassroomModal from './CreateClassroomModal.jsx';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 export default function MyClassrooms() {
+    const navigate = useNavigate();
     const { auth } = useAuth();
     const [classrooms, setClassrooms] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function MyClassrooms() {
                         </div>
                     )}
                     {displayedClassrooms.map((cls) => (
-                        <div key={cls._id} className="bg-[#14151a] border border-gray-800/80 hover:border-gray-700/80 rounded-2xl overflow-hidden group transition-all cursor-pointer">
+                        <div key={cls._id} onClick={() => navigate(`/classroom/${cls._id}`)} className="bg-[#14151a] border border-gray-800/80 hover:border-gray-700/80 rounded-2xl overflow-hidden group transition-all cursor-pointer">
                             {/* Card Banner */}
                             <div className="h-28 bg-gradient-to-br from-indigo-900/40 to-slate-800 relative border-b border-gray-800/50">
                                 <div className="absolute top-4 left-4 bg-[#0e0e11]/80 backdrop-blur-sm text-[10px] font-bold px-2.5 py-1 rounded text-gray-300 uppercase tracking-wider border border-gray-700">

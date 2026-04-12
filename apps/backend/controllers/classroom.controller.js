@@ -1,9 +1,15 @@
 import { Classroom } from '../models/classroom.model.js';
 import Student from '../models/student.model.js';
+import Teacher from '../models/teacher.model.js';
 // 1. CREATE CLASSROOM (Teacher Only)
 export const createClassroom = async (req, res) => {
   try {
     const { name, description, programme, semester, branches, inviteCode } = req.body;
+
+    const teacherProfile = await Teacher.findOne({ user: req.user._id });
+    if (!teacherProfile) {
+      return res.status(404).json({ success: false, message: 'Teacher profile not found' });
+    }
 
     const classroom = new Classroom({
       name,
@@ -13,7 +19,7 @@ export const createClassroom = async (req, res) => {
       semester,
       branches,
       inviteCode,
-      teachers: [req.user._id],
+      teachers: [teacherProfile._id],
       students: []
     });
 
@@ -41,8 +47,13 @@ export const updateClassroom = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Classroom not found' });
     }
 
+    const teacherProfile = await Teacher.findOne({ user: req.user._id });
+    if (!teacherProfile) {
+      return res.status(404).json({ success: false, message: 'Teacher profile not found' });
+    }
+
     // Authorization: User must be a teacher of THIS classroom
-    if (!classroom.teachers.includes(req.user._id)) {
+    if (!classroom.teachers.includes(teacherProfile._id)) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this classroom' });
     }
 
@@ -72,8 +83,13 @@ export const deleteClassroom = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Classroom not found' });
     }
 
+    const teacherProfile = await Teacher.findOne({ user: req.user._id });
+    if (!teacherProfile) {
+      return res.status(404).json({ success: false, message: 'Teacher profile not found' });
+    }
+
     // Authorization: User must be a teacher of THIS classroom
-    if (!classroom.teachers.includes(req.user._id)) {
+    if (!classroom.teachers.includes(teacherProfile._id)) {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this classroom' });
     }
 
@@ -96,8 +112,8 @@ export const getClassroom = async (req, res) => {
     
     // Only return if it's active
     const classroom = await Classroom.findOne({ _id: id, isActive: true })
-        .populate('teachers', 'fullName email')
-        .populate('students', 'fullName email rollNumber');
+        .populate('teachers', 'fullName email user')
+        .populate('students', 'fullName email rollNumber user');
 
     if (!classroom) {
       return res.status(404).json({ success: false, message: 'Classroom not found or inactive' });
@@ -107,12 +123,12 @@ export const getClassroom = async (req, res) => {
     const role = req.user.role;
 
     if (role === 'Teacher') {
-      const isTeacher = classroom.teachers.some((t) => t._id.toString() === userId.toString());
+      const isTeacher = classroom.teachers.some((t) => t.user?.toString() === userId.toString());
       if (!isTeacher) {
         return res.status(403).json({ success: false, message: 'Not authorized to view this classroom' });
       }
     } else if (role === 'Student') {
-      let isAuthorized = classroom.students.some((s) => s._id.toString() === userId.toString());
+      let isAuthorized = classroom.students.some((s) => s.user?.toString() === userId.toString());
       
       if (!isAuthorized) {
         const studentProfile = await Student.findOne({ user: userId });
@@ -152,13 +168,18 @@ export const getAllClassrooms = async (req, res) => {
     let query = { isActive: true };
 
     if (role === 'Teacher') {
-        query.teachers = userId;
+        const teacherProfile = await Teacher.findOne({ user: userId });
+        if (teacherProfile) {
+            query.teachers = teacherProfile._id;
+        } else {
+            query.teachers = null; // No profile, no class
+        }
     } else if (role === 'Student') {
         const studentProfile = await Student.findOne({ user: userId });
         
         if (studentProfile) {
             query.$or = [
-                { students: userId },
+                { students: studentProfile._id },
                 {
                     institute: req.user.institution,
                     programme: studentProfile.programme,
@@ -167,13 +188,13 @@ export const getAllClassrooms = async (req, res) => {
                 }
             ];
         } else {
-            query.students = userId;
+            query.students = null;
         }
     }
 
     const classrooms = await Classroom.find(query)
-        .populate('teachers', 'fullName email')
-        .populate('students', 'fullName email rollNumber');
+        .populate('teachers', 'fullName email user')
+        .populate('students', 'fullName email rollNumber user');
 
     return res.status(200).json({
       success: true,
@@ -200,15 +221,18 @@ export const enrollClassroom = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Classroom not found or inactive' });
     }
 
-    // Check if already enrolled
-    const isEnrolled = classroom.students.includes(userId);
-    if (isEnrolled) {
-      return res.status(400).json({ success: false, message: 'Already enrolled in this classroom' });
-    }
-
     // Demographic check
     let isAuthorized = false;
     const studentProfile = await Student.findOne({ user: userId });
+    if (!studentProfile) {
+        return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    // Check if already enrolled
+    const isEnrolled = classroom.students.includes(studentProfile._id);
+    if (isEnrolled) {
+      return res.status(400).json({ success: false, message: 'Already enrolled in this classroom' });
+    }
     
     if (studentProfile) {
       const matchInstitute = classroom.institute === req.user.institution;
@@ -226,7 +250,7 @@ export const enrollClassroom = async (req, res) => {
     }
 
     // Add student to classroom
-    classroom.students.push(userId);
+    classroom.students.push(studentProfile._id);
     await classroom.save();
 
     return res.status(200).json({

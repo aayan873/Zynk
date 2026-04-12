@@ -12,6 +12,7 @@ import Room from "./components/Room.jsx";
 import History from "./components/History.jsx";
 import ProfileSetup from "./pages/ProfileSetup.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import ClassroomPage from "./pages/ClassroomPage.jsx";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -45,6 +46,14 @@ function App() {
             element={
               <ProtectedRoutes>
                 <ProfilePage />
+              </ProtectedRoutes>
+            }
+          />
+          <Route
+            path="/classroom/:id"
+            element={
+              <ProtectedRoutes>
+                <ClassroomPage />
               </ProtectedRoutes>
             }
           />
