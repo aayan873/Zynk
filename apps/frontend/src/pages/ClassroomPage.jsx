@@ -195,7 +195,11 @@ export default function ClassroomPage() {
                             </div>
 
                             {/* Tab Content Display */}
-                            <div className={`flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl ${activeTab !== 'announcements' ? 'p-10 flex flex-col items-center justify-center text-center shadow-sm' : 'p-6 overflow-y-auto'}`}>
+                            <div className={`flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl overflow-hidden ${
+                                activeTab === 'announcements' ? 'p-6 overflow-y-auto' :
+                                activeTab === 'chat' ? 'flex flex-col' :
+                                'p-10 flex flex-col items-center justify-center text-center shadow-sm'
+                            }`}>
                                 {activeTab === 'announcements' ? (
                                     <ClassroomAnnouncements 
                                         classroom={classroom} 
