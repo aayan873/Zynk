@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes.js';
 import meetRoutes from './routes/meet.routes.js'
 import classroomRoutes from './routes/classroom.routes.js';
 import profileRoutes from './routes/profile.routes.js';
+import announcementRoutes from './routes/announcement.routes.js';
 import { registerSocketEvents } from "./sockets/sfu.socket.js";
 import { registerRoomSocket } from "./sockets/room.socket.js";
 import { registerChatSocket } from "./sockets/chat.socket.js";
@@ -85,6 +86,7 @@ export const startServer = async ({ port }) => {
     app.use('/api/meets', meetRoutes)
     app.use('/api/classrooms', classroomRoutes)
     app.use('/api/profiles', profileRoutes)
+    app.use('/api/announcements', announcementRoutes)
 
     await new Promise((resolve) => {
         server.listen(port, resolve);
