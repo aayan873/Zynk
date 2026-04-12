@@ -53,6 +53,10 @@ const classroomSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isChatEnabled: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

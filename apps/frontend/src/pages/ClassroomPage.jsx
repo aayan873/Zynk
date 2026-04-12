@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import ClassroomAnnouncements from '../components/ClassroomAnnouncements.jsx';
+import ClassroomChat from '../components/ClassroomChat.jsx';
 import { 
     BookOpen, 
     MessageSquare, 
@@ -212,18 +213,36 @@ export default function ClassroomPage() {
                             </div>
 
                             {/* Tab Content Display */}
-                            {activeTab === 'stream' && (
-                                <div className="flex-1 w-full mx-auto max-w-4xl">
-                                    <ClassroomStream classroomId={id} />
-                                </div>
-                            )}
-                            {activeTab === 'announcements' && (
-                                <div className="flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl p-6 overflow-y-auto shadow-sm">
+                            <div className={`flex-1 bg-[#14151a] border border-gray-800/80 rounded-2xl overflow-hidden ${
+                                activeTab === 'announcements' ? 'p-6 overflow-y-auto' :
+                                activeTab === 'chat' ? 'flex flex-col' :
+                                'p-10 flex flex-col items-center justify-center text-center shadow-sm'
+                            }`}>
+                                {activeTab === 'announcements' ? (
                                     <ClassroomAnnouncements 
                                         classroom={classroom} 
                                         user={user} 
                                         isTeacher={user?.role === 'Teacher'} 
                                     />
+                                ) : activeTab === 'chat' ? (
+                                    <ClassroomChat 
+                                        classroom={classroom} 
+                                        user={user} 
+                                        isTeacher={user?.role === 'Teacher'} 
+                                        token={auth.token}
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="text-gray-600 mb-4">
+                                            <Megaphone size={48} className="mx-auto opacity-20" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-300 mb-2 capitalize">{activeTab}</h3>
+                                        <p className="text-gray-500 text-sm">
+                                            The {activeTab} section is currently under construction. Check back soon!
+                                        </p>
+                                    </>
+                                )}
+                            </div>
                                 </div>
                             )}
                             {activeTab !== 'stream' && activeTab !== 'announcements' && (
