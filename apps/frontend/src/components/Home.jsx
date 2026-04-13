@@ -39,7 +39,7 @@ export default function Home() {
             <Navbar />
 
             {/* Scrollable content area — only this scrolls */}
-            <main className="flex-1 overflow-y-auto pt-16">
+            <main className="flex-1 overflow-y-auto ">
 
                 {/* Sticky sub-header for teacher action */}
                 {user?.role === 'Teacher' && (

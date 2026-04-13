@@ -86,7 +86,7 @@ export default function ProfilePage() {
     const Shell = ({ children }) => (
         <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#0e0e11] text-gray-100 font-sans">
             <Navbar />
-            <main className="flex-1 overflow-y-auto pt-16">{children}</main>
+            <main className="flex-1 overflow-y-auto pt-4">{children}</main>
         </div>
     );
 
