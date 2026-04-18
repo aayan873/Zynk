@@ -45,14 +45,14 @@ const Signup = async (req, res) => {
         });
 
         if (role === 'Student') {
-            const studentRegex = /^(\d{2})(01|02|03|11|21)([a-z]{2})(\d+)_([a-zA-Z0-9]+)@([a-zA-Z0-9-]+)\.(.+)$/;
+            const studentRegex = /^([a-zA-Z0-9]+)_(\d{2})(01|02|03|11|21)([a-z]{2})(\d+)@([a-zA-Z0-9-]+)\.(.+)$/;
             const match = email.match(studentRegex);
             
             if (!match) {
-                return res.status(400).json({ success: false, message: "Invalid student email format. Must follow [RollNumber]_[Name]@college.domain" });
+                return res.status(400).json({ success: false, message: "Invalid student email format. Must follow [Name]_[RollNumber]@college.domain" });
             }
 
-            const batchYearObj = "20" + match[1];
+            const batchYearObj = "20" + match[2];
             const progMap = {
                 '01': 'BTech (4 year)',
                 '02': 'BTech + Mtech (5 yr dual degree)',
@@ -60,9 +60,9 @@ const Signup = async (req, res) => {
                 '11': 'Mtech (2 years)',
                 '21': 'PhD'
             };
-            const programmeObj = progMap[match[2]];
-            const branchObj = match[3].toUpperCase();
-            const rollNumberObj = email.split('@')[0].split('_')[0]; 
+            const programmeObj = progMap[match[3]];
+            const branchObj = match[4].toUpperCase();
+            const rollNumberObj = email.split('@')[0].split('_')[1]; 
 
             const currentYear = new Date().getFullYear();
             const currentHalf = new Date().getMonth() < 6 ? 1 : 2;
