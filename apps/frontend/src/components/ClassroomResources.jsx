@@ -114,8 +114,8 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
   };
 
   return (
-    /* Full-height flex column — parent already provides the scroll container */
-    <div className="flex flex-col h-full w-full">
+    /* Constrained height column to support internal scroll */
+    <div className="flex flex-col h-[65vh] sm:h-[70vh] w-full">
 
       {/* ── Top bar: heading + "Upload" toggle button ── STICKY, never scrolls */}
       <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800/60">
