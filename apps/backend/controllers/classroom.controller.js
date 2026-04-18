@@ -4,7 +4,7 @@ import Teacher from '../models/teacher.model.js';
 // 1. CREATE CLASSROOM (Teacher Only)
 export const createClassroom = async (req, res) => {
   try {
-    const { name, description, programme, semester, branches, inviteCode } = req.body;
+    const { name, description, programmes, semester, branches, inviteCode } = req.body;
 
     const teacherProfile = await Teacher.findOne({ user: req.user._id });
     if (!teacherProfile) {
@@ -15,7 +15,7 @@ export const createClassroom = async (req, res) => {
       name,
       description,
       institute: req.user.institution,
-      programme,
+      programmes,
       semester,
       branches,
       inviteCode,
@@ -139,7 +139,7 @@ export const getClassroom = async (req, res) => {
         const studentProfile = await Student.findOne({ user: userId });
         if (studentProfile) {
            const matchInstitute = classroom.institute === req.user.institution;
-           const matchProgramme = classroom.programme === studentProfile.programme;
+           const matchProgramme = classroom.programmes && classroom.programmes.includes(studentProfile.programme);
            const matchSemester = classroom.semester === studentProfile.semester;
            const matchBranch = classroom.branches.includes(studentProfile.branch);
 
@@ -187,7 +187,7 @@ export const getAllClassrooms = async (req, res) => {
                 { students: studentProfile._id },
                 {
                     institute: req.user.institution,
-                    programme: studentProfile.programme,
+                    programmes: { $in: [studentProfile.programme] },
                     semester: studentProfile.semester,
                     branches: { $in: [studentProfile.branch] }
                 }
@@ -241,7 +241,7 @@ export const enrollClassroom = async (req, res) => {
     
     if (studentProfile) {
       const matchInstitute = classroom.institute === req.user.institution;
-      const matchProgramme = classroom.programme === studentProfile.programme;
+      const matchProgramme = classroom.programmes && classroom.programmes.includes(studentProfile.programme);
       const matchSemester = classroom.semester === studentProfile.semester;
       const matchBranch = classroom.branches.includes(studentProfile.branch);
 
