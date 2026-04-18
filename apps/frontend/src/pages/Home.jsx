@@ -46,21 +46,6 @@ export default function Home() {
           <img src="/image.png" alt="Zynk Logo" />
         </Link>
 
-        <nav className="nocturnal-menu" aria-label="Landing">
-          <a href="#features" className="nocturnal-menu-link nocturnal-menu-link-active">
-            Features
-          </a>
-          <a href="#why-zynk" className="nocturnal-menu-link">
-            Why Zynk
-          </a>
-          <a href="#academic-flow" className="nocturnal-menu-link">
-            Academic Flow
-          </a>
-        </nav>
-
-        <Link to="/signup" className="nocturnal-btn nocturnal-btn-primary">
-          Get Started
-        </Link>
       </header>
 
       <main>
@@ -125,16 +110,6 @@ export default function Home() {
           </blockquote>
         </section>
 
-        <section className="nocturnal-cta-slab">
-          <h2>
-            Ready to sync your
-            <br />
-            classroom?
-          </h2>
-          <Link to="/signup" className="nocturnal-btn nocturnal-btn-dark">
-            Get Started
-          </Link>
-        </section>
       </main>
 
       <footer className="nocturnal-footer">

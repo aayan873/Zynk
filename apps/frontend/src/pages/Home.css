@@ -28,19 +28,16 @@
   --surface: #121414;
   --surface-low: #1a1c1c;
   --surface-high: #333535;
-  --text-main: #ece8de;
-  --text-muted: #bdb5a4;
-  --primary: #ffdea0;
-  --primary-deep: #e5c17c;
-  --on-primary: #2f2205;
-  --ghost-outline: rgba(77, 70, 57, 0.15);
+  --text-main: #ffffff;
+  --text-muted: #a0a0a0;
+  --primary: #ffffff;
+  --primary-deep: #f0f0f0;
+  --on-primary: #000000;
+  --ghost-outline: rgba(255, 255, 255, 0.15);
   min-height: 100vh;
   color: var(--text-main);
   font-family: "SK Concretica", "Manrope", sans-serif;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(229, 193, 124, 0.08), transparent 34%),
-    radial-gradient(circle at 90% 100%, rgba(229, 193, 124, 0.06), transparent 42%),
-    linear-gradient(180deg, #0f1212 0%, #111414 48%, #0e1111 100%);
+  background: black;
   position: relative;
   overflow-x: hidden;
 }
@@ -62,8 +59,7 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  background: rgba(26, 28, 28, 0.7);
-  backdrop-filter: blur(20px);
+  background: black;
 }
 
 .nocturnal-brand {
@@ -90,7 +86,7 @@
 }
 
 .nocturnal-menu-link {
-  color: #d6d0c1;
+  color: #d6d6d6;
   text-decoration: none;
   font-size: 0.78rem;
   font-weight: 500;
@@ -102,7 +98,7 @@
 .nocturnal-menu-link-active,
 .nocturnal-menu-link:hover {
   color: var(--primary);
-  border-bottom-color: rgba(255, 222, 160, 0.7);
+  border-bottom-color: rgba(255, 255, 255, 0.7);
 }
 
 .nocturnal-topbar .nocturnal-btn-primary {
@@ -129,12 +125,12 @@
 .nocturnal-btn-primary {
   color: var(--on-primary);
   background: linear-gradient(45deg, var(--primary), var(--primary-deep));
-  box-shadow: 0 20px 38px -28px rgba(229, 193, 124, 0.85);
+  box-shadow: 0 20px 38px -28px rgba(255, 255, 255, 0.85);
 }
 
 .nocturnal-btn-ghost {
   color: var(--primary);
-  border: 1px solid rgba(255, 222, 160, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   background: rgba(20, 24, 24, 0.6);
 }
 
@@ -143,8 +139,8 @@
 }
 
 .nocturnal-btn-dark {
-  color: #f4e2b8;
-  background: linear-gradient(180deg, #3a2a06 0%, #201705 100%);
+  color: #ffffff;
+  background: linear-gradient(180deg, #333333 0%, #111111 100%);
   min-width: 11rem;
 }
 
@@ -184,7 +180,7 @@
 
 .nocturnal-subline {
   margin-top: 1.9rem;
-  color: #d2ccbe;
+  color: #cccccc;
   max-width: 54ch;
   line-height: 1.48;
   font-size: 2.05ch;
@@ -228,7 +224,7 @@
   padding: 3rem 2.1rem 2.5rem;
   min-height: 15rem;
   background: rgba(26, 28, 28, 0.18);
-  box-shadow: inset 0 0 0 1px rgba(77, 70, 57, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .nocturnal-feature-icon {
@@ -245,7 +241,7 @@
 .nocturnal-feature-card p {
   margin-top: 1rem;
   max-width: 34ch;
-  color: #d0cabf;
+  color: #cccccc;
   line-height: 1.58;
   font-size: 0.9rem;
 }
@@ -267,7 +263,7 @@
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
-  background: #726a5a;
+  background: #666666;
 }
 
 .nocturnal-dot-active {
@@ -277,7 +273,7 @@
 .nocturnal-dot-line {
   flex: 1;
   height: 1px;
-  background: rgba(143, 132, 110, 0.35);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .nocturnal-philosophy {
@@ -315,9 +311,9 @@
   place-content: center;
   text-align: center;
   background:
-    radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.22), transparent 42%),
-    linear-gradient(160deg, #f1d49a 0%, #f0d199 35%, #e7c388 100%);
-  color: #211809;
+    radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.5), transparent 42%),
+    linear-gradient(160deg, #ffffff 0%, #f0f0f0 35%, #e0e0e0 100%);
+  color: #000000;
 }
 
 .nocturnal-cta-slab h2 {
@@ -352,7 +348,7 @@
   font-size: 0.67rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #a8a091;
+  color: #999999;
 }
 
 .nocturnal-footer-links {
