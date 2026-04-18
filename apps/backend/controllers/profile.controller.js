@@ -97,9 +97,13 @@ export const updateUserProfile = async (req, res) => {
             { new: true, runValidators: true }
         ).populate('user', '-password');
     } else if (userRole === 'Student') {
+        const allowedUpdates = {};
+        if (profileFields.fullName) allowedUpdates.fullName = profileFields.fullName;
+        if (profileFields.semester) allowedUpdates.semester = profileFields.semester;
+
         updatedProfile = await Student.findOneAndUpdate(
             { user: req.user._id },
-            { $set: profileFields },
+            { $set: allowedUpdates },
             { new: true, runValidators: true }
         ).populate('user', '-password');
     }
@@ -108,10 +112,22 @@ export const updateUserProfile = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Profile not found' });
     }
 
+    let userUpdated = false;
+
     if (institution && institution !== req.user.institution) {
         req.user.institution = institution;
-        await req.user.save();
         updatedProfile.user.institution = institution;
+        userUpdated = true;
+    }
+
+    if (profileFields.fullName && profileFields.fullName !== req.user.fullName) {
+        req.user.fullName = profileFields.fullName;
+        updatedProfile.user.fullName = profileFields.fullName;
+        userUpdated = true;
+    }
+
+    if (userUpdated) {
+        await req.user.save();
     }
 
     return res.status(200).json({
