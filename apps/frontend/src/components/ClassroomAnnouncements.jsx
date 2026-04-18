@@ -221,20 +221,6 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
                     color: #4b5563 !important;
                     font-style: italic !important;
                 }
-                /* Custom Scrollbar for Announcements */
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background-color: #374151;
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background-color: #4b5563;
-                }
                 @media (max-width: 480px) {
                     .quill-wrapper .ql-toolbar { padding: 4px !important; }
                     .quill-wrapper .ql-toolbar button { width: 24px !important; height: 24px !important; padding: 2px !important; }

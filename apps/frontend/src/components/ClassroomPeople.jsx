@@ -65,7 +65,7 @@ export default function ClassroomPeople({ classroom }) {
     };
 
     return (
-        <div className="p-4 sm:p-6 h-full w-full overflow-y-auto">
+        <div className="p-4 sm:p-6 h-full w-full overflow-y-auto custom-scrollbar">
             <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
 
                 {/* Teachers */}

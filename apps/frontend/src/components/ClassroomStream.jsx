@@ -53,7 +53,7 @@ export default function ClassroomStream({ classroom, user, isTeacher, token }) {
     );
 
     return (
-        <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-3 sm:space-y-4 overflow-y-auto max-h-[60vh] custom-scrollbar pr-2">
             {meets.map((meet, index) => {
                 const live = isLive(meet);
                 return (

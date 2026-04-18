@@ -406,10 +406,6 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
             </div>
 
             <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #2a2b33; border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f404d; }
                 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
             `}</style>
         </div>

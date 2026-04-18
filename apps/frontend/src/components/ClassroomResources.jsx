@@ -186,7 +186,7 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
       )}
 
       {/* ── Resources list ── THIS is the ONLY part that scrolls ── */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-6 py-4">
         {sortedResources.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[160px] border border-dashed border-gray-800 rounded-xl">
             <FileText size={36} className="text-gray-600 mb-2" />
