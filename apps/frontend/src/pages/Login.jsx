@@ -48,7 +48,7 @@ let handleSubmit = async (e)=>{
             toast.error(data.message || "Login failed");
         }
     } catch (error) {
-        toast.error("An error occurred during login");
+        toast.error(`An error occurred during login ${error}`);
     } finally {
         setLoading(false);
     }
