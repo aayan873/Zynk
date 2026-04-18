@@ -181,7 +181,7 @@ export const createRoom = async (req, res) => {
         res.status(201).json({
             message: "Room successfully created!",
             roomId: newMeeting.roomId,
-            joinLink: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/room/${newMeeting.roomId}`,
+            joinLink: `${process.env.FRONTEND_URL || 'https://172.9.5.90:5173'}/room/${newMeeting.roomId}`,
             meetingDetails: newMeeting
         });
 

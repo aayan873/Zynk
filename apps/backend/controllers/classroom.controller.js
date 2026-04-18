@@ -113,7 +113,12 @@ export const getClassroom = async (req, res) => {
     // Only return if it's active
     const classroom = await Classroom.findOne({ _id: id, isActive: true })
         .populate('teachers', 'fullName email user')
-        .populate('students', 'fullName email rollNumber user');
+        .populate('students', 'fullName email rollNumber user')
+        .populate({
+          path: 'resources',
+          options: { sort: { createdAt: -1 } },
+          populate: { path: 'uploadedBy', select: 'email role institution profileCompleted' },
+        });
 
     if (!classroom) {
       return res.status(404).json({ success: false, message: 'Classroom not found or inactive' });

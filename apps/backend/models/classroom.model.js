@@ -44,6 +44,12 @@ const classroomSchema = new mongoose.Schema(
         ref: 'Announcement',
       },
     ],
+    resources: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Resource',
+      },
+    ],
     inviteCode: {
       type: String,
       unique: true,
@@ -60,5 +66,10 @@ const classroomSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+classroomSchema.path('resources').default([]);
+classroomSchema.path('teachers').default([]);
+classroomSchema.path('students').default([]);
+classroomSchema.path('announcements').default([]);
 
 export const Classroom = mongoose.model('Classroom', classroomSchema);

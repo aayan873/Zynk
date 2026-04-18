@@ -19,6 +19,7 @@ import toast from 'react-hot-toast';
 import ScheduleMeetModal from '../components/ScheduleMeetModal.jsx';
 import ClassroomStream from '../components/ClassroomStream.jsx';
 import ClassroomPeople from '../components/ClassroomPeople.jsx';
+import ClassroomResources from '../components/ClassroomResources.jsx';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -244,6 +245,12 @@ export default function ClassroomPage() {
                                 ) : activeTab === 'people' ? (
                                     <ClassroomPeople 
                                         classroom={classroom} 
+                                    />
+                                ) : activeTab === 'resources' ? (
+                                    <ClassroomResources
+                                        classroom={classroom}
+                                        isTeacher={isTeacherState}
+                                        token={auth.token}
                                     />
                                 ) : (
                                     <>
