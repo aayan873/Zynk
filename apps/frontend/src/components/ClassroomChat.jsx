@@ -183,7 +183,7 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
     );
 
     return (
-        <div className="flex flex-col w-full h-full bg-[#14151a] overflow-hidden">
+        <div className="flex flex-col w-full h-[65vh] sm:h-[70vh] bg-[#14151a] overflow-hidden">
             {/* Header */}
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800/50 flex items-center justify-between bg-[#1a1b21]/80 backdrop-blur-md shrink-0">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
