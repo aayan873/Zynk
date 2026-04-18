@@ -64,6 +64,20 @@ const Signup = async (req, res) => {
             const branchObj = match[4].toUpperCase();
             const rollNumberObj = email.split('@')[0].split('_')[1]; 
 
+            const existingStudentsWithSameRoll = await Student.find({ rollNumber: rollNumberObj })
+                .populate({ path: 'user', select: 'institution' });
+
+            const duplicateAtSameInstitution = existingStudentsWithSameRoll.some(
+                (student) => student.user?.institution === institution
+            );
+
+            if (duplicateAtSameInstitution) {
+                return res.status(400).json({
+                    success: false,
+                    message: "A student with this roll number is already registered at this institution."
+                });
+            }
+
             const currentYear = new Date().getFullYear();
             const currentHalf = new Date().getMonth() < 6 ? 1 : 2;
             let sem = (currentYear - parseInt(batchYearObj)) * 2 + (currentHalf === 2 ? 1 : 0);
