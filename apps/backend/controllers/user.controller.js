@@ -1,15 +1,20 @@
 import mongoose from 'mongoose';
 import User from '../models/user.model.js';
+import Student from '../models/student.model.js';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 
 const Signup = async (req, res) => {
     try {
-        const { email, password, role, institution } = req.body;
+        const { email, password, role, fullName } = req.body;
 
         if (!role || !['Teacher', 'Student'].includes(role)) {
              return res.status(400).json({ success: false, message: "Valid role ('Teacher' or 'Student') is required" });
+        }
+        
+        if (!fullName) {
+             return res.status(400).json({ success: false, message: "Full Name is required" });
         }
 
         const ismatched = await User.findOne({ email });
@@ -20,6 +25,12 @@ const Signup = async (req, res) => {
                 message: "User already exists",
             });
         }
+        
+        const domainParts = email.split('@')[1]?.split('.');
+        if (!domainParts || domainParts.length < 2) {
+             return res.status(400).json({ success: false, message: "Invalid email address format" });
+        }
+        const institution = domainParts[0].toUpperCase();
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -27,12 +38,69 @@ const Signup = async (req, res) => {
             email,
             password: hashedPassword,
             role,
-            institution: institution || 'Independent',
+            fullName,
+            institution,
             isVerified: false,
             profileCompleted: false
         });
 
-        await newUser.save();
+        if (role === 'Student') {
+            const studentRegex = /^([a-zA-Z0-9]+)_(\d{2})(01|02|03|11|21)([a-z]{2})(\d+)@([a-zA-Z0-9-]+)\.(.+)$/;
+            const match = email.match(studentRegex);
+            
+            if (!match) {
+                return res.status(400).json({ success: false, message: "Invalid student email format. Must follow [Name]_[RollNumber]@college.domain" });
+            }
+
+            const batchYearObj = "20" + match[2];
+            const progMap = {
+                '01': 'BTech (4 year)',
+                '02': 'BTech + Mtech (5 yr dual degree)',
+                '03': 'BTech + MBA (5 yr dual degree)',
+                '11': 'Mtech (2 years)',
+                '21': 'PhD'
+            };
+            const programmeObj = progMap[match[3]];
+            const branchObj = match[4].toUpperCase();
+            const rollNumberObj = email.split('@')[0].split('_')[1]; 
+
+            const existingStudentsWithSameRoll = await Student.find({ rollNumber: rollNumberObj })
+                .populate({ path: 'user', select: 'institution' });
+
+            const duplicateAtSameInstitution = existingStudentsWithSameRoll.some(
+                (student) => student.user?.institution === institution
+            );
+
+            if (duplicateAtSameInstitution) {
+                return res.status(400).json({
+                    success: false,
+                    message: "A student with this roll number is already registered at this institution."
+                });
+            }
+
+            const currentYear = new Date().getFullYear();
+            const currentHalf = new Date().getMonth() < 6 ? 1 : 2;
+            let sem = (currentYear - parseInt(batchYearObj)) * 2 + (currentHalf === 2 ? 1 : 0);
+            sem = Math.max(1, sem);
+
+            await newUser.save();
+            
+            const studentProfile = new Student({
+                user: newUser._id,
+                fullName,
+                rollNumber: rollNumberObj,
+                programme: programmeObj,
+                branch: branchObj,
+                semester: String(sem),
+                batchYear: batchYearObj
+            });
+            await studentProfile.save();
+            
+            newUser.profileCompleted = true;
+            await newUser.save();
+        } else {
+            await newUser.save();
+        }
 
         const token = jwt.sign(
             { id: newUser._id, email: newUser.email, role: newUser.role },
@@ -55,6 +123,7 @@ const Signup = async (req, res) => {
                 _id: newUser._id,
                 email: newUser.email,
                 role: newUser.role,
+                fullName: newUser.fullName,
                 institution: newUser.institution,
                 profileCompleted: newUser.profileCompleted
             },

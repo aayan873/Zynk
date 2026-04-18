@@ -12,8 +12,7 @@ const ProfileSetup = () => {
     
     const role = auth?.user?.role;
 
-    // Common
-    const [fullName, setFullName] = useState('');
+    // Teacher specific
     const [loading, setLoading] = useState(false);
 
     // Teacher specific
@@ -22,23 +21,15 @@ const ProfileSetup = () => {
     const [employeeId, setEmployeeId] = useState('');
     const [bio, setBio] = useState('');
 
-    // Student specific
-    const [rollNumber, setRollNumber] = useState('');
-    const [programme, setProgramme] = useState('');
-    const [branch, setBranch] = useState('');
-    const [semester, setSemester] = useState('');
-    const [batchYear, setBatchYear] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
-        const payload = { fullName };
+        const payload = {};
 
         if (role === 'Teacher') {
             Object.assign(payload, { department, designation, employeeId, bio });
-        } else if (role === 'Student') {
-            Object.assign(payload, { rollNumber, programme, branch, semester, batchYear });
         }
 
         try {
@@ -84,11 +75,6 @@ const ProfileSetup = () => {
                 </p>
 
                 <form className='signup-form' onSubmit={handleSubmit}>
-                    <div className='form-group'>
-                        <label htmlFor="fullName">Full Name</label>
-                        <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder='Full Name' />
-                    </div>
-
                     {role === 'Teacher' && (
                         <>
                             <div className='form-group'>
@@ -110,40 +96,7 @@ const ProfileSetup = () => {
                         </>
                     )}
 
-                    {role === 'Student' && (
-                        <>
-                            <div className='form-group'>
-                                <label htmlFor="rollNumber">Roll Number / Student ID</label>
-                                <input type="text" value={rollNumber} onChange={(e) => setRollNumber(e.target.value)} required placeholder='Roll Number' />
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor="programme">Programme</label>
-                                <select value={programme} onChange={(e) => setProgramme(e.target.value)} required style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #333', background: '#111', color: 'white'}}>
-                                    <option value="" disabled hidden>Select Programme</option>
-                                    {['B.Tech', 'M.Tech', 'BCA', 'MCA', 'BBA', 'MBA', 'B.Sc', 'M.Sc'].map(deg => (
-                                        <option key={deg} value={deg}>{deg}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor="branch">Branch / Department</label>
-                                <input type="text" value={branch} onChange={(e) => setBranch(e.target.value)} required placeholder='e.g. Computer Science' />
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor="semester">Semester</label>
-                                <select value={semester} onChange={(e) => setSemester(e.target.value)} required style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #333', background: '#111', color: 'white'}}>
-                                    <option value="" disabled hidden>Select Semester</option>
-                                    {['1', '2', '3', '4', '5', '6', '7', '8'].map(sem => (
-                                        <option key={sem} value={sem}>{sem}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor="batchYear">Batch Year</label>
-                                <input type="text" value={batchYear} onChange={(e) => setBatchYear(e.target.value)} required placeholder='e.g. 2022-2026' />
-                            </div>
-                        </>
-                    )}
+
 
                     <button style={{ marginTop: '10px' }}>{loading ? "Saving..." : "Finish Profile"}</button>
                 </form>

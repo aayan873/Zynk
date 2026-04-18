@@ -11,15 +11,15 @@ export const createUserProfile = async (req, res) => {
     }
 
     if (userRole === 'Teacher') {
-        const { fullName, department, designation, employeeId, bio } = req.body;
+        const { department, designation, employeeId, bio } = req.body;
         
-        if (!fullName || !department || !designation) {
+        if (!department || !designation) {
             return res.status(400).json({ success: false, message: 'Missing required Teacher fields' });
         }
         
         const teacherProfile = new Teacher({
             user: req.user._id,
-            fullName,
+            fullName: req.user.fullName,
             department,
             designation,
             employeeId,
@@ -28,15 +28,15 @@ export const createUserProfile = async (req, res) => {
         
         await teacherProfile.save();
     } else if (userRole === 'Student') {
-        const { fullName, rollNumber, programme, branch, semester, batchYear } = req.body;
+        const { rollNumber, programme, branch, semester, batchYear } = req.body;
         
-        if (!fullName || !rollNumber || !programme || !branch || !semester || !batchYear) {
+        if (!rollNumber || !programme || !branch || !semester || !batchYear) {
             return res.status(400).json({ success: false, message: 'Missing required Student fields' });
         }
         
         const studentProfile = new Student({
             user: req.user._id,
-            fullName,
+            fullName: req.user.fullName,
             rollNumber,
             programme,
             branch,
@@ -97,9 +97,13 @@ export const updateUserProfile = async (req, res) => {
             { new: true, runValidators: true }
         ).populate('user', '-password');
     } else if (userRole === 'Student') {
+        const allowedUpdates = {};
+        if (profileFields.fullName) allowedUpdates.fullName = profileFields.fullName;
+        if (profileFields.semester) allowedUpdates.semester = profileFields.semester;
+
         updatedProfile = await Student.findOneAndUpdate(
             { user: req.user._id },
-            { $set: profileFields },
+            { $set: allowedUpdates },
             { new: true, runValidators: true }
         ).populate('user', '-password');
     }
@@ -108,10 +112,22 @@ export const updateUserProfile = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Profile not found' });
     }
 
+    let userUpdated = false;
+
     if (institution && institution !== req.user.institution) {
         req.user.institution = institution;
-        await req.user.save();
         updatedProfile.user.institution = institution;
+        userUpdated = true;
+    }
+
+    if (profileFields.fullName && profileFields.fullName !== req.user.fullName) {
+        req.user.fullName = profileFields.fullName;
+        updatedProfile.user.fullName = profileFields.fullName;
+        userUpdated = true;
+    }
+
+    if (userUpdated) {
+        await req.user.save();
     }
 
     return res.status(200).json({
