@@ -130,10 +130,6 @@ export default function ClassroomPage() {
         );
     }
 
-    /* ── helpers for tab content wrapper ── */
-    const tabNeedsFlex   = ['chat', 'stream', 'people'].includes(activeTab);
-    const tabNeedsPadded = activeTab === 'announcements';
-
     return (
         <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
             <Navbar />
@@ -181,7 +177,11 @@ export default function ClassroomPage() {
                 </header>
 
                 {/* ── Page body ── */}
-                <div className="flex-1 overflow-y-auto w-full p-3 sm:p-5 md:p-10 max-w-6xl mx-auto w-full">
+                {/*
+                    On mobile (< sm): add pb-20 so content isn't hidden behind the fixed bottom nav.
+                    On desktop (>= sm): no extra padding needed.
+                */}
+                <div className="flex-1 overflow-y-auto w-full p-3 sm:p-5 md:p-10 max-w-6xl mx-auto w-full pb-20 sm:pb-10">
                     {!isEnrolled ? (
 
                         /* ── Enroll card ── */
@@ -218,8 +218,8 @@ export default function ClassroomPage() {
                         /* ── Enrolled: Tabs UI ── */
                         <div className="w-full flex flex-col" style={{ minHeight: 0 }}>
 
-                            {/* Tab bar row — sticky, horizontally scrollable on mobile */}
-                            <div className="sticky top-0 z-10 bg-[#0e0e11] pt-1 pb-0 mb-4">
+                            {/* ── Desktop tab bar — hidden on mobile ── */}
+                            <div className="hidden sm:block sticky top-0 z-10 bg-[#0e0e11] pt-1 pb-0 mb-4">
                                 <div className="flex items-end justify-between gap-2 border-b border-gray-800/80">
 
                                     {/* scrollable tab list */}
@@ -238,7 +238,7 @@ export default function ClassroomPage() {
                                                     onClick={() => setActiveTab(tab.id)}
                                                     className={[
                                                         'flex items-center gap-1.5 whitespace-nowrap flex-shrink-0',
-                                                        'px-3 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold',
+                                                        'px-5 py-3 text-sm font-semibold',
                                                         'border-b-2 transition-all duration-150',
                                                         isActive
                                                             ? 'border-indigo-500 text-indigo-400'
@@ -256,11 +256,10 @@ export default function ClassroomPage() {
                                     {isTeacherState && (
                                         <button
                                             onClick={() => setIsScheduleModalOpen(true)}
-                                            className="mb-1.5 shrink-0 flex items-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all"
+                                            className="mb-1.5 shrink-0 flex items-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
                                         >
                                             <CalendarPlus size={14} />
-                                            <span className="hidden sm:inline">Schedule Meet</span>
-                                            <span className="sm:hidden">Meet</span>
+                                            <span>Schedule Meet</span>
                                         </button>
                                     )}
                                 </div>
@@ -320,6 +319,73 @@ export default function ClassroomPage() {
                     )}
                 </div>
             </main>
+
+            {/* ════════════════════════════════════════════════════════
+                ── Mobile Bottom Navigation Bar — visible only on mobile ──
+                Sits above the system safe-area / home indicator.
+                Hidden on sm and above screens.
+            ════════════════════════════════════════════════════════ */}
+            {isEnrolled && (
+                <nav
+                    className="sm:hidden fixed bottom-0 inset-x-0 z-30
+                               bg-[#14151a]/95 backdrop-blur-md
+                               border-t border-gray-800/80
+                               flex items-stretch
+                               safe-area-inset-bottom"
+                    style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+                >
+                    {ENROLLMENT_TABS.map((tab) => {
+                        const Icon     = tab.icon;
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={[
+                                    'flex-1 flex flex-col items-center justify-center gap-0.5',
+                                    'py-2.5 px-1 transition-all duration-150 relative',
+                                    isActive ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300',
+                                ].join(' ')}
+                            >
+                                {/* active indicator dot */}
+                                {isActive && (
+                                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-indigo-500" />
+                                )}
+
+                                {/* icon — slightly bigger when active */}
+                                <Icon
+                                    size={isActive ? 22 : 20}
+                                    strokeWidth={isActive ? 2.5 : 1.8}
+                                    className="transition-all duration-150"
+                                />
+
+                                {/* label */}
+                                <span
+                                    className={[
+                                        'text-[10px] font-semibold leading-none tracking-wide transition-all duration-150',
+                                        isActive ? 'text-indigo-400' : 'text-gray-600',
+                                    ].join(' ')}
+                                >
+                                    {tab.label}
+                                </span>
+                            </button>
+                        );
+                    })}
+
+                    {/* Teacher: extra "Meet" button in bottom nav */}
+                    {isTeacherState && (
+                        <button
+                            onClick={() => setIsScheduleModalOpen(true)}
+                            className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 px-1 text-indigo-400 transition-all duration-150 relative"
+                        >
+                            <CalendarPlus size={20} strokeWidth={1.8} />
+                            <span className="text-[10px] font-semibold leading-none tracking-wide text-indigo-500">
+                                Meet
+                            </span>
+                        </button>
+                    )}
+                </nav>
+            )}
 
             <ScheduleMeetModal
                 isOpen={isScheduleModalOpen}
