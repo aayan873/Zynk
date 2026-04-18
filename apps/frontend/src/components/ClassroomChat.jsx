@@ -183,7 +183,7 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
     );
 
     return (
-        <div className="flex flex-col w-full h-full bg-[#14151a] overflow-hidden">
+        <div className="flex flex-col w-full h-[65vh] sm:h-[70vh] bg-[#14151a] overflow-hidden">
             {/* Header */}
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800/50 flex items-center justify-between bg-[#1a1b21]/80 backdrop-blur-md shrink-0">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -406,10 +406,6 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
             </div>
 
             <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #2a2b33; border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f404d; }
                 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
             `}</style>
         </div>
