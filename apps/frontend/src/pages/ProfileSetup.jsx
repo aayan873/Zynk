@@ -50,7 +50,7 @@ const ProfileSetup = () => {
                 if (auth && auth.user) {
                     login({ ...auth.user, profileCompleted: true }, auth.token);
                 }
-                navigate("/home");
+                navigate("/dashboard");
             } else {
                 toast.error(data.message || "Failed to complete profile");
             }

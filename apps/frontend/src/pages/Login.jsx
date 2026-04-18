@@ -42,7 +42,7 @@ let handleSubmit = async (e)=>{
             if (!data.user.profileCompleted) {
                 navigate("/profile-setup");
             } else {
-                navigate("/home");
+                navigate("/dashboard");
             }
         } else {
             toast.error(data.message || "Login failed");

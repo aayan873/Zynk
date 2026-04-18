@@ -210,8 +210,8 @@ export default function Room() {
     const handleToggleChat = (isEnabled) => socket.emit("toggle-chat", { roomID: roomId, isEnabled })
 
     useEffect(() => {
-        const onMeetingEnded = () => { alert("The host has ended the meeting."); leaveRoom(); navigate("/home") }
-        const onKicked = () => { alert("You have been removed from the meeting."); leaveRoom(); navigate("/home") }
+        const onMeetingEnded = () => { alert("The host has ended the meeting."); leaveRoom(); navigate("/dashboard") }
+        const onKicked = () => { alert("You have been removed from the meeting."); leaveRoom(); navigate("/dashboard") }
         socket.on("meeting-ended", onMeetingEnded)
         socket.on("kicked-from-meeting", onKicked)
         return () => { socket.off("meeting-ended", onMeetingEnded); socket.off("kicked-from-meeting", onKicked) }
@@ -219,8 +219,8 @@ export default function Room() {
 
     const handleDisconnect = () => {
         if (isHost) {
-            socket.emit("end-meeting", (res) => { if (res?.error) console.error(res.error); navigate("/home") })
-        } else { leaveRoom(); navigate("/home") }
+            socket.emit("end-meeting", (res) => { if (res?.error) console.error(res.error); navigate("/dashboard") })
+        } else { leaveRoom(); navigate("/dashboard") }
     }
 
     const handleJoin = () => {

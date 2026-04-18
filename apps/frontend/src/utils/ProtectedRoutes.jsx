@@ -53,7 +53,7 @@ const ProtectedRoutes = ({ children }) => {
   }
 
   if (user.profileCompleted && location.pathname === '/profile-setup') {
-      return <Navigate to="/home" replace />;
+      return <Navigate to="/dashboard" replace />;
   }
 
   return children;

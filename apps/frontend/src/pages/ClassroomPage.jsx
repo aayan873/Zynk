@@ -120,7 +120,7 @@ export default function ClassroomPage() {
                 <main className="flex-1 flex flex-col items-center justify-center shadow-lg px-4">
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-400 text-center">Classroom not found</h2>
                     <button
-                        onClick={() => navigate('/home')}
+                        onClick={() => navigate('/dashboard')}
                         className="mt-4 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 rounded-lg text-white font-semibold transition"
                     >
                         Go Home
@@ -398,7 +398,7 @@ export default function ClassroomPage() {
                 onClose={() => setIsSettingsModalOpen(false)}
                 classroom={classroom}
                 onSuccessUpdate={(updatedData) => setClassroom(updatedData)}
-                onDeleteRedirect={() => navigate('/home')}
+                onDeleteRedirect={() => navigate('/dashboard')}
             />
         </div>
     );

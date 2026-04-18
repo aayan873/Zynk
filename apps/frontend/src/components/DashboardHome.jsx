@@ -9,7 +9,7 @@ import Navbar from './Navbar.jsx';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-export default function Home() {
+export default function DashboardHome() {
     const navigate = useNavigate();
     const { auth } = useAuth();
     const user = auth?.user;

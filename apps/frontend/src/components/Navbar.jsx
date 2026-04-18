@@ -25,7 +25,7 @@ export default function Navbar() {
                     {/* Left — Brand */}
                     <div
                         className="flex flex-col cursor-pointer select-none shrink-0"
-                        onClick={() => { navigate('/home'); setMenuOpen(false); }}
+                        onClick={() => { navigate('/dashboard'); setMenuOpen(false); }}
                     >
                         <span className="text-xl font-bold tracking-tight text-white leading-none">Zynk</span>
                         <span className="text-[10px] font-semibold tracking-[0.18em] text-indigo-400 uppercase mt-0.5">Live Learning</span>
@@ -33,7 +33,7 @@ export default function Navbar() {
 
                     {/* Desktop Right */}
                     <div className="hidden md:flex items-center gap-2">
-                        <NavLink to="/home" className={navLinkClass}>
+                        <NavLink to="/dashboard" className={navLinkClass}>
                             <HomeIcon size={15} /><span>Home</span>
                         </NavLink>
                         <NavLink to="/profile" className={navLinkClass}>
@@ -92,7 +92,7 @@ export default function Navbar() {
 
                         <div className="h-px bg-gray-800/60 mb-1" />
 
-                        <NavLink to="/home" className={navLinkClass} onClick={() => setMenuOpen(false)}>
+                        <NavLink to="/dashboard" className={navLinkClass} onClick={() => setMenuOpen(false)}>
                             <HomeIcon size={15} /><span>Home</span>
                         </NavLink>
                         <NavLink to="/profile" className={navLinkClass} onClick={() => setMenuOpen(false)}>

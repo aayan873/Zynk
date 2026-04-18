@@ -49,7 +49,7 @@ const Signup = () => {
                 toast.success("Signup successful!");
                 login(data.user, data.token); // Auto login
                 if (data.user.profileCompleted) {
-                    navigate("/home");
+                    navigate("/dashboard");
                 } else {
                     navigate("/profile-setup");
                 }
