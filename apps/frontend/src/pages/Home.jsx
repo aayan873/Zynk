@@ -43,7 +43,7 @@ export default function Home() {
     <div className="nocturnal-home">
       <header className="nocturnal-topbar">
         <Link to="/home" className="nocturnal-brand" aria-label="Zynk Home">
-          Zynk
+          <img src="/image.png" alt="Zynk Logo" />
         </Link>
 
         <nav className="nocturnal-menu" aria-label="Landing">
