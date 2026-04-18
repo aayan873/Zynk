@@ -41,7 +41,7 @@ export default function ClassroomStream({ classroom, user, isTeacher, token }) {
     const formatDate = (d) => new Date(d).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 
     return (
-        <div className="flex flex-col h-full w-full">
+        <div className="flex flex-col h-[65vh] sm:h-[70vh] w-full">
 
             {/* ── Top bar: heading + Schedule Meet button (teacher only) — never scrolls ── */}
             <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800/60">
