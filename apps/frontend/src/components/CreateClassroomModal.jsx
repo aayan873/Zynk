@@ -107,7 +107,7 @@ export default function CreateClassroomModal({ isOpen, onClose, onSuccess }) {
                                 className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white transition appearance-none"
                             >
                                 <option value="" disabled hidden>Select Degree</option>
-                                {['B.Tech', 'M.Tech', 'BCA', 'MCA', 'BBA', 'MBA', 'B.Sc', 'M.Sc'].map(deg => (
+                                {['BTech (4 year)', 'BTech + Mtech (5 yr dual degree)', 'BTech + MBA (5 yr dual degree)', 'Mtech (2 years)', 'PhD'].map(deg => (
                                     <option key={deg} value={deg}>{deg}</option>
                                 ))}
                             </select>
