@@ -20,7 +20,7 @@ const MultiSelect = ({ label, options, selected, onChange }) => {
                 <ChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
             </div>
             {open && (
-                <div className="absolute z-10 w-full mt-1 bg-[#1a1b23] border border-gray-800 rounded-lg shadow-xl max-h-48 overflow-y-auto overflow-x-hidden">
+                <div className="absolute z-35 w-full mt-1 bg-[#1a1b23] border border-gray-800 rounded-lg shadow-xl max-h-48 overflow-y-auto overflow-x-hidden">
                     {options.map(opt => {
                         const isSelected = selected.includes(opt.value);
                         return (
