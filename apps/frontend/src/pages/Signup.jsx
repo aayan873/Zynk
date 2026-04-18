@@ -13,8 +13,8 @@ const Signup = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [fullName, setFullName] = useState('');
     const [role, setRole] = useState('Student');
-    const [institution, setInstitution] = useState('');
     // const [termsAccepted, setTermsAccepted] = useState(false);
     
     const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ const Signup = () => {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ email, password, role, institution: institution || 'Independent' })
+                body: JSON.stringify({ email, password, role, fullName })
             });
 
             const data = await response.json();
@@ -48,8 +48,11 @@ const Signup = () => {
             if (response.ok) {
                 toast.success("Signup successful!");
                 login(data.user, data.token); // Auto login
-                // It's a new signup, profileCompleted is definitely false.
-                navigate("/profile-setup");
+                if (data.user.profileCompleted) {
+                    navigate("/home");
+                } else {
+                    navigate("/profile-setup");
+                }
             } else {
                 toast.error(data.message || "Signup failed");
             }
@@ -66,6 +69,15 @@ const Signup = () => {
             <div className='signup-container'>
                 <h1>Sign up</h1>
                 <form className='signup-form' onSubmit={handleSubmit}>
+                    <div className='form-group'>
+                        <label htmlFor="fullName">Full Name</label>
+                        <input type="text"
+                            name="fullName"
+                            value={fullName}
+                            required
+                            onChange={(e) => setFullName(e.target.value)}
+                            placeholder='Full Name' />
+                    </div>
                     <div className='form-group'>
                         <label htmlFor="email">Email</label>
                         <input type="email"
@@ -104,14 +116,7 @@ const Signup = () => {
                         </select>
                         </div>
                     </div>
-                     <div className='form-group'>
-                        <label htmlFor="institution">Institution</label>
-                        <input type="text"
-                            name="institution"
-                            value={institution}
-                            onChange={(e) => setInstitution(e.target.value)}
-                            placeholder='IIT Patna' />
-                    </div>
+
                     {/* <div className='form-group checkbox-group' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <input type="checkbox" id="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
                         <label htmlFor="terms" style={{ margin: 0, fontSize: '0.9rem' }}>I accept the Terms of Service</label>

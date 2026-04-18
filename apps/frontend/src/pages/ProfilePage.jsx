@@ -83,6 +83,13 @@ export default function ProfilePage() {
         </div>
     );
 
+    const renderStaticField = (label, value) => (
+        <div className="flex flex-col space-y-1.5">
+            <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{label}</label>
+            <div className={`${readClass} cursor-not-allowed opacity-70`}>{value || <span className="text-gray-600 italic">Not provided</span>}</div>
+        </div>
+    );
+
     const Shell = ({ children }) => (
         <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#0e0e11] text-gray-100 font-sans">
             <Navbar />
@@ -162,7 +169,7 @@ export default function ProfilePage() {
                                 General Information
                             </h3>
                             {renderField("Full Name", "fullName")}
-                            {renderField("Institution", "institution")}
+                            {renderStaticField("Institution", profile.institution || profile.user?.institution)}
                             <div className="flex flex-col space-y-1.5">
                                 <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Role</label>
                                 <div className="bg-[#1a1b23] border border-gray-800 rounded-lg px-3 sm:px-4 py-2.5 text-gray-400 text-sm cursor-not-allowed">{role}</div>
@@ -203,12 +210,12 @@ export default function ProfilePage() {
 
                             {role === 'Student' && (
                                 <>
-                                    {renderField("Roll Number", "rollNumber")}
-                                    {renderSelect("Programme", "programme", ['B.Tech', 'M.Tech', 'BCA', 'MCA', 'BBA', 'MBA', 'B.Sc', 'M.Sc'])}
+                                    {renderStaticField("Roll Number", profile.rollNumber)}
+                                    {renderStaticField("Programme", profile.programme)}
                                     {/* Semester + Batch side by side on all screen sizes */}
                                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                         {renderSelect("Semester", "semester", ['1','2','3','4','5','6','7','8'])}
-                                        {renderField("Batch Year", "batchYear")}
+                                        {renderStaticField("Batch Year", profile.batchYear)}
                                     </div>
                                 </>
                             )}
