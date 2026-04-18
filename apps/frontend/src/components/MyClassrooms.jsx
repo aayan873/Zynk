@@ -51,7 +51,7 @@ export default function MyClassrooms() {
                 {classrooms.length > 3 && (
                     <button 
                         onClick={() => setViewAll(!viewAll)}
-                        className="text-sm font-medium text-gray-400 hover:text-indigo-400 transition"
+                        className="cursor-pointer text-sm font-medium text-gray-400 hover:text-indigo-400 transition"
                     >
                         {viewAll ? 'Show Less ▴' : 'View All ▾'}
                     </button>

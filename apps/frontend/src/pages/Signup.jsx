@@ -15,7 +15,7 @@ const Signup = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [role, setRole] = useState('Student');
     const [institution, setInstitution] = useState('');
-    const [termsAccepted, setTermsAccepted] = useState(false);
+    // const [termsAccepted, setTermsAccepted] = useState(false);
     
     const [loading, setLoading] = useState(false);
 
@@ -27,10 +27,10 @@ const Signup = () => {
             return;
         }
 
-        if (!termsAccepted) {
-            toast.error("You must accept the Terms of Service.");
-            return;
-        }
+        // if (!termsAccepted) {
+        //     toast.error("You must accept the Terms of Service.");
+        //     return;
+        // }
 
         setLoading(true);
 
@@ -96,11 +96,13 @@ const Signup = () => {
                         />
                     </div>
                     <div className='form-group'>
-                        <label htmlFor="role">I am a</label>
-                        <select name="role" value={role} onChange={(e) => setRole(e.target.value)}>
+                        <label htmlFor="role" className='block text-m '>Select Role</label>
+                        <div className='w-full border rounded px-3 py-2 bg-blue-50'>
+                        <select name="role"  className="w-full" value={role} onChange={(e) => setRole(e.target.value)}>
                             <option value="Student">Student</option>
                             <option value="Teacher">Teacher</option>
                         </select>
+                        </div>
                     </div>
                      <div className='form-group'>
                         <label htmlFor="institution">Institution</label>
@@ -108,12 +110,12 @@ const Signup = () => {
                             name="institution"
                             value={institution}
                             onChange={(e) => setInstitution(e.target.value)}
-                            placeholder='e.g., Harvard Univ (Optional)' />
+                            placeholder='IIT Patna' />
                     </div>
-                    <div className='form-group checkbox-group' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {/* <div className='form-group checkbox-group' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <input type="checkbox" id="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
                         <label htmlFor="terms" style={{ margin: 0, fontSize: '0.9rem' }}>I accept the Terms of Service</label>
-                    </div>
+                    </div> */}
 
                     <button>{loading ? "Loading..." : "Sign up"}</button>
                 </form>
