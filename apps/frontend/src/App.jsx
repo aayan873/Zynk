@@ -8,7 +8,7 @@ import Root from "./utils/Root.jsx";
 import ProtectedRoutes from "./utils/ProtectedRoutes.jsx";
 import Logout from "./pages/Logout.jsx";
 import Home from "./pages/Home.jsx";
-import DashboardHome from "./components/DashboardHome.jsx";
+import DashboardHome from "./pages/DashboardHome.jsx";
 import Room from "./components/Room.jsx";
 import ProfileSetup from "./pages/ProfileSetup.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";

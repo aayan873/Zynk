@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext.jsx';
-import MySessionsToday from './MySessionsToday.jsx';
-import MyClassrooms from './MyClassrooms.jsx';
+import MySessionsToday from '../components/MySessionsToday.jsx';
+import MyClassrooms from '../components/MyClassrooms.jsx';
 import { Zap, Calendar } from 'lucide-react';
-import Navbar from './Navbar.jsx';
+import Navbar from '../components/Navbar.jsx';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
