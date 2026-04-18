@@ -4,6 +4,7 @@ import Student from '../models/student.model.js';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import { branchMap } from '../utils/constants.js';
 
 const Signup = async (req, res) => {
     try {
@@ -61,7 +62,8 @@ const Signup = async (req, res) => {
                 '21': 'PhD'
             };
             const programmeObj = progMap[match[3]];
-            const branchObj = match[4].toUpperCase();
+            const rawBranch = match[4].toLowerCase();
+            const branchObj = branchMap[rawBranch] || match[4].toUpperCase();
             const rollNumberObj = email.split('@')[0].split('_')[1]; 
 
             const existingStudentsWithSameRoll = await Student.find({ rollNumber: rollNumberObj })
