@@ -111,6 +111,40 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
     }
   };
 
+  const handleDownloadResource = async (resource) => {
+    if (!classroom?._id || !resource?._id) return;
+    const toastId = toast.loading('Downloading...');
+    try {
+      const res = await axios.get(
+        `${BACKEND_URL}/api/classrooms/${classroom._id}/resources/${resource._id}/download`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob',
+        }
+      );
+
+      let filename = resource.title || 'download';
+      const contentDisposition = res.headers['content-disposition'];
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (match) filename = match[1];
+      }
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Download complete', { id: toastId });
+    } catch (err) {
+      console.error('Resource download failed:', err);
+      toast.error('Failed to download resource.', { id: toastId });
+    }
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col space-y-6">
       {isTeacher && (
@@ -197,21 +231,14 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
                 </div>
 
                 <div className="shrink-0 flex items-center gap-2">
-                  <a
-                    href={resourceUrl || '#'}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => {
-                      if (!resourceUrl) {
-                        e.preventDefault();
-                        toast.error('Resource URL is missing.');
-                      }
-                    }}
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadResource(resource)}
                     className="px-3 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 rounded-lg text-sm font-semibold inline-flex items-center gap-2"
                   >
                     <Download size={14} />
-                    Open
-                  </a>
+                    Download
+                  </button>
 
                   {isTeacher && (
                     <button
