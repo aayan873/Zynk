@@ -69,9 +69,9 @@ export default function Home() {
             <h1 className="nocturnal-headline">
               Run your classroom.
               <br />
-              <span className="nocturnal-headline-soft">Live</span>, organized, and
+              <span>Live</span>, organized, and
               <br />
-              in <span className="nocturnal-headline-gold">sync</span>.
+              in <span>sync</span>.
             </h1>
 
             <p className="nocturnal-subline">
@@ -120,8 +120,8 @@ export default function Home() {
         <section className="nocturnal-philosophy" id="academic-flow">
           <p className="nocturnal-philosophy-kicker">The Philosophy</p>
           <blockquote>
-            <span className="nocturnal-headline-soft">Built for real</span> academic
-            flow <span className="nocturnal-headline-soft">- not just video calls.</span>
+            <span>Built for real</span> academic
+            flow <span>- not just video calls.</span>
           </blockquote>
         </section>
 
