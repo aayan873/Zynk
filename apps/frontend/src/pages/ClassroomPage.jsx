@@ -12,10 +12,12 @@ import {
     Video, 
     Megaphone,
     ExternalLink,
-    CalendarPlus
+    CalendarPlus,
+    Settings
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ScheduleMeetModal from '../components/ScheduleMeetModal.jsx';
+import ClassroomSettingsModal from '../components/ClassroomSettingsModal.jsx';
 import ClassroomStream from '../components/ClassroomStream.jsx';
 import ClassroomPeople from '../components/ClassroomPeople.jsx';
 import ClassroomResources from '../components/ClassroomResources.jsx';
@@ -44,6 +46,7 @@ export default function ClassroomPage() {
     const [isEnrolled,          setIsEnrolled]          = useState(false);
     const [isTeacherState,      setIsTeacherState]      = useState(false);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     /* ── fetch classroom ── */
     useEffect(() => {
@@ -158,11 +161,21 @@ export default function ClassroomPage() {
                             {classroom.description || 'Welcome to the class! Here you can find all course materials, discussions, and updates.'}
                         </p>
 
-                        <div className="mt-3 flex items-center gap-3">
+                        <div className="mt-3 flex items-center justify-between">
                             <div className="flex items-center text-xs sm:text-sm font-medium text-gray-500">
                                 <Users size={14} className="mr-1.5" />
                                 {classroom.students?.length || 0} Students
                             </div>
+                            
+                            {isTeacherState && (
+                                <button
+                                    onClick={() => setIsSettingsModalOpen(true)}
+                                    className="p-2 bg-gray-800/50 hover:bg-gray-700/50 text-gray-400 hover:text-white rounded-lg transition"
+                                    title="Classroom Settings"
+                                >
+                                    <Settings size={18} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </header>
@@ -312,6 +325,14 @@ export default function ClassroomPage() {
                 isOpen={isScheduleModalOpen}
                 onClose={() => setIsScheduleModalOpen(false)}
                 classroomId={id}
+            />
+
+            <ClassroomSettingsModal
+                isOpen={isSettingsModalOpen}
+                onClose={() => setIsSettingsModalOpen(false)}
+                classroom={classroom}
+                onSuccessUpdate={(updatedData) => setClassroom(updatedData)}
+                onDeleteRedirect={() => navigate('/home')}
             />
         </div>
     );

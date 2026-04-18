@@ -211,9 +211,12 @@ export default function ProfilePage() {
                             {role === 'Student' && (
                                 <>
                                     {renderStaticField("Roll Number", profile.rollNumber)}
-                                    {renderStaticField("Programme", profile.programme)}
+                                    <div className='grid grid-cols-[1fr_1fr] gap-3 sm:gap-4'>
+                                        {renderStaticField("Programme", profile.programme)}
+                                        {renderStaticField("Branch", profile.branch)}
+                                    </div>
                                     {/* Semester + Batch side by side on all screen sizes */}
-                                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                    <div className="grid grid-cols-[1fr_1fr] gap-3 sm:gap-4">
                                         {renderSelect("Semester", "semester", ['1','2','3','4','5','6','7','8'])}
                                         {renderStaticField("Batch Year", profile.batchYear)}
                                     </div>
