@@ -9,6 +9,7 @@ import {
   getAllClassrooms,
   enrollClassroom,
 } from '../controllers/classroom.controller.js';
+import { uploadResource, deleteResource, downloadResource } from '../controllers/resource.controller.js';
 import {
   getMessages,
   sendMessage,
@@ -16,7 +17,18 @@ import {
   toggleChatStatus,
 } from '../controllers/classroomMessage.controller.js';
 
+import { upload } from '../utils/cloudinaryConfig.js';
+
 const router = express.Router();
+
+// POST /api/classrooms/:id/resources
+router.post('/:id/resources', requireAuth, isTeacher, upload.single('file'), uploadResource);
+
+// DELETE /api/classrooms/:id/resources/:resourceId
+router.delete('/:id/resources/:resourceId', requireAuth, deleteResource);
+
+// GET /api/classrooms/:id/resources/:resourceId/download
+router.get('/:id/resources/:resourceId/download', requireAuth, downloadResource);
 
 router.get('/', requireAuth, getAllClassrooms);
 router.get('/:id', requireAuth, getClassroom);
