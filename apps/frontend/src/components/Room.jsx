@@ -491,7 +491,7 @@ export default function Room() {
                                             <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3">
                                                 {participants.map((p) => {
                                                     const isMe = p.id === socket.id
-                                                    const name = isMe ? `${p.user?.name || "You"} (You)` : (p.user?.name || p.user?._id?.slice(-6) || "Guest")
+                                                    const name = isMe ? `${p.user?.fullName || "You"} (You)` : (p.user?.FullName || p.user?._id?.slice(-6) || "Guest")
                                                     const pState = participantStates[p.id] || {}
                                                     const isMicActive = isMe ? isMicOn : !!pState.audio
                                                     const isCamActive = isMe ? isVideoOn : !!pState.video
