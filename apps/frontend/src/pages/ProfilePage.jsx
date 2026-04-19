@@ -54,8 +54,8 @@ export default function ProfilePage() {
         }
     };
 
-    const inputClass = "bg-[#14151a] border border-gray-700 rounded-lg px-3 sm:px-4 py-2.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-all w-full text-sm";
-    const readClass  = "bg-[#1a1b23] border border-gray-800 rounded-lg px-3 sm:px-4 py-2.5 text-gray-200 text-sm w-full";
+    const inputClass = "bg-[#121414] border border-white/10 rounded-lg px-3 sm:px-4 py-2.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all w-full text-sm";
+    const readClass  = "bg-black border border-white/10 rounded-lg px-3 sm:px-4 py-2.5 text-gray-200 text-sm w-full";
 
     const renderField = (label, name, type = "text", placeholder = "") => (
         <div className="flex flex-col space-y-1.5">
@@ -91,7 +91,7 @@ export default function ProfilePage() {
     );
 
     const Shell = ({ children }) => (
-        <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#0e0e11] text-gray-100 font-sans">
+        <div className="h-screen w-screen overflow-hidden flex flex-col bg-black text-gray-100 font-sans">
             <Navbar />
             <main className="flex-1 overflow-y-auto pt-4">{children}</main>
         </div>
@@ -100,7 +100,7 @@ export default function ProfilePage() {
     if (loading) return (
         <Shell>
             <div className="flex items-center justify-center h-full">
-                <Loader2 className="animate-spin text-indigo-500 w-10 h-10" />
+                <Loader2 className="animate-spin text-white w-10 h-10" />
             </div>
         </Shell>
     );
@@ -130,23 +130,23 @@ export default function ProfilePage() {
                     {!isEditing ? (
                         <button
                             onClick={() => { setFormData(profile); setIsEditing(true); }}
-                            className="self-start sm:self-auto flex items-center gap-2 bg-[#1e1f26] hover:bg-[#2a2b36] border border-gray-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-all shrink-0"
+                            className="self-start sm:self-auto flex items-center gap-2 bg-[#121414] hover:bg-white/5 border border-white/10 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-all shrink-0"
                         >
-                            <Edit2 size={15} className="text-indigo-400" />
+                            <Edit2 size={15} className="text-white" />
                             <span>Edit Profile</span>
                         </button>
                     ) : (
                         <div className="flex items-center gap-2 self-start sm:self-auto">
                             <button
                                 onClick={() => setIsEditing(false)}
-                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-[#1a1b23] transition-all"
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
                             >
                                 <X size={15} /><span>Cancel</span>
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-70 shrink-0"
+                                className="flex items-center gap-2 bg-white hover:bg-gray-200 text-black px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-lg shadow-white/20 disabled:opacity-70 shrink-0"
                             >
                                 {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
                                 <span>{saving ? 'Saving...' : 'Save Changes'}</span>
@@ -156,31 +156,31 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Profile Card */}
-                <div className="bg-[#14151a] border border-gray-800 rounded-2xl p-5 sm:p-8 relative overflow-hidden">
+                <div className="bg-[#121414] border border-white/10 rounded-2xl p-5 sm:p-8 relative overflow-hidden">
                     {/* Decorative blur */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none translate-x-1/3 -translate-y-1/3" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none translate-x-1/3 -translate-y-1/3" />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
 
                         {/* General Information */}
                         <div className="space-y-5">
-                            <h3 className="text-base sm:text-lg font-semibold text-white border-b border-gray-800 pb-2 flex items-center gap-2">
-                                <User size={17} className="text-indigo-400" />
+                            <h3 className="text-base sm:text-lg font-semibold text-white border-b border-white/10 pb-2 flex items-center gap-2">
+                                <User size={17} className="text-white" />
                                 General Information
                             </h3>
                             {renderField("Full Name", "fullName")}
                             {renderStaticField("Institution", profile.institution || profile.user?.institution)}
                             <div className="flex flex-col space-y-1.5">
                                 <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Role</label>
-                                <div className="bg-[#1a1b23] border border-gray-800 rounded-lg px-3 sm:px-4 py-2.5 text-gray-400 text-sm cursor-not-allowed">{role}</div>
+                                <div className="bg-black border border-white/10 rounded-lg px-3 sm:px-4 py-2.5 text-gray-400 text-sm cursor-not-allowed">{role}</div>
                                 <p className="text-[10px] text-gray-500">Role cannot be changed.</p>
                             </div>
                         </div>
 
                         {/* Role-specific Information */}
                         <div className="space-y-5">
-                            <h3 className="text-base sm:text-lg font-semibold text-white border-b border-gray-800 pb-2 flex items-center gap-2">
-                                <CheckCircle2 size={17} className="text-indigo-400" />
+                            <h3 className="text-base sm:text-lg font-semibold text-white border-b border-white/10 pb-2 flex items-center gap-2">
+                                <CheckCircle2 size={17} className="text-white" />
                                 {role === 'Teacher' ? 'Professional Details' : 'Academic Details'}
                             </h3>
 
@@ -197,10 +197,10 @@ export default function ProfilePage() {
                                                 value={formData.bio || ''}
                                                 onChange={handleChange}
                                                 placeholder="Tell students a bit about yourself..."
-                                                className="bg-[#14151a] border border-gray-700 rounded-lg px-3 sm:px-4 py-2.5 text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-all min-h-[100px] resize-y w-full"
+                                                className="bg-[#121414] border border-white/10 rounded-lg px-3 sm:px-4 py-2.5 text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all min-h-[100px] resize-y w-full"
                                             />
                                         ) : (
-                                            <div className="bg-[#1a1b23] border border-gray-800 rounded-lg px-3 sm:px-4 py-3 text-gray-200 text-sm leading-relaxed min-h-[100px]">
+                                            <div className="bg-black border border-white/10 rounded-lg px-3 sm:px-4 py-3 text-gray-200 text-sm leading-relaxed min-h-[100px]">
                                                 {profile.bio || <span className="text-gray-600 italic">No bio added yet.</span>}
                                             </div>
                                         )}
