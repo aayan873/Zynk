@@ -137,42 +137,42 @@ export default function ClassroomPage() {
             <main className="flex-1 flex flex-col overflow-hidden relative">
 
                 {/* ── Classroom Header ── */}
-                <header className="px-4 sm:px-6 md:px-10 py-5 sm:py-8 border-b border-gray-800/50 bg-[#14151a] shrink-0 sticky top-0 z-20 shadow-sm relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/20 to-transparent pointer-events-none" />
-                    <div className="relative z-10">
+                <header className="px-10 sm:px-5 md:px-10 py-2 sm:py-4  sticky top-0 z-20 shadow-sm relative overflow-hidden">
+                    <div className="absolute inset-0 pointer-events-none" />
+                     <div className="relative z-10 flex items-center justify-between gap-4">
                         {/* breadcrumb pills */}
-                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-indigo-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1.5">
+                        {/* <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-indigo-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1.5">
                             <span className="truncate max-w-[120px] sm:max-w-none">{classroom.institute}</span>
                             <span>•</span>
                             <span className="truncate max-w-[100px] sm:max-w-none">{classroom.programme}</span>
                             <span>•</span>
                             <span>{classroom.semester}</span>
-                        </div>
+                        </div> */}
 
                         <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-1 sm:mb-2 leading-tight">
                             {classroom.name}
                         </h1>
 
-                        <p className="text-gray-400 text-xs sm:text-sm max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
+                        {/* <p className="text-gray-400 text-xs sm:text-sm max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
                             {classroom.description || 'Welcome to the class! Here you can find all course materials, discussions, and updates.'}
-                        </p>
+                        </p> */}
 
-                        <div className="mt-3 flex items-center justify-between">
-                            <div className="flex items-center text-xs sm:text-sm font-medium text-gray-500">
+                       
+                            {/* <div className="flex items-center text-xs sm:text-sm font-medium text-gray-500">
                                 <Users size={14} className="mr-1.5" />
                                 {classroom.students?.length || 0} Students
-                            </div>
+                            </div> */}
                             
                             {isTeacherState && (
                                 <button
                                     onClick={() => setIsSettingsModalOpen(true)}
-                                    className="p-2 bg-gray-800/50 hover:bg-gray-700/50 text-gray-400 hover:text-white rounded-lg transition"
+                                    className="p-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-white rounded-lg transition"
                                     title="Classroom Settings"
                                 >
                                     <Settings size={18} />
                                 </button>
                             )}
-                        </div>
+                        
                     </div>
                 </header>
 
@@ -181,7 +181,7 @@ export default function ClassroomPage() {
                     On mobile (< sm): add pb-20 so content isn't hidden behind the fixed bottom nav.
                     On desktop (>= sm): no extra padding needed.
                 */}
-                <div className="flex-1 overflow-y-auto w-full p-3 sm:p-5 md:p-10 max-w-6xl mx-auto w-full pb-20 sm:pb-10">
+                <div className="flex-1 overflow-y-auto w-full p-3 sm:p-5 md:p-0 max-w-6xl mx-auto w-full pb-20 sm:pb-10">
                     {!isEnrolled ? (
 
                         /* ── Enroll card ── */
@@ -253,7 +253,7 @@ export default function ClassroomPage() {
                                     </div>
 
                                     {/* Schedule Meet button — teacher only */}
-                                    {isTeacherState && (
+                                    {/* {isTeacherState && (
                                         <button
                                             onClick={() => setIsScheduleModalOpen(true)}
                                             className="mb-1.5 shrink-0 flex items-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
@@ -261,7 +261,7 @@ export default function ClassroomPage() {
                                             <CalendarPlus size={14} />
                                             <span>Schedule Meet</span>
                                         </button>
-                                    )}
+                                    )} */}
                                 </div>
                             </div>
 
@@ -373,7 +373,7 @@ export default function ClassroomPage() {
                     })}
 
                     {/* Teacher: extra "Meet" button in bottom nav */}
-                    {isTeacherState && (
+                    {/* {isTeacherState && (
                         <button
                             onClick={() => setIsScheduleModalOpen(true)}
                             className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 px-1 text-indigo-400 transition-all duration-150 relative"
@@ -383,7 +383,7 @@ export default function ClassroomPage() {
                                 Meet
                             </span>
                         </button>
-                    )}
+                    )} */}
                 </nav>
             )}
 

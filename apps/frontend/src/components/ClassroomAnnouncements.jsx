@@ -89,7 +89,7 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
     }
 
     return (
-        <div className="flex flex-col h-full w-full min-h-0 overflow-hidden">
+        <div className="flex flex-col h-[65vh] sm:h-[70vh] w-full min-h-0 overflow-hidden">
 
             {/* ── Top bar: title + Post button (teacher only) — never scrolls ── */}
             <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800/60">
@@ -153,7 +153,7 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
             )}
 
             {/* ── Announcements list — ONLY this scrolls ── */}
-           <div className="space-y-4 sm:space-y-6 pb-4 sm:pb-6 overflow-y-auto max-h-[60vh] custom-scrollbar pr-2">
+           <div className="flex-1 space-y-4 sm:space-y-6 px-4 sm:px-6 py-4 overflow-y-auto custom-scrollbar">
                 {announcements.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full min-h-[160px] border border-dashed border-gray-800 rounded-xl">
                         <Send size={28} className="text-gray-600 mb-2" />
