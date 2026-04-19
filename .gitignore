@@ -137,3 +137,10 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# VS Code Extensions
+./vscode
+
+# Cert files
+/apps/backend/certs/**
+/apps/frontend/certs/**

@@ -1,0 +1,62 @@
+import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import axios from "axios";
+
+const ProtectedRoutes = ({ children }) => {
+  const { auth, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = auth?.user;
+  const token = auth?.token;
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const verify = async () => {
+      if (!user || !token) {
+        if (active) {
+          setChecking(false);
+          navigate("/login", { replace: true });
+        }
+        return;
+      }
+
+      try {
+        const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+        await axios.get(`${BACKEND_URL}/api/auth/validate`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (active) setChecking(false);
+      } catch {
+        logout();
+        if (active) {
+          setChecking(false);
+          navigate("/login", { replace: true });
+        }
+      }
+    };
+
+    verify();
+
+    return () => {
+      active = false;
+    };
+  }, [user, token, navigate, logout]);
+
+  if (checking) return null;
+  if (!user || !token) return null;
+
+  if (!user.profileCompleted && location.pathname !== '/profile-setup') {
+      return <Navigate to="/profile-setup" replace />;
+  }
+
+  if (user.profileCompleted && location.pathname === '/profile-setup') {
+      return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
+export default ProtectedRoutes;

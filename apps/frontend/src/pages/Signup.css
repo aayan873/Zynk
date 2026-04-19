@@ -1,0 +1,140 @@
+/* Reset + base */
+.signup-page {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  min-height: 100vh;
+  background: rgb(33, 33, 33);
+
+  display: flex;
+  flex-direction: column;  
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;               
+}
+
+.signup-page .title{
+    text-align:center;
+    margin-bottom:8px;
+    color:#ffffff;
+    font-size:2.8rem;
+}
+
+
+/* Page background */
+
+
+/* Container */
+.signup-page .signup-container {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  padding: 1.8rem;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.6s ease;
+}
+
+/* Heading */
+.signup-page .signup-container h1 {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.6rem;
+  color: #222;
+}
+
+/* Form */
+.signup-page .signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* Input group */
+.signup-page .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-page .form-group label {
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  color: #444;
+}
+
+/* Inputs */
+.signup-page .form-group input {
+  padding: 0.6rem 0.76rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+  background-color: #EFF6FF;
+}
+
+.signup-page .form-group input:focus {
+  outline: none;
+  border-color: #5a67d8;
+  box-shadow: 0 0 0 2px rgba(90, 103, 216, 0.2);
+}
+
+/* Button */
+.signup-page button {
+  margin-top: 0.4rem;
+  padding: 0.65rem;
+  background: #5a67d8;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.signup-page button:hover {
+  background: #434dbf;
+}
+
+.signup-page button:active {
+  transform: scale(0.98);
+}
+
+/* Register text */
+.signup-page .signup-container p {
+  margin-top: 0.8rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.signup-page .signup-container p a {
+  color: #5a67d8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.signup-page .signup-container p a:hover {
+  text-decoration: underline;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+ .signup-page .signup-container {
+    padding: 2rem 1.5rem;
+  }
+}

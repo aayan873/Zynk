@@ -1,0 +1,612 @@
+import roomManager from "../sfu/roomManager.js"
+import { Meeting } from "../models/meeting.model.js"
+
+const getTransportListenInfos = () => {
+    const frontendUrl = process.env.FRONTEND_URL || ""
+    const isLocalFrontend =
+        frontendUrl.includes("localhost") || frontendUrl.includes("127.0.0.1")
+
+    const announcedAddress =
+        process.env.ANNOUNCED_IP || (isLocalFrontend ? "127.0.0.1" : undefined)
+
+    return [
+        {
+            protocol: "udp",
+            ip: "0.0.0.0",
+            announcedAddress
+        },
+        {
+            protocol: "tcp",
+            ip: "0.0.0.0",
+            announcedAddress
+        },
+    ]
+}
+
+const serializeParticipants = (roomID) =>
+    roomManager.getAllPeers(roomID).map((peer) => ({
+        id: peer.id,
+        user: peer.user,
+        joinedAt: peer.joinedAt,
+        handRaised: peer.handRaised
+    }))
+
+const handlePeerLeaveRoom = async (io, socket, roomID) => {
+    if (!roomID) return;
+
+    await roomManager.removePeer(roomID, socket.id);
+
+    socket.leave(roomID);
+    socket.roomID = null;
+
+    socket.to(roomID).emit("peer-left", { socketID: socket.id });
+    io.to(roomID).emit("participant-update", serializeParticipants(roomID));
+
+    console.log(`Peer ${socket.id} left room ${roomID}`);
+};
+
+export const registerSocketEvents = (io, socket) => {
+
+    //Join or Create a Room
+    socket.on("join-room", async ({ roomID }, callback) => {
+        try {
+            const user = socket.user    //! From Auth Middleware
+            const normalizedRoomId = String(roomID || "").trim().toLowerCase()
+            if (!normalizedRoomId) { return callback({ error: `roomID is required` }) }
+
+            const meeting = await Meeting.findOne({ roomId: normalizedRoomId })
+
+            if (!meeting) { return callback({ error: "Room does not exist" }) }
+
+            if (meeting.blacklistedParticipants?.includes(String(user._id))) {
+                return callback({ error: "You have been removed from this meeting." })
+            }
+
+            if (!meeting.participants.includes(user._id)) {
+                meeting.participants.push(user._id)
+                await meeting.save()
+            }
+
+            const room = await roomManager.createRoom(roomID)
+            roomManager.addPeer(roomID, socket, user)
+
+            socket.roomID = normalizedRoomId
+            socket.join(normalizedRoomId)
+
+            const router = roomManager.getRouter(normalizedRoomId)
+            socket.emit("router-rtp-capabilities", router.rtpCapabilities)
+
+            const producers = roomManager.getProducers(normalizedRoomId, socket.id)
+            socket.emit("existing-producers", producers)
+
+            socket.to(normalizedRoomId).emit("peer-joined", {
+                peerID: socket.id,
+                user
+            })
+
+            io.to(roomID).emit("participant-update", serializeParticipants(roomID))
+
+            console.log(`Peer ${socket.id} joined room ${normalizedRoomId}`)
+            callback({ success: true })
+
+        } catch (error) {
+            console.error(`join-room error: ${error}`);
+            callback({ error: "join failed" })
+        }
+    })
+
+
+    //Disconnect a Room (Removal of Peer)
+    socket.on("disconnect", async () => {
+        try {
+            await handlePeerLeaveRoom(io, socket, socket.roomID)
+        } catch (error) {
+            console.error(`Disconnect Error: ${error}`);
+        }
+    })
+
+    //Hand raising event
+    socket.on("toggle-hand", ({ isRaised }) => {
+        try {
+            const roomID = socket.roomID;
+            if (!roomID) return;
+
+            const room = roomManager.getRoom(roomID);
+            if (!room) return;
+
+            const peer = room.peers.get(socket.id);
+            if (!peer) return;
+
+            peer.handRaised = Boolean(isRaised);
+
+            socket.to(roomID).emit("hand-toggled", {
+                socketId: socket.id,
+                isRaised: peer.handRaised,
+                user: peer.user
+            });
+
+            io.to(roomID).emit("participant-update", serializeParticipants(roomID));
+        } catch (error) {
+            console.error(`Toggle Hand Error: ${error}`);
+        }
+    })
+
+    //Leave Meeting manually
+    socket.on("leave-meeting", async () => {
+        try {
+            await handlePeerLeaveRoom(io, socket, socket.roomID)
+        } catch (error) {
+            console.error(`Leave Meeting Error: ${error}`);
+        }
+    })
+
+    //End Meeting (Host only)
+    socket.on("end-meeting", async (callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) {
+                if(callback) return callback({ error: "No room ID found" })
+                return
+            }
+
+            const user = socket.user
+            const meeting = await Meeting.findOne({ roomId: roomID })
+
+            if (!meeting || String(meeting.hostId) !== String(user._id)) {
+                if(callback) return callback({ error: "Unauthorized or room not found" })
+                return
+            }
+
+            // Update meeting in DB
+            meeting.endedAt = new Date()
+            await meeting.save()
+
+            // Emit to everyone that meeting ended
+            io.to(roomID).emit("meeting-ended")
+
+            // Delete room and all peer resources
+            await roomManager.deleteRoom(roomID)
+
+            // Make all sockets natively leave the Socket.IO room
+            const socketsInRoom = await io.in(roomID).fetchSockets()
+            socketsInRoom.forEach(s => {
+                s.leave(roomID)
+                s.roomID = null
+            })
+
+            console.log(`Meeting ${roomID} ended by host ${user._id}`)
+            if(callback) callback({ success: true })
+
+        } catch (error) {
+            console.error(`End Meeting Error: ${error}`);
+            if(callback) callback({ error: error.message })
+        }
+    })
+
+    //Remove Peer (Kick User - Host only)
+    socket.on("remove-peer", async ({ targetSocketIds }, callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID || !targetSocketIds || !Array.isArray(targetSocketIds)) {
+                if(callback) return callback({ error: "Invalid data provided" })
+                return
+            }
+
+            const user = socket.user
+            const meeting = await Meeting.findOne({ roomId: roomID })
+
+            if (!meeting || String(meeting.hostId) !== String(user._id)) {
+                if(callback) return callback({ error: "Unauthorized or room not found" })
+                return
+            }
+
+            for (const targetSocketId of targetSocketIds) {
+                const peerToBeKicked = roomManager.getPeer(roomID, targetSocketId)
+                if (!peerToBeKicked) continue
+
+                // Add to blacklist if not already
+                if (!meeting.blacklistedParticipants.includes(String(peerToBeKicked.user._id))) {
+                    meeting.blacklistedParticipants.push(String(peerToBeKicked.user._id))
+                }
+
+                // Notify peer
+                io.to(targetSocketId).emit("kicked-from-meeting")
+
+                // Ensure peer leaves backend logic
+                await handlePeerLeaveRoom(io, peerToBeKicked.socket, roomID)
+            }
+            
+            await meeting.save()
+
+            if(callback) callback({ success: true })
+
+        } catch (error) {
+            console.error(`Remove Peer Error: ${error}`)
+            if(callback) callback({ error: error.message })
+        }
+    })
+
+    socket.on("create-send-transport", async (callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
+            const room = roomManager.getRoom(roomID)
+            if (!room) return callback({ error: `Room Not Found` });
+
+            const router = room.router
+            const peer = room.peers.get(socket.id)
+            if (!peer) return callback({ error: `Peer Not Found` });
+
+            //Create WebRTC Transport
+            const transport = await router.createWebRtcTransport({
+                listenInfos: getTransportListenInfos(),
+                enableUdp: true,
+                enableTcp: true,
+                preferUdp: true,
+            })
+
+            //Send Transport in Peer
+            peer.sendTransport = transport
+
+            //Handle Transport Lifecycle
+            transport.on("dtlsstatechange", (state) => {
+                if (state === "closed") {
+                    console.log("Send Transport Closed")
+                    transport.close()
+                }
+            })
+
+            transport.on("close", () => {
+                console.log("Send transport fully closed");
+            })
+
+            callback({
+                id: transport.id,
+                iceParameters: transport.iceParameters,
+                iceCandidates: transport.iceCandidates,
+                dtlsParameters: transport.dtlsParameters,
+            })
+
+        } catch (error) {
+            console.error(`Error creating sent transport ${error}`);
+            callback({ error: error.message })
+        }
+    })
+
+
+    socket.on("connect-send-transport", async ({ dtlsParameters }, callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
+            const room = roomManager.getRoom(roomID)
+            if (!room) return callback({ error: `Room Not Found` });
+
+            const peer = room.peers.get(socket.id)
+            if (!peer) return callback({ error: `Peer Not Found` });
+
+            const transport = peer.sendTransport;
+            if (!transport) return callback({ error: `Send Transport Not Found` });
+
+            await transport.connect({ dtlsParameters })
+
+            console.log(`Send Transport Connected For ${socket.id}`)
+            callback({ success: true })
+
+        } catch (error) {
+            console.error(`Error connecting send transport: ${error}`);
+            callback({ error: error.message })
+        }
+    })
+
+
+    socket.on("produce", async ({ kind, rtpParameters, appData }, callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
+            const room = roomManager.getRoom(roomID)
+            if (!room) return callback({ error: `Room Not Found` });
+
+            const peer = room.peers.get(socket.id)
+            if (!peer || !peer.sendTransport) return callback({ error: `Send Transport Not Found` });
+
+            //Create Producer
+            const producer = await peer.sendTransport.produce({
+                kind, rtpParameters, appData
+            })
+
+            //Store Producer
+            peer.producers.set(producer.id, producer)
+
+            console.log(`Producer created: ${producer.id} ${kind}`);
+
+            //Handle Producer Close
+            producer.on("transportclose", () => {
+                console.log(`Producer Transport Closed`);
+                producer.close()
+                peer.producers.delete(producer.id)
+            })
+
+            producer.on("close", () => {
+                console.log("Producer Closed")
+                peer.producers.delete(producer.id)
+            })
+
+            //Notify other peers
+            socket.to(roomID).emit("new-producer", {
+                producerId: producer.id,
+                peerID: socket.id,
+                kind,
+                appData,
+            })
+
+            //Send Producer ID back to client
+            callback({
+                id: producer.id,
+            })
+        } catch (error) {
+            console.error(`Producer Error: ${error}`);
+            callback({ error: error.message })
+        }
+    })
+
+
+
+    socket.on("resume-producer", async ({ producerId }, callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
+            const room = roomManager.getRoom(roomID)
+            if (!room) return callback({ error: `Room Not Found` });
+
+            const peer = room.peers.get(socket.id)
+            if (!peer) return callback({ error: `Peer Not Found` });
+
+            const producer = peer.producers.get(producerId)
+            if (!producer) return callback({ error: `Producer Not Found` });
+
+            await producer.resume()
+
+            socket.to(roomID).emit("producer-resumed", {
+                producerId, peerID: socket.id
+            })
+
+            console.log(`Producer Resumed: ${producerId}`);
+            callback({ success: true })
+
+        } catch (error) {
+            console.error(`Resume Producer Error: ${error}`);
+            callback({ error: error.message })
+        }
+    })
+
+
+
+    socket.on("pause-producer", async ({ producerId }, callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
+            const room = roomManager.getRoom(roomID)
+            if (!room) return callback({ error: `Room Not Found` });
+
+            const peer = room.peers.get(socket.id)
+            if (!peer) return callback({ error: `Peer Not Found` });
+
+            const producer = peer.producers.get(producerId)
+            if (!producer) return callback({ error: `Producer Not Found` });
+
+            await producer.pause()
+
+            socket.to(roomID).emit("producer-paused", {
+                producerId, peerID: socket.id
+            })
+
+            console.log(`Producer Paused: ${producerId}`);
+            callback({ success: true })
+
+        } catch (error) {
+            console.error(`Pause Producer Error: ${error}`);
+            callback({ error: error.message })
+        }
+    })
+
+    socket.on("close-producer", ({ producerID, producerId }, callback) => {
+        try {
+            const finalProducerId = producerId || producerID;
+            const respond = typeof callback === "function" ? callback : () => {}
+            const roomID = socket.roomID
+            if(!roomID) return respond({ error: `RoomID Not Found in socket`})
+            
+            const room = roomManager.getRoom(roomID)
+            if(!room) return respond({ error: `Room Not Found`});
+
+            const peer = room.peers.get(socket.id)
+            if(!peer) return respond({ error: `Peer Not Found`});
+
+            const producer = peer.producers.get(finalProducerId)
+            if(!producer) return respond({ error: `Producer Not Found `});
+            
+            producer.close()
+            peer.producers.delete(finalProducerId)
+            socket.to(roomID).emit("producer-closed", { producerId: finalProducerId })
+            console.log(`Producer closed ${finalProducerId}`);
+            respond({ success: true })
+
+        } catch (error) {
+            if (typeof callback === "function") callback({ error: error.message })
+        }
+    })
+
+    socket.on("create-recv-transport", async (callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
+            const room = roomManager.getRoom(roomID)
+            if (!room) return callback({ error: `Room Not Found` });
+
+            const router = room.router
+            const peer = room.peers.get(socket.id)
+            if (!peer) return callback({ error: `Peer Not Found` });
+
+            //Create WebRTC Transport
+            const transport = await router.createWebRtcTransport({
+                listenInfos: getTransportListenInfos(),
+                enableUdp: true,
+                enableTcp: true,
+                preferUdp: true,
+            })
+
+            if (!peer.recvTransports) {
+                peer.recvTransports = new Map()
+            }
+            peer.recvTransports.set(transport.id, transport)
+
+            //Handle Transport Lifecycle
+            transport.on("dtlsstatechange", (state) => {
+                if (state === "closed") {
+                    console.log("Send Transport Closed")
+                    transport.close()
+                }
+            })
+
+            transport.on("close", () => {
+                console.log("Send transport fully closed");
+                peer.recvTransports.delete(transport.id)
+            })
+
+            callback({
+                id: transport.id,
+                iceParameters: transport.iceParameters,
+                iceCandidates: transport.iceCandidates,
+                dtlsParameters: transport.dtlsParameters,
+            })
+
+        } catch (error) {
+            console.error(`Error creating recv transport ${error}`);
+            callback({ error: error.message })
+        }
+    })
+
+
+
+    socket.on("connect-recv-transport", async ({ transportID, dtlsParameters }, callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
+            const room = roomManager.getRoom(roomID)
+            if (!room) return callback({ error: `Room Not Found` });
+
+            const peer = room.peers.get(socket.id)
+            if (!peer) return callback({ error: `Peer Not Found` });
+
+            const transport = peer.recvTransports.get(transportID);
+            if (!transport) return callback({ error: `Recv Transport Not Found` });
+
+            await transport.connect({ dtlsParameters })
+
+            console.log(`Recv Transport Connected For ${socket.id}`)
+            callback({ success: true })
+
+        } catch (error) {
+            console.error(`Error connecting recv transport: ${error}`);
+            callback({ error: error.message })
+        }
+    })
+
+
+
+    socket.on("consume", async ({ producerId, transportID, rtpCapabilities }, callback) => {
+        try {
+            const roomID = socket.roomID
+            if (!roomID) return callback({ error: `RoomID Not Found in socket` })
+
+            const room = roomManager.getRoom(roomID)
+            if (!room) return callback({ error: `Room Not Found` });
+
+            const router = room.router
+            const peer = room.peers.get(socket.id)
+            if (!peer) return callback({ error: `Peer Not Found` });
+
+            const canConsume = router.canConsume({
+                producerId: producerId,
+                rtpCapabilities
+            })
+            if (!canConsume) {
+                console.error(`Cannot consume this producer`)
+                return callback({ error: "Cannot consume" })
+            }
+
+            const recvTransport = peer.recvTransports.get(transportID)
+            if (!recvTransport) {
+                return callback({ error: "Recv Transport Not Found" })
+            }
+
+            const consumer = await recvTransport.consume({
+                producerId: producerId,
+                rtpCapabilities,
+                paused: true
+            })
+
+            if (!peer.consumers) {
+                peer.consumers = new Map()
+            }
+            peer.consumers.set(consumer.id, consumer)
+
+            consumer.on("transportclose", () => {
+                consumer.close()
+                peer.consumers.delete(consumer.id)
+            })
+
+            consumer.on("producerclose", () => {
+                consumer.close()
+                peer.consumers.delete(consumer.id)
+
+                socket.emit("producer-closed", { producerId })
+            })
+
+            callback({
+                id: consumer.id,
+                producerId,
+                kind: consumer.kind,
+                rtpParameters: consumer.rtpParameters,
+            })
+        } catch (error) {
+            console.error(`Consumer Error: ${error}`);
+            callback({ error: error.message })
+        }
+    })
+
+
+
+    socket.on("resume-consumer", async ({ consumerID }, callback) => {
+        try {
+            const respond = typeof callback === "function" ? callback : () => {}
+            const roomID = socket.roomID
+            if (!roomID) return respond({ error: `RoomID Not Found in socket` })
+
+            const room = roomManager.getRoom(roomID)
+            if (!room) return respond({ error: `Room Not Found` });
+
+            const peer = room.peers.get(socket.id)
+            if (!peer) return respond({ error: `Peer Not Found` });
+
+            const consumer = peer.consumers.get(consumerID)
+            if (!consumer) return respond({ error: `Consumer Not Found` });
+
+            await consumer.resume()
+
+            console.log(`Consumer Resumed: ${consumerID}`);
+            respond({ success: true })
+
+        } catch (error) {
+            console.error(`Resume Consumer Error: ${error}`);
+            if (typeof callback === "function") callback({ error: error.message })
+        }
+    })
+}

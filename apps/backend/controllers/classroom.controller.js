@@ -1,0 +1,268 @@
+import { Classroom } from '../models/classroom.model.js';
+import Student from '../models/student.model.js';
+import Teacher from '../models/teacher.model.js';
+// 1. CREATE CLASSROOM (Teacher Only)
+export const createClassroom = async (req, res) => {
+  try {
+    const { name, description, programmes, semester, branches, inviteCode } = req.body;
+
+    const teacherProfile = await Teacher.findOne({ user: req.user._id });
+    if (!teacherProfile) {
+      return res.status(404).json({ success: false, message: 'Teacher profile not found' });
+    }
+
+    const classroom = new Classroom({
+      name,
+      description,
+      institute: req.user.institution,
+      programmes,
+      semester,
+      branches,
+      inviteCode,
+      teachers: [teacherProfile._id],
+      students: []
+    });
+
+    await classroom.save();
+
+    return res.status(201).json({
+      success: true,
+      message: 'Classroom created successfully',
+      data: classroom
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// 2. UPDATE CLASSROOM (Teacher Only)
+export const updateClassroom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const classroom = await Classroom.findById(id);
+
+    if (!classroom) {
+      return res.status(404).json({ success: false, message: 'Classroom not found' });
+    }
+
+    const teacherProfile = await Teacher.findOne({ user: req.user._id });
+    if (!teacherProfile) {
+      return res.status(404).json({ success: false, message: 'Teacher profile not found' });
+    }
+
+    // Authorization: User must be a teacher of THIS classroom
+    if (!classroom.teachers.includes(teacherProfile._id)) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this classroom' });
+    }
+
+    const updatedClassroom = await Classroom.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Classroom updated successfully',
+      data: updatedClassroom
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// 3. DELETE CLASSROOM (Teacher Only - Soft Delete)
+export const deleteClassroom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const classroom = await Classroom.findById(id);
+
+    if (!classroom) {
+      return res.status(404).json({ success: false, message: 'Classroom not found' });
+    }
+
+    const teacherProfile = await Teacher.findOne({ user: req.user._id });
+    if (!teacherProfile) {
+      return res.status(404).json({ success: false, message: 'Teacher profile not found' });
+    }
+
+    // Authorization: User must be a teacher of THIS classroom
+    if (!classroom.teachers.includes(teacherProfile._id)) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this classroom' });
+    }
+
+    classroom.isActive = false;
+    await classroom.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Classroom successfully deleted',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// 4. GET SINGLE CLASSROOM (Any User)
+export const getClassroom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Only return if it's active
+    const classroom = await Classroom.findOne({ _id: id, isActive: true })
+        .populate('teachers', 'fullName email user')
+        .populate('students', 'fullName email rollNumber user')
+        .populate({
+          path: 'resources',
+          options: { sort: { createdAt: -1 } },
+          populate: { path: 'uploadedBy', select: 'email role institution profileCompleted' },
+        });
+
+    if (!classroom) {
+      return res.status(404).json({ success: false, message: 'Classroom not found or inactive' });
+    }
+
+    const userId = req.user._id;
+    const role = req.user.role;
+
+    if (role === 'Teacher') {
+      const isTeacher = classroom.teachers.some((t) => t.user?.toString() === userId.toString());
+      if (!isTeacher) {
+        return res.status(403).json({ success: false, message: 'Not authorized to view this classroom' });
+      }
+    } else if (role === 'Student') {
+      let isAuthorized = classroom.students.some((s) => s.user?.toString() === userId.toString());
+      
+      if (!isAuthorized) {
+        const studentProfile = await Student.findOne({ user: userId });
+        if (studentProfile) {
+           const matchInstitute = classroom.institute === req.user.institution;
+           const matchProgramme = classroom.programmes && classroom.programmes.includes(studentProfile.programme);
+           const matchSemester = classroom.semester === studentProfile.semester;
+           const matchBranch = classroom.branches.includes(studentProfile.branch);
+
+           if (matchInstitute && matchProgramme && matchSemester && matchBranch) {
+               isAuthorized = true;
+           }
+        }
+      }
+
+      if (!isAuthorized) {
+        return res.status(403).json({ success: false, message: 'Not authorized to view this classroom' });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: classroom
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// 5. GET ALL CLASSROOMS (Requires Filtering based on User participation)
+export const getAllClassrooms = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const role = req.user.role;
+
+    // Filter to list only active classes that the user belongs to
+    let query = { isActive: true };
+
+    if (role === 'Teacher') {
+        const teacherProfile = await Teacher.findOne({ user: userId });
+        if (teacherProfile) {
+            query.teachers = teacherProfile._id;
+        } else {
+            query.teachers = null; // No profile, no class
+        }
+    } else if (role === 'Student') {
+        const studentProfile = await Student.findOne({ user: userId });
+        
+        if (studentProfile) {
+            query.$or = [
+                { students: studentProfile._id },
+                {
+                    institute: req.user.institution,
+                    programmes: { $in: [studentProfile.programme] },
+                    semester: studentProfile.semester,
+                    branches: { $in: [studentProfile.branch] }
+                }
+            ];
+        } else {
+            query.students = null;
+        }
+    }
+
+    const classrooms = await Classroom.find(query)
+        .populate('teachers', 'fullName email user')
+        .populate('students', 'fullName email rollNumber user');
+
+    return res.status(200).json({
+      success: true,
+      data: classrooms
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+// 6. ENROLL CLASSROOM (Student Only)
+export const enrollClassroom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+    const role = req.user.role;
+
+    if (role !== 'Student') {
+      return res.status(403).json({ success: false, message: 'Only students can enroll in classrooms' });
+    }
+
+    const classroom = await Classroom.findOne({ _id: id, isActive: true });
+    if (!classroom) {
+      return res.status(404).json({ success: false, message: 'Classroom not found or inactive' });
+    }
+
+    // Demographic check
+    let isAuthorized = false;
+    const studentProfile = await Student.findOne({ user: userId });
+    if (!studentProfile) {
+        return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    // Check if already enrolled
+    const isEnrolled = classroom.students.includes(studentProfile._id);
+    if (isEnrolled) {
+      return res.status(400).json({ success: false, message: 'Already enrolled in this classroom' });
+    }
+    
+    if (studentProfile) {
+      const matchInstitute = classroom.institute === req.user.institution;
+      const matchProgramme = classroom.programmes && classroom.programmes.includes(studentProfile.programme);
+      const matchSemester = classroom.semester === studentProfile.semester;
+      const matchBranch = classroom.branches.includes(studentProfile.branch);
+
+      if (matchInstitute && matchProgramme && matchSemester && matchBranch) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({ success: false, message: 'Not eligible to enroll in this classroom based on your profile' });
+    }
+
+    // Add student to classroom
+    classroom.students.push(studentProfile._id);
+    await classroom.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Successfully enrolled in the classroom',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
