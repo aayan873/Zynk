@@ -41,42 +41,33 @@ export default function Home() {
 
   return (
     <div className="nocturnal-home">
-      <header className="nocturnal-topbar">
+      <header className="nocturnal-topbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
         <Link to="/home" className="nocturnal-brand" aria-label="Zynk Home">
-          <img src="/image.png" alt="Zynk Logo" />
+          <img src="/logo.png" alt="Zynk Logo" />
         </Link>
 
+        <div className="nocturnal-topbar-actions" style={{ display: "flex", gap: "1rem" }}>
+          <Link to="/signup" className="nocturnal-btn nocturnal-btn-primary">
+            SignUp
+          </Link>
+          <Link to="/login" className="nocturnal-btn nocturnal-btn-ghost">
+            Login
+          </Link>
+        </div>
       </header>
 
       <main>
         <section className="nocturnal-hero" id="why-zynk">
           <div className="nocturnal-hero-copy">
-            <h1 className="nocturnal-headline">
-              Run your classroom.
-              <br />
-              <span>Live</span>, organized, and
-              <br />
-              in <span>sync</span>.
-            </h1>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <img src="/brand_name.png" alt="Zynk Logo" style={{ maxWidth: '700px', height: 'auto' }} />
+            </div>
 
             <p className="nocturnal-subline">
               Create classes, schedule or start instant sessions, share updates, and keep
               students engaged from one dashboard.
             </p>
 
-            <div className="nocturnal-actions">
-              <Link to="/signup" className="nocturnal-btn nocturnal-btn-primary">
-                Get Started
-              </Link>
-              <Link to="/login" className="nocturnal-btn nocturnal-btn-ghost">
-                Explore Demo
-              </Link>
-            </div>
-          </div>
-
-          <div className="nocturnal-hero-art" aria-hidden="true">
-            <div className="nocturnal-art-frame" />
-            <div className="nocturnal-art-frame nocturnal-art-frame-offset" />
           </div>
         </section>
 
