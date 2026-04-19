@@ -69,8 +69,8 @@ export default function Signup() {
             />
 
             {/* Glow blobs */}
-            <div className="absolute top-[-10%] right-[-5%] w-72 h-72 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-indigo-900/30 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute top-[-10%] right-[-5%] w-72 h-72 bg-gray-600/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-gray-900/20 rounded-full blur-[120px] pointer-events-none" />
 
             {/* Card */}
             <div className="relative w-full max-w-md my-8">
@@ -81,7 +81,7 @@ export default function Signup() {
                         <Zap size={22} className="text-indigo-400" fill="currentColor" />
                     </div> */}
                     <h1 className="text-3xl font-black text-white tracking-tight">Zynk</h1>
-                    <p className="text-[11px] font-bold tracking-[0.25em] text-indigo-400 uppercase mt-1">Live Learning</p>
+                    <p className="text-[11px] font-bold tracking-[0.25em] text-gray-400 uppercase mt-1">Live Learning</p>
                 </div>
 
                 {/* Form card */}
@@ -104,12 +104,12 @@ export default function Signup() {
                                         onClick={() => setRole(value)}
                                         className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all duration-150 ${
                                             role === value
-                                                ? 'bg-indigo-500/10 border-indigo-500/50 text-white'
+                                                ? 'bg-gray-500/10 border-gray-500/50 text-white'
                                                 : 'bg-[#0e0e11] border-gray-800 text-gray-500 hover:border-gray-700 hover:text-gray-300'
                                         }`}
                                     >
                                         <div className="flex items-center gap-2">
-                                            <Icon size={15} className={role === value ? 'text-indigo-400' : 'text-gray-600'} />
+                                            <Icon size={15} className={role === value ? 'text-gray-200' : 'text-gray-600'} />
                                             <span className="text-sm font-semibold">{label}</span>
                                         </div>
                                         <span className="text-[11px] text-gray-500 leading-tight">{desc}</span>
@@ -123,10 +123,10 @@ export default function Signup() {
                             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Full Name</label>
                             <div className={`flex items-center gap-3 bg-[#0e0e11] border rounded-xl px-4 py-3 transition-all duration-200 ${
                                 focusedField === 'name'
-                                    ? 'border-indigo-500/60 ring-1 ring-indigo-500/20'
+                                    ? 'border-gray-500/60 ring-1 ring-gray-500/20'
                                     : 'border-gray-800 hover:border-gray-700'
                             }`}>
-                                <User size={16} className={`shrink-0 transition-colors ${focusedField === 'name' ? 'text-indigo-400' : 'text-gray-600'}`} />
+                                <User size={16} className={`shrink-0 transition-colors ${focusedField === 'name' ? 'text-gray-200' : 'text-gray-600'}`} />
                                 <input
                                     type="text"
                                     value={fullName}
@@ -146,10 +146,10 @@ export default function Signup() {
                             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</label>
                             <div className={`flex items-center gap-3 bg-[#0e0e11] border rounded-xl px-4 py-3 transition-all duration-200 ${
                                 focusedField === 'email'
-                                    ? 'border-indigo-500/60 ring-1 ring-indigo-500/20'
+                                    ? 'border-gray-500/60 ring-1 ring-gray-500/20'
                                     : 'border-gray-800 hover:border-gray-700'
                             }`}>
-                                <Mail size={16} className={`shrink-0 transition-colors ${focusedField === 'email' ? 'text-indigo-400' : 'text-gray-600'}`} />
+                                <Mail size={16} className={`shrink-0 transition-colors ${focusedField === 'email' ? 'text-gray-200' : 'text-gray-600'}`} />
                                 <input
                                     type="email"
                                     value={email}
@@ -169,10 +169,10 @@ export default function Signup() {
                             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Password</label>
                             <div className={`flex items-center gap-3 bg-[#0e0e11] border rounded-xl px-4 py-3 transition-all duration-200 ${
                                 focusedField === 'password'
-                                    ? 'border-indigo-500/60 ring-1 ring-indigo-500/20'
+                                    ? 'border-gray-500/60 ring-1 ring-gray-500/20'
                                     : 'border-gray-800 hover:border-gray-700'
                             }`}>
-                                <Lock size={16} className={`shrink-0 transition-colors ${focusedField === 'password' ? 'text-indigo-400' : 'text-gray-600'}`} />
+                                <Lock size={16} className={`shrink-0 transition-colors ${focusedField === 'password' ? 'text-gray-200' : 'text-gray-600'}`} />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
@@ -220,7 +220,7 @@ export default function Signup() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full mt-2 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-indigo-600/20 active:scale-[0.98] text-sm"
+                            className="w-full mt-2 flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-black-600/20 active:scale-[0.98] text-sm"
                         >
                             {loading ? (
                                 <>
@@ -248,7 +248,7 @@ export default function Signup() {
                         Already have an account?{' '}
                         <Link
                             to="/login"
-                            className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
+                            className="text-gray-300 hover:text-gray-200 font-semibold transition-colors"
                         >
                             Sign in
                         </Link>

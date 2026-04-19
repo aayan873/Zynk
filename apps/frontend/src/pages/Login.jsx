@@ -61,11 +61,11 @@ export default function Login() {
 
                 {/* Brand */}
                 <div className="text-center mb-8">
-                    {/* <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-4">
-                        <Zap size={22} className="text-indigo-400" fill="currentColor" />
+                    {/* <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-500/10 border border-gray-500/20 mb-4">
+                        <Zap size={22} className="text-gray-400" fill="currentColor" />
                     </div> */}
                     <h1 className="text-3xl font-black text-white tracking-tight">Zynk</h1>
-                    <p className="text-[11px] font-bold tracking-[0.25em] text-indigo-400 uppercase mt-1">Live Learning</p>
+                    <p className="text-[11px] font-bold tracking-[0.25em] text-gray-400 uppercase mt-1">Live Learning</p>
                 </div>
 
                 {/* Form card */}
@@ -82,10 +82,10 @@ export default function Login() {
                             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</label>
                             <div className={`flex items-center gap-3 bg-[#0e0e11] border rounded-xl px-4 py-3 transition-all duration-200 ${
                                 focusedField === 'email'
-                                    ? 'border-indigo-500/60 ring-1 ring-indigo-500/20'
+                                    ? 'border-gray-500/60 ring-1 ring-gray-500/20'
                                     : 'border-gray-800 hover:border-gray-700'
                             }`}>
-                                <Mail size={16} className={`shrink-0 transition-colors ${focusedField === 'email' ? 'text-indigo-400' : 'text-gray-600'}`} />
+                                <Mail size={16} className={`shrink-0 transition-colors ${focusedField === 'email' ? 'text-gray-300' : 'text-gray-500'}`} />
                                 <input
                                     type="email"
                                     value={email}
@@ -105,10 +105,10 @@ export default function Login() {
                             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Password</label>
                             <div className={`flex items-center gap-3 bg-[#0e0e11] border rounded-xl px-4 py-3 transition-all duration-200 ${
                                 focusedField === 'password'
-                                    ? 'border-indigo-500/60 ring-1 ring-indigo-500/20'
+                                    ? 'border-gray-500/60 ring-1 ring-gray-500/20'
                                     : 'border-gray-800 hover:border-gray-700'
                             }`}>
-                                <Lock size={16} className={`shrink-0 transition-colors ${focusedField === 'password' ? 'text-indigo-400' : 'text-gray-600'}`} />
+                                <Lock size={16} className={`shrink-0 transition-colors ${focusedField === 'password' ? 'text-gray-300' : 'text-gray-500'}`} />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
@@ -134,7 +134,7 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full mt-2 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-indigo-600/20 active:scale-[0.98] text-sm"
+                            className="w-full mt-2 flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-gray-600/20 active:scale-[0.98] text-sm"
                         >
                             {loading ? (
                                 <>
@@ -162,7 +162,7 @@ export default function Login() {
                         Don't have an account?{' '}
                         <Link
                             to="/signup"
-                            className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
+                            className="text-gray-300 hover:text-gray-200 font-semibold transition-colors"
                         >
                             Create one
                         </Link>
