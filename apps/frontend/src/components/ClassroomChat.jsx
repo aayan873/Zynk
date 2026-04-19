@@ -52,17 +52,17 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
             const isReplyToMe = replyTargetId === currentUserId;
 
             if (isMentioned) toast.custom(() => (
-                <div className="max-w-xs w-full bg-indigo-600 shadow-lg rounded-xl flex items-start gap-3 px-4 py-3">
+                <div className="max-w-xs w-full bg-white shadow-lg rounded-xl flex items-start gap-3 px-4 py-3">
                     <span className="text-xl">📣</span>
                     <div>
-                        <p className="text-xs font-black text-white uppercase tracking-widest mb-0.5">Mentioned</p>
-                        <p className="text-sm text-indigo-100"><span className="font-bold">{senderName}</span> mentioned you</p>
+                        <p className="text-xs font-black text-black uppercase tracking-widest mb-0.5">Mentioned</p>
+                        <p className="text-sm text-gray-800"><span className="font-bold">{senderName}</span> mentioned you</p>
                     </div>
                 </div>
             ), { duration: 4000 });
 
             if (isReplyToMe) toast.custom(() => (
-                <div className="max-w-xs w-full bg-[#1e1f26] border border-gray-700 shadow-lg rounded-xl flex items-start gap-3 px-4 py-3">
+                <div className="max-w-xs w-full bg-[#121414] border border-white/10 shadow-lg rounded-xl flex items-start gap-3 px-4 py-3">
                     <span className="text-xl">↩️</span>
                     <div>
                         <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5">Reply</p>
@@ -183,11 +183,11 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
     );
 
     return (
-        <div className="flex flex-col w-full h-[65vh] sm:h-[70vh] bg-[#14151a] overflow-hidden">
+        <div className="flex flex-col w-full h-[65vh] sm:h-[70vh] bg-black overflow-hidden">
             {/* Header */}
-            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800/50 flex items-center justify-between bg-[#1a1b21]/80 backdrop-blur-md shrink-0">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 flex items-center justify-between bg-[#121414]/80 backdrop-blur-md shrink-0">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20 shrink-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20 shrink-0">
                         <MessageCircle size={16} className="sm:hidden" />
                         <MessageCircle size={20} className="hidden sm:block" />
                     </div>
@@ -230,18 +230,18 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
                                     <span className="text-[10px] sm:text-[11px] font-bold mb-1 ml-1 flex items-center gap-1.5">
                                         <span className="text-gray-300 truncate max-w-[120px] sm:max-w-none">{senderName}</span>
                                         {senderRole === 'Teacher' && (
-                                            <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-md text-[8px] font-black uppercase tracking-widest shrink-0">Teacher</span>
+                                            <span className="px-1.5 py-0.5 bg-white/20 text-white rounded-md text-[8px] font-black uppercase tracking-widest shrink-0">Teacher</span>
                                         )}
                                     </span>
                                 )}
                                 <div className={`group max-w-[85%] sm:max-w-[72%] px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl relative shadow-md ${
                                     isOwn
-                                        ? 'bg-indigo-600 text-white rounded-tr-none'
-                                        : 'bg-[#1e1f26] text-gray-100 rounded-tl-none border border-gray-800/50'
+                                        ? 'bg-white text-black rounded-tr-none'
+                                        : 'bg-[#121414] text-gray-100 rounded-tl-none border border-white/10'
                                 }`}>
                                     {msg.replyTo && (
                                         <div className={`mb-2 p-2 rounded-lg border-l-4 text-[10px] sm:text-[11px] ${
-                                            isOwn ? 'bg-indigo-700/50 border-white/30' : 'bg-gray-800/80 border-indigo-500/50'
+                                            isOwn ? 'bg-gray-200 border-black/30' : 'bg-white/5 border-white/30'
                                         }`}>
                                             <p className="font-bold opacity-70 mb-0.5">
                                                 {(msg.replyTo.senderId?._id || msg.replyTo.senderId)?.toString() === user?._id?.toString()
@@ -261,8 +261,8 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
                                                     onClick={() => handleReact(msg._id, emoji)}
                                                     className={`px-1.5 py-0.5 rounded-full border text-[9px] sm:text-[10px] flex items-center gap-1 transition-all ${
                                                         msg.reactions.some(r => r.user === user?._id && r.emoji === emoji)
-                                                            ? 'bg-indigo-500/20 border-indigo-500/50 text-white'
-                                                            : 'bg-white/5 border-white/10 text-gray-400'
+                                                            ? (isOwn ? 'bg-black/10 border-black/30 text-black' : 'bg-white/20 border-white/50 text-white')
+                                                            : (isOwn ? 'bg-black/5 border-black/10 text-gray-600' : 'bg-white/5 border-white/10 text-gray-400')
                                                     }`}
                                                 >
                                                     <span>{emoji}</span>
@@ -272,7 +272,7 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
                                         </div>
                                     )}
 
-                                    <div className={`mt-1 flex items-center justify-between text-[8px] ${isOwn ? 'text-indigo-200' : 'text-gray-500'}`}>
+                                    <div className={`mt-1 flex items-center justify-between text-[8px] ${isOwn ? 'text-gray-500' : 'text-gray-500'}`}>
                                         <div className="flex items-center gap-1">
                                             <Clock size={8} />
                                             <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -316,7 +316,7 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 sm:p-4 bg-[#1a1b21]/50 border-t border-gray-800/50 relative shrink-0">
+            <div className="p-3 sm:p-4 bg-[#121414] border-t border-white/10 relative shrink-0">
                 {/* Mentions Popover */}
                 {showMentions && filteredParticipants.length > 0 && (
                     <div className="absolute bottom-full left-3 sm:left-4 mb-2 w-56 sm:w-64 bg-[#1e1f26] border border-gray-800 rounded-xl shadow-2xl overflow-hidden z-50">
@@ -331,7 +331,7 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
                                     key={p.id}
                                     onClick={() => insertMention(p)}
                                     className={`w-full flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm transition-colors ${
-                                        i === mentionIndex ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-white/5'
+                                        i === mentionIndex ? 'bg-white text-black' : 'text-gray-300 hover:bg-white/5'
                                     }`}
                                 >
                                     <div className="flex items-center gap-2">
@@ -341,7 +341,7 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
                                         <span className="truncate max-w-[100px] sm:max-w-none">{p.name}</span>
                                     </div>
                                     <span className={`text-[8px] px-1.5 py-0.5 rounded shrink-0 ml-1 ${
-                                        i === mentionIndex ? 'bg-white/20 text-white' : 'bg-gray-800 text-gray-500'
+                                        i === mentionIndex ? 'bg-black/20 text-black' : 'bg-gray-800 text-gray-500'
                                     }`}>
                                         {p.type}
                                     </span>
@@ -353,11 +353,11 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
 
                 {/* Reply Bar */}
                 {replyingTo && (
-                    <div className="mb-2 sm:mb-3 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#1e1f26] border border-gray-800 rounded-xl">
-                        <div className="w-0.5 min-h-[28px] bg-indigo-500 rounded-full shrink-0" />
+                    <div className="mb-2 sm:mb-3 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#121414] border border-white/10 rounded-xl">
+                        <div className="w-0.5 min-h-[28px] bg-white rounded-full shrink-0" />
                         <div className="flex-1 overflow-hidden">
-                            <p className="text-[10px] sm:text-[11px] font-bold text-indigo-400 leading-none mb-0.5">
-                                Replying to <span className="text-white">
+                            <p className="text-[10px] sm:text-[11px] font-bold text-white leading-none mb-0.5">
+                                Replying to <span className="text-gray-400">
                                     {(replyingTo.senderId?._id || replyingTo.senderId)?.toString() === user?._id?.toString()
                                         ? 'yourself' : (replyingTo.senderProfile?.fullName || 'User')}
                                 </span>
@@ -388,7 +388,7 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
                                 onChange={handleInputChange}
                                 onKeyDown={handleKeyDown}
                                 placeholder={isChatEnabled ? "Type a message... (@ to mention)" : "Chat locked (Teacher override)"}
-                                className="w-full bg-[#0e0e11] border border-gray-800/80 text-gray-100 text-xs sm:text-sm py-3 pl-4 pr-10 rounded-xl focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-gray-600"
+                                className="w-full bg-black border border-white/10 text-gray-100 text-xs sm:text-sm py-3 pl-4 pr-10 rounded-xl focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50 transition-all placeholder:text-gray-600"
                             />
                             <button type="button" className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-300 transition hover:bg-white/5 rounded-lg">
                                 <Smile size={16} />
@@ -397,7 +397,7 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
                         <button
                             type="submit"
                             disabled={!newMessage.trim() || sending}
-                            className="p-3 sm:p-3.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 shrink-0"
+                            className="p-3 sm:p-3.5 bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-xl transition-all shadow-lg shadow-white/20 active:scale-95 shrink-0"
                         >
                             {sending ? <Spinner size="sm" /> : <Send size={16} />}
                         </button>
@@ -413,5 +413,5 @@ export default function ClassroomChat({ classroom, user, isTeacher, token }) {
 }
 
 const Spinner = ({ size = "default" }) => (
-    <div className={`animate-spin rounded-full border-b-2 border-indigo-500/30 border-t-indigo-500 ${size === "sm" ? "h-4 w-4" : "h-8 w-8"}`} />
+    <div className={`animate-spin rounded-full border-b-2 border-white/20 border-t-white ${size === "sm" ? "h-4 w-4" : "h-8 w-8"}`} />
 );

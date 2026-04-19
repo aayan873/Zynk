@@ -21,9 +21,9 @@ export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUs
     const canSend = isHost || isChatEnabled
 
     return (
-        <div className="w-full sm:w-80 bg-gray-900 rounded-none sm:rounded-2xl border-l sm:border border-gray-800 flex flex-col overflow-hidden shrink-0 shadow-lg h-full">
+        <div className="w-full sm:w-80 bg-[#121414] rounded-none sm:rounded-2xl border-l sm:border border-white/10 flex flex-col overflow-hidden shrink-0 shadow-lg h-full">
             {/* Header */}
-            <div className="p-4 border-b border-gray-800 flex flex-col gap-3 shrink-0">
+            <div className="p-4 border-b border-white/10 flex flex-col gap-3 shrink-0">
                 <div className="flex items-center justify-between">
                     <h3 className="text-base font-bold">In-call Messages</h3>
                     {onClose && (
@@ -36,7 +36,7 @@ export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUs
                     )}
                 </div>
                 {isHost && (
-                    <div className="flex items-center justify-between bg-gray-800/50 p-2 rounded-lg border border-gray-700/50">
+                    <div className="flex items-center justify-between bg-black/50 p-2 rounded-lg border border-white/10">
                         <span className="text-xs sm:text-sm font-medium text-gray-300">Allow participants to chat</span>
                         <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
                             <input
@@ -45,7 +45,7 @@ export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUs
                                 checked={isChatEnabled}
                                 onChange={(e) => onToggleChat(e.target.checked)}
                             />
-                            <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" />
+                            <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white peer-checked:after:bg-black" />
                         </label>
                     </div>
                 )}
@@ -67,7 +67,7 @@ export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUs
                                         {isMe ? "You" : msg.sender?.name}
                                     </span>
                                     {msg.isHost && (
-                                        <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold bg-blue-600/20 text-blue-400 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
+                                        <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
                                             <Shield className="w-3 h-3" /> Host
                                         </span>
                                     )}
@@ -77,8 +77,8 @@ export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUs
                                 </div>
                                 <div className={`p-2.5 sm:p-3 rounded-xl text-xs sm:text-sm break-words border ${
                                     isMe
-                                        ? 'bg-blue-600/20 border-blue-600/30 text-blue-50 rounded-tr-sm'
-                                        : 'bg-gray-800 border-gray-700/50 text-gray-100 rounded-tl-sm'
+                                        ? 'bg-white border-white text-black rounded-tr-sm'
+                                        : 'bg-white/10 border-white/10 text-gray-100 rounded-tl-sm'
                                 }`}>
                                     {msg.text}
                                 </div>
@@ -89,7 +89,7 @@ export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUs
             </div>
 
             {/* Input */}
-            <div className="p-3 sm:p-4 border-t border-gray-800 bg-gray-900 shrink-0">
+            <div className="p-3 sm:p-4 border-t border-white/10 bg-[#121414] shrink-0">
                 {!canSend && !isHost ? (
                     <div className="text-center p-2.5 text-xs text-red-400 bg-red-400/10 rounded-lg border border-red-400/20 font-medium">
                         Chat is disabled by host
@@ -101,13 +101,13 @@ export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUs
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder="Send a message..."
-                            className="w-full bg-gray-800 text-white placeholder-gray-400 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-11 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700 disabled:opacity-50 text-xs sm:text-sm"
+                            className="w-full bg-black text-white placeholder-gray-500 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 pr-11 focus:outline-none focus:ring-2 focus:ring-white/50 border border-white/10 disabled:opacity-50 text-xs sm:text-sm"
                             disabled={!canSend}
                         />
                         <button
                             type="submit"
                             disabled={!newMessage.trim() || !canSend}
-                            className="absolute right-2 p-1.5 sm:p-2 text-blue-500 hover:text-blue-400 disabled:text-gray-600 transition-colors"
+                            className="absolute right-2 p-1.5 sm:p-2 text-white hover:text-gray-300 disabled:text-gray-600 transition-colors"
                         >
                             <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>

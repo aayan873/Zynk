@@ -107,7 +107,7 @@ export default function ClassroomPage() {
     /* ── loading / not found states ── */
     if (loading) {
         return (
-            <div className="flex h-screen bg-[#0e0e11] text-gray-100 items-center justify-center">
+            <div className="flex h-screen bg-black text-gray-100 items-center justify-center">
                 <Spinner />
             </div>
         );
@@ -115,13 +115,13 @@ export default function ClassroomPage() {
 
     if (!classroom) {
         return (
-            <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100">
+            <div className="flex flex-col min-h-screen bg-black text-gray-100">
                 <Navbar />
                 <main className="flex-1 flex flex-col items-center justify-center shadow-lg px-4">
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-400 text-center">Classroom not found</h2>
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className="mt-4 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 rounded-lg text-white font-semibold transition"
+                        className="mt-4 px-4 py-2 bg-white hover:bg-gray-200 rounded-lg text-black font-semibold transition"
                     >
                         Go Home
                     </button>
@@ -131,7 +131,7 @@ export default function ClassroomPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#0e0e11] text-gray-100 font-sans overflow-hidden">
+        <div className="flex flex-col min-h-screen bg-black text-gray-100 font-sans overflow-hidden">
             <Navbar />
 
             <main className="flex-1 flex flex-col overflow-hidden relative">
@@ -185,8 +185,8 @@ export default function ClassroomPage() {
                     {!isEnrolled ? (
 
                         /* ── Enroll card ── */
-                        <div className="w-full mt-6 sm:mt-10 p-8 sm:p-12 bg-[#14151a] border border-gray-800/80 rounded-2xl flex flex-col items-center justify-center text-center shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 mb-5 border border-indigo-500/20">
+                        <div className="w-full mt-6 sm:mt-10 p-8 sm:p-12 bg-[#121414] border border-white/10 rounded-2xl flex flex-col items-center justify-center text-center shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/5 rounded-full flex items-center justify-center text-white mb-5 border border-white/10">
                                 <BookOpen size={28} className="sm:hidden" />
                                 <BookOpen size={36} className="hidden sm:block" />
                             </div>
@@ -197,7 +197,7 @@ export default function ClassroomPage() {
                             <button
                                 onClick={handleEnroll}
                                 disabled={enrolling}
-                                className="px-6 sm:px-8 py-2.5 sm:py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-base sm:text-lg transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-70 flex items-center space-x-2 w-full max-w-xs justify-center"
+                                className="px-6 sm:px-8 py-2.5 sm:py-3 bg-white hover:bg-gray-200 text-black rounded-xl font-bold text-base sm:text-lg transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] disabled:opacity-70 flex items-center space-x-2 w-full max-w-xs justify-center"
                             >
                                 {enrolling ? (
                                     <>
@@ -219,8 +219,8 @@ export default function ClassroomPage() {
                         <div className="w-full flex flex-col" style={{ minHeight: 0 }}>
 
                             {/* ── Desktop tab bar — hidden on mobile ── */}
-                            <div className="hidden sm:block sticky top-0 z-10 bg-[#0e0e11] pt-1 pb-0 mb-4">
-                                <div className="flex items-end justify-between gap-2 border-b border-gray-800/80">
+                            <div className="hidden sm:block sticky top-0 z-10 bg-black pt-1 pb-0 mb-4">
+                                <div className="flex items-end justify-between gap-2 border-b border-white/10">
 
                                     {/* scrollable tab list */}
                                     <div
@@ -241,8 +241,9 @@ export default function ClassroomPage() {
                                                         'px-5 py-3 text-sm font-semibold',
                                                         'border-b-2 transition-all duration-150',
                                                         isActive
-                                                            ? 'border-indigo-500 text-indigo-400'
+                                                            ? 'border-white text-white'
                                                             : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-700',
+
                                                     ].join(' ')}
                                                 >
                                                     <Icon size={14} className="shrink-0" />
@@ -267,7 +268,7 @@ export default function ClassroomPage() {
 
                             {/* ── Tab content panel ── */}
                             <div
-                                className="bg-[#14151a] border border-gray-800/80 rounded-2xl overflow-hidden flex flex-col"
+                                className="bg-[#121414] border border-white/5 rounded-2xl overflow-hidden flex flex-col"
                                 style={{ minHeight: '60vh' }}
                             >
                                 {activeTab === 'stream' && (
@@ -328,8 +329,8 @@ export default function ClassroomPage() {
             {isEnrolled && (
                 <nav
                     className="sm:hidden fixed bottom-0 inset-x-0 z-30
-                               bg-[#14151a]/95 backdrop-blur-md
-                               border-t border-gray-800/80
+                               bg-black/95 backdrop-blur-md
+                               border-t border-white/10
                                flex items-stretch
                                safe-area-inset-bottom"
                     style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
@@ -344,12 +345,12 @@ export default function ClassroomPage() {
                                 className={[
                                     'flex-1 flex flex-col items-center justify-center gap-0.5',
                                     'py-2.5 px-1 transition-all duration-150 relative',
-                                    isActive ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300',
+                                    isActive ? 'text-white' : 'text-gray-500 hover:text-gray-300',
                                 ].join(' ')}
                             >
                                 {/* active indicator dot */}
                                 {isActive && (
-                                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-indigo-500" />
+                                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-white" />
                                 )}
 
                                 {/* icon — slightly bigger when active */}
@@ -363,7 +364,7 @@ export default function ClassroomPage() {
                                 <span
                                     className={[
                                         'text-[10px] font-semibold leading-none tracking-wide transition-all duration-150',
-                                        isActive ? 'text-indigo-400' : 'text-gray-600',
+                                        isActive ? 'text-white' : 'text-gray-600',
                                     ].join(' ')}
                                 >
                                     {tab.label}
@@ -406,7 +407,7 @@ export default function ClassroomPage() {
 
 const Spinner = ({ size = "default" }) => (
     <div
-        className={`animate-spin rounded-full border-2 border-gray-700 border-t-indigo-500 ${
+        className={`animate-spin rounded-full border-2 border-white/20 border-t-white ${
             size === "sm" ? "h-4 w-4" : "h-8 w-8"
         }`}
     />

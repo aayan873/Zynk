@@ -92,7 +92,7 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
         <div className="flex flex-col h-[65vh] sm:h-[70vh] w-full min-h-0 overflow-hidden">
 
             {/* ── Top bar: title + Post button (teacher only) — never scrolls ── */}
-            <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800/60">
+            <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-200">
                     Announcements
                     {announcements.length > 0 && (
@@ -109,7 +109,7 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
                             'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold border transition-all',
                             showForm
                                 ? 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700'
-                                : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20',
+                                : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10',
                         ].join(' ')}
                     >
                         {showForm ? <X size={14} /> : <Plus size={14} />}
@@ -120,7 +120,7 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
 
             {/* ── Collapsible post form — sticky, never scrolls ── */}
             {showForm && isTeacher && (
-                <div className="shrink-0 border-b border-gray-800/60 bg-[#1a1c24]">
+                <div className="shrink-0 border-b border-white/10 bg-[#121414]">
                     <div className="px-4 sm:px-6 py-4 quill-wrapper">
                         <input
                             type="text"
@@ -142,7 +142,7 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
                             <button
                                 onClick={handlePostAnnouncement}
                                 disabled={submitting}
-                                className="w-full sm:w-auto px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+                                className="w-full sm:w-auto px-5 py-2 bg-white hover:bg-gray-200 text-black rounded-lg font-semibold transition flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
                             >
                                 {submitting ? <Spinner size="sm" /> : <Send size={14} />}
                                 <span>{submitting ? 'Posting…' : 'Post Announcement'}</span>
@@ -163,14 +163,14 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
                     announcements.map((announcement) => (
                         <div
                             key={announcement._id}
-                            className=" bg-[#0e0e11] border border-gray-800/80 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden group hover:border-gray-700 transition-colors"
+                            className=" bg-[#121414] border border-white/5 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden group hover:border-white/10 transition-colors"
                         >
                             {/* Accent line */}
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/40 group-hover:bg-indigo-500 transition-colors duration-300 rounded-l-2xl" />
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/20 group-hover:bg-white transition-colors duration-300 rounded-l-2xl" />
 
                             {/* Author row */}
                             <div className="flex items-center gap-3 mb-3">
-                                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20 text-indigo-400">
+                                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/20 text-white">
                                     <UserIcon size={16} />
                                 </div>
                                 <div className="flex flex-col min-w-0">
@@ -188,7 +188,7 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
                             </h4>
 
                             <div
-                                className="prose prose-invert max-w-none prose-indigo prose-sm leading-relaxed px-1"
+                                className="prose prose-invert max-w-none prose-neutral prose-sm leading-relaxed px-1"
                                 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(announcement.content) }}
                             />
                         </div>
@@ -200,21 +200,21 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
                 .quill-wrapper .ql-toolbar {
                     border: 1px solid #374151 !important;
                     border-radius: 0.5rem 0.5rem 0 0 !important;
-                    background-color: #14151a !important;
+                    background-color: #121414 !important;
                     flex-wrap: wrap !important;
                 }
                 .quill-wrapper .ql-toolbar .ql-formats { margin-bottom: 2px !important; }
                 .quill-wrapper .ql-toolbar .ql-stroke  { stroke: #9ca3af !important; }
                 .quill-wrapper .ql-toolbar .ql-fill    { fill:   #9ca3af !important; }
                 .quill-wrapper .ql-toolbar .ql-picker   { color:  #9ca3af !important; }
-                .quill-wrapper .ql-toolbar button:hover .ql-stroke { stroke: #818cf8 !important; }
-                .quill-wrapper .ql-toolbar button:hover .ql-fill   { fill:   #818cf8 !important; }
+                .quill-wrapper .ql-toolbar button:hover .ql-stroke { stroke: #ffffff !important; }
+                .quill-wrapper .ql-toolbar button:hover .ql-fill   { fill:   #ffffff !important; }
                 .quill-wrapper .ql-container {
                     border: 1px solid #374151 !important;
                     border-top: none !important;
                     border-radius: 0 0 0.5rem 0.5rem !important;
                     font-size: 0.9rem !important;
-                    background-color: #1a1b23 !important;
+                    background-color: black !important;
                     color: #f3f4f6 !important;
                 }
                 .quill-wrapper .ql-editor.ql-blank::before {
@@ -231,5 +231,5 @@ export default function ClassroomAnnouncements({ classroom, user, isTeacher }) {
 }
 
 const Spinner = ({ size = "default" }) => (
-    <div className={`animate-spin rounded-full border-2 border-gray-700 border-t-indigo-500 ${size === "sm" ? "h-4 w-4" : "h-8 w-8"}`} />
+    <div className={`animate-spin rounded-full border-2 border-white/20 border-t-white ${size === "sm" ? "h-4 w-4" : "h-8 w-8"}`} />
 );

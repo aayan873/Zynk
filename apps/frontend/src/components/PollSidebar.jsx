@@ -65,14 +65,14 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
 
     const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
-    const inputClass = "w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-blue-500 outline-none"
+    const inputClass = "w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-white/50 outline-none"
 
     return (
-        <div className="w-full sm:w-80 bg-gray-900 rounded-none sm:rounded-2xl border-l sm:border border-gray-800 flex flex-col overflow-hidden shrink-0 shadow-lg h-full">
+        <div className="w-full sm:w-80 bg-[#121414] rounded-none sm:rounded-2xl border-l sm:border border-white/10 flex flex-col overflow-hidden shrink-0 shadow-lg h-full">
             {/* Header */}
-            <div className="p-3 sm:p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900 shrink-0">
+            <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between bg-[#121414] shrink-0">
                 <h3 className="text-base sm:text-lg font-bold flex items-center gap-2">
-                    <BarChart className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" /> Live Polls
+                    <BarChart className="w-4 h-4 sm:w-5 sm:h-5 text-white" /> Live Polls
                 </h3>
                 {onClose && (
                     <button onClick={onClose} className="p-1.5 rounded-full text-gray-500 hover:text-white hover:bg-white/5 transition sm:hidden">
@@ -86,13 +86,13 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
 
                     {/* ACTIVE POLL */}
                     {activePoll && (
-                        <div className="bg-gray-800 border border-blue-500/30 rounded-xl p-3 sm:p-4 shadow-lg relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-blue-600/20">
-                                <div className="h-full bg-blue-500 transition-all duration-1000 ease-linear"
+                        <div className="bg-white/5 border border-white/20 rounded-xl p-3 sm:p-4 shadow-lg relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-white/10">
+                                <div className="h-full bg-white transition-all duration-1000 ease-linear"
                                     style={{ width: `${(timeLeft / activePoll.timerDuration) * 100}%` }} />
                             </div>
                             <div className="flex justify-between items-center mb-3 mt-1">
-                                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2 py-1 rounded">Active Now</span>
+                                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white bg-white/20 px-2 py-1 rounded">Active Now</span>
                                 <span className="text-xs sm:text-sm font-mono flex items-center text-gray-300">
                                     <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 text-gray-400" />
                                     {formatTime(timeLeft)}
@@ -102,13 +102,13 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
 
                             <div className="space-y-2 mb-3 sm:mb-4">
                                 {activePoll.options.map(opt => (
-                                    <label key={opt.id} className={`flex items-center p-2.5 sm:p-3 rounded-lg border cursor-pointer transition-all ${selectedOption === opt.id ? 'bg-blue-600/20 border-blue-500' : 'bg-gray-900 border-gray-700 hover:border-gray-600'}`}>
+                                    <label key={opt.id} className={`flex items-center p-2.5 sm:p-3 rounded-lg border cursor-pointer transition-all ${selectedOption === opt.id ? 'bg-white/20 border-white' : 'bg-black border-white/10 hover:border-white/30'}`}>
                                         <input
                                             type="radio" name="poll_option" value={opt.id}
                                             checked={selectedOption === opt.id}
                                             onChange={() => !hasVoted && setSelectedOption(opt.id)}
                                             disabled={hasVoted && selectedOption !== opt.id}
-                                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-blue-500 shrink-0"
+                                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black bg-black border-white/20 focus:ring-white/50 shrink-0"
                                         />
                                         <span className="ml-2.5 sm:ml-3 text-xs sm:text-sm font-medium text-gray-200">{opt.text}</span>
                                     </label>
@@ -117,7 +117,7 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
 
                             {!isHost ? (
                                 <button onClick={handleVote} disabled={hasVoted || !selectedOption || timeLeft === 0}
-                                    className="w-full py-2 sm:py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-500 text-white">
+                                    className="w-full py-2 sm:py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-gray-200 text-black">
                                     {hasVoted ? "Vote Submitted" : "Submit Vote"}
                                 </button>
                             ) : (
@@ -131,7 +131,7 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
 
                     {/* HOST CREATE POLL */}
                     {isHost && !activePoll && (
-                        <div className="bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-700">
+                        <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-white/10">
                             <h4 className="font-semibold text-white mb-3 sm:mb-4 text-sm">Create New Poll</h4>
                             <form onSubmit={handleCreatePoll} className="space-y-3 sm:space-y-4">
                                 <div>
@@ -148,7 +148,7 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
                                                 placeholder={`Option ${idx + 1}`} className={`${inputClass} flex-1`} />
                                             {options.length > 2 && (
                                                 <button type="button" onClick={() => handleRemoveOption(opt.id)}
-                                                    className="p-2 text-gray-500 hover:text-red-400 bg-gray-900 rounded-lg border border-gray-700 transition shrink-0">
+                                                    className="p-2 text-gray-500 hover:text-red-400 bg-black rounded-lg border border-white/10 transition shrink-0">
                                                     <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                 </button>
                                             )}
@@ -156,7 +156,7 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
                                     ))}
                                     {options.length < 10 && (
                                         <button type="button" onClick={handleAddOption}
-                                            className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 mt-1">
+                                            className="text-xs text-white hover:text-gray-300 font-medium flex items-center gap-1 mt-1">
                                             <Plus className="w-3 h-3" /> Add Option
                                         </button>
                                     )}
@@ -182,7 +182,7 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
                                 </div>
 
                                 <button type="submit"
-                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg py-2 text-sm transition-colors shadow-lg mt-1">
+                                    className="w-full bg-white hover:bg-gray-200 text-black font-semibold rounded-lg py-2 text-sm transition-colors shadow-lg mt-1">
                                     Publish Poll
                                 </button>
                             </form>
@@ -200,14 +200,14 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
 
                     {/* POLL HISTORY */}
                     {isHost && pollHistory.length > 0 && (
-                        <div className="space-y-3 sm:space-y-4 pt-4 border-t border-gray-800 mt-4 sm:mt-6 pb-6">
+                        <div className="space-y-3 sm:space-y-4 pt-4 border-t border-white/10 mt-4 sm:mt-6 pb-6">
                             <h4 className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest px-1">Past Polls</h4>
                             {pollHistory.map((poll, index) => {
                                 const totalVotes = poll.votes?.length || 0;
                                 const optionCounts = {};
                                 poll.votes?.forEach(v => { optionCounts[v.optionId] = (optionCounts[v.optionId] || 0) + 1; });
                                 return (
-                                    <div key={poll._id || poll.id || index} className="bg-gray-800/80 border border-gray-700/50 rounded-xl p-3 sm:p-4">
+                                    <div key={poll._id || poll.id || index} className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4">
                                         <h5 className="font-medium text-xs sm:text-sm text-gray-200 leading-snug mb-3">{poll.question}</h5>
                                         <div className="space-y-2">
                                             {poll.options.map(opt => {
@@ -222,7 +222,7 @@ export default function PollSidebar({ roomID, socket, activePoll, pollHistory, i
                                                             </span>
                                                             <span className="text-gray-400 shrink-0">{percentage}% ({count})</span>
                                                         </div>
-                                                        <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden">
+                                                        <div className="w-full h-1.5 bg-black rounded-full overflow-hidden">
                                                             <div className={`h-full rounded-full ${isCorrect ? 'bg-green-500' : 'bg-gray-500'}`}
                                                                 style={{ width: `${percentage}%` }} />
                                                         </div>
