@@ -35,7 +35,9 @@ export default function DashboardHome() {
 
     return (
         /* Full viewport, no overflow at root level */
-        <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#0e0e11] text-gray-100 font-sans">
+        <div className="h-screen w-screen overflow-hidden flex flex-col bg-black text-gray-100 font-['SK_Concretica',_'Manrope',_sans-serif] relative">
+            <div className="fixed inset-0 pointer-events-none opacity-[0.14] z-0" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23noise)' opacity='0.18'/%3E%3C/svg%3E")` }} />
+            <div className="z-10 flex flex-col flex-1 h-full w-full overflow-hidden">
             <Navbar />
 
             {/* Scrollable content area — only this scrolls */}
@@ -43,13 +45,13 @@ export default function DashboardHome() {
 
                 {/* Sticky sub-header for teacher action */}
                 {user?.role === 'Teacher' && (
-                    <header className="sticky top-0 z-10 flex justify-end px-4 sm:px-8 lg:px-10 py-4 border-b border-gray-800/50 bg-[#0e0e11]/80 backdrop-blur-md">
+                    <header className="sticky top-0 z-10 flex justify-end px-4 sm:px-8 lg:px-10 py-4 border-b border-white/10 bg-black/80 backdrop-blur-md">
                         <button
                             onClick={handleInstantSession}
                             disabled={creatingSession}
-                            className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-4 sm:px-5 py-2 rounded-full text-sm font-semibold transition-all shadow-[0_4px_20px_-5px_rgba(99,102,241,0.5)] hover:-translate-y-0.5 disabled:opacity-75 disabled:translate-y-0"
+                            className="flex items-center gap-2 bg-gradient-to-tr from-white to-[#f0f0f0] hover:scale-[1.02] text-black px-4 sm:px-5 py-2 rounded-full text-sm font-bold transition-all shadow-[0_20px_38px_-28px_rgba(255,255,255,0.85)] disabled:opacity-75"
                         >
-                            <Zap size={14} className="text-indigo-100" />
+                            <Zap size={14} className="text-black" />
                             <span>{creatingSession ? 'Starting...' : 'Start Instant Session'}</span>
                         </button>
                     </header>
@@ -61,14 +63,14 @@ export default function DashboardHome() {
                     {/* Welcome Row */}
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
                         <div>
-                            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
+                            <h2 className="text-2xl sm:text-3xl font-['Outfit',_'Manrope',_sans-serif] font-bold tracking-tight text-white mb-2">
                                 Good morning, {user?.fullName?.split(' ')[0] || 'User'}.
                             </h2>
                             <p className="text-gray-400 text-sm font-medium">
                                 You have upcoming sessions scheduled for today.
                             </p>
                         </div>
-                        <div className="flex flex-col items-start sm:items-end bg-[#14151a] px-4 py-2.5 rounded-xl border border-gray-800/80 shadow-sm shrink-0">
+                        <div className="flex flex-col items-start sm:items-end bg-[#121414] px-4 py-2.5 rounded-xl border border-white/5 shadow-sm shrink-0">
                             <div className="flex items-center gap-1.5 text-gray-500 text-[10px] mb-1.5 font-bold tracking-widest uppercase">
                                 <Calendar size={12} />
                                 <span>Date</span>
@@ -90,6 +92,7 @@ export default function DashboardHome() {
 
                 </div>
             </main>
+            </div>
         </div>
     );
 }
