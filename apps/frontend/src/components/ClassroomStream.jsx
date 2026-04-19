@@ -44,7 +44,7 @@ export default function ClassroomStream({ classroom, user, isTeacher, token }) {
         <div className="flex flex-col h-[65vh] sm:h-[70vh] w-full">
 
             {/* ── Top bar: heading + Schedule Meet button (teacher only) — never scrolls ── */}
-            <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800/60">
+            <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-200">
                     Upcoming Meets
                     {meets.length > 0 && (
@@ -57,7 +57,7 @@ export default function ClassroomStream({ classroom, user, isTeacher, token }) {
                 {isTeacher && (
                     <button
                         onClick={() => setIsScheduleModalOpen(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold border transition-all bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold border transition-all bg-white/5 border-white/10 text-white hover:bg-white/10"
                     >
                         <CalendarPlus size={14} />
                         <span>Schedule Meet</span>
@@ -89,27 +89,27 @@ export default function ClassroomStream({ classroom, user, isTeacher, token }) {
                                 key={meet._id || index}
                                 className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-6 rounded-2xl border transition-all gap-4 ${
                                     live
-                                        ? 'bg-[#1e1f26] border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.15)] relative overflow-hidden'
-                                        : 'bg-[#0e0e11] border-gray-800/80 hover:border-gray-700'
+                                        ? 'bg-[#1e1f26] border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] relative overflow-hidden'
+                                        : 'bg-black border-white/5 hover:border-white/10'
                                 }`}
                             >
                                 {live && (
-                                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+                                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
                                 )}
 
                                 {/* Left: dot + info */}
                                 <div className="flex items-start sm:items-center gap-4 sm:gap-6">
                                     <div className="mt-1 sm:mt-0 shrink-0">
-                                        <div className={`w-3 h-3 rounded-full ring-4 ${live ? 'bg-indigo-500 ring-indigo-500/20' : 'bg-gray-700 ring-gray-800'}`} />
+                                        <div className={`w-3 h-3 rounded-full ring-4 ${live ? 'bg-white ring-white/20' : 'bg-gray-700 ring-gray-900'}`} />
                                     </div>
                                     <div>
                                         <div className="flex flex-wrap items-center gap-2 mb-1.5">
                                             {live && (
-                                                <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">
+                                                <span className="bg-white/10 text-white border border-white/20 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">
                                                     Live Now
                                                 </span>
                                             )}
-                                            <span className="text-indigo-300 bg-indigo-900/40 px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase tracking-wide">
+                                            <span className="text-gray-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase tracking-wide">
                                                 {formatDate(meet.scheduledFor)}
                                             </span>
                                             <span className="text-gray-400 text-[10px] sm:text-xs font-semibold flex items-center gap-1">
@@ -129,7 +129,7 @@ export default function ClassroomStream({ classroom, user, isTeacher, token }) {
                                     {live ? (
                                         <button
                                             onClick={() => navigate(`/room/${meet.roomId}`)}
-                                            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg hover:shadow-indigo-500/20 active:scale-95 text-sm"
+                                            className="w-full sm:w-auto bg-white hover:bg-gray-200 text-black font-semibold px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] active:scale-95 text-sm"
                                         >
                                             Join Meeting
                                         </button>
@@ -155,5 +155,5 @@ export default function ClassroomStream({ classroom, user, isTeacher, token }) {
 }
 
 const Spinner = () => (
-    <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-700 border-t-indigo-500" />
+    <div className="animate-spin rounded-full h-8 w-8 border-2 border-white/20 border-t-white" />
 );

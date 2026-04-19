@@ -118,7 +118,7 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
     <div className="flex flex-col h-[65vh] sm:h-[70vh] w-full">
 
       {/* ── Top bar: heading + "Upload" toggle button ── STICKY, never scrolls */}
-      <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800/60">
+      <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10">
         <h3 className="text-base sm:text-lg font-semibold text-gray-200">
           Classroom Resources
           {sortedResources.length > 0 && (
@@ -135,7 +135,7 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold border transition-all',
               showUpload
                 ? 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-700'
-                : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20',
+                : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10',
             ].join(' ')}
           >
             {showUpload ? <X size={14} /> : <Plus size={14} />}
@@ -146,14 +146,14 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
 
       {/* ── Collapsible upload form ── STICKY below top bar, never scrolls */}
       {showUpload && isTeacher && (
-        <div className="shrink-0 border-b border-gray-800/60 bg-[#1a1c24]">
+        <div className="shrink-0 border-b border-white/10 bg-[#121414]">
           <form onSubmit={handleUpload} className="px-4 sm:px-6 py-4 grid gap-3">
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Resource title (optional)"
-              className="w-full bg-[#0e0e11] text-gray-100 border border-gray-700/80 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-black text-gray-100 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-white/50 transition-colors"
             />
 
             <input
@@ -161,9 +161,9 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
               type="file"
               accept=".pdf,.jpg,.jpeg,.png,.pptx"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="w-full bg-[#0e0e11] text-gray-300 border border-gray-700/80 rounded-lg px-3 py-2 text-sm
-                         file:mr-3 file:rounded-md file:border-0 file:bg-indigo-500/20 file:text-indigo-300
-                         file:px-3 file:py-1 file:text-xs hover:file:bg-indigo-500/30 cursor-pointer"
+              className="w-full bg-black text-gray-300 border border-white/10 rounded-lg px-3 py-2 text-sm
+                         file:mr-3 file:rounded-md file:border-0 file:bg-white/10 file:text-white
+                         file:px-3 file:py-1 file:text-xs hover:file:bg-white/20 cursor-pointer"
             />
 
             <div className="flex items-center justify-between gap-3">
@@ -175,7 +175,7 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
               <button
                 type="submit"
                 disabled={uploading}
-                className="ml-auto shrink-0 px-4 sm:px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:opacity-50"
+                className="ml-auto shrink-0 px-4 sm:px-6 py-2 bg-white hover:bg-gray-200 text-black rounded-lg text-sm font-semibold transition flex items-center gap-2 disabled:opacity-50"
               >
                 {uploading ? <Spinner size="sm" /> : <Upload size={14} />}
                 <span>{uploading ? 'Uploading…' : 'Upload'}</span>
@@ -208,7 +208,7 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
               return (
                 <div
                   key={resource?._id || `${resourceUrl}-${idx}`}
-                  className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-[#0e0e11] border border-gray-800/80 rounded-xl hover:border-gray-700 transition-colors"
+                  className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-[#121414] border border-white/5 rounded-xl hover:border-white/10 transition-colors"
                 >
                   {/* Left: title + meta */}
                   <div className="min-w-0 flex-1">
@@ -232,7 +232,7 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
                     <button
                       type="button"
                       onClick={() => handleDownloadResource(resource)}
-                      className="p-1.5 sm:px-3 sm:py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+                      className="p-1.5 sm:px-3 sm:py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
                       title="Download"
                     >
                       <Download size={13} />
@@ -266,7 +266,7 @@ export default function ClassroomResources({ classroom, token, isTeacher }) {
 
 const Spinner = ({ size = 'default' }) => (
   <div
-    className={`animate-spin rounded-full border-2 border-gray-700 border-t-indigo-500 ${
+    className={`animate-spin rounded-full border-2 border-white/20 border-t-white ${
       size === 'sm' ? 'h-4 w-4' : 'h-8 w-8'
     }`}
   />
