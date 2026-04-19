@@ -57,7 +57,7 @@ export default function Room() {
                 ctx.resume()
             }
             const videos = document.querySelectorAll("video")
-            videos.forEach(v => { if (!v.muted) v.play().catch(() => {}) })
+            videos.forEach(v => { if (!v.muted) v.play().catch(() => { }) })
             document.removeEventListener("click", unlockAudioAndVideos)
         }
         document.addEventListener("click", unlockAudioAndVideos)
@@ -302,7 +302,7 @@ export default function Room() {
     if (status === "joined") {
         const localStreamObj = {
             stream: localStream, peerID: "local", isLocal: true,
-            userName: auth?.user?.name || "You"
+            userName: auth?.user?.fullName || "You"
         }
 
         if (isHost) mainStreamObj = localStreamObj
@@ -310,7 +310,7 @@ export default function Room() {
 
         Array.from(remoteStreams.entries()).forEach(([id, data]) => {
             const participantInfo = participants.find(p => p.id === id)
-            const name = participantInfo?.user?.name || participantInfo?.user?._id?.slice(-6) || "Guest"
+            const name = participantInfo?.user?.fullName || participantInfo?.user?._id?.slice(-6) || "Guest"
             if (data.stream) {
                 const streamData = { stream: data.stream, peerID: id, isLocal: false, userName: name }
                 if (participantInfo && participantInfo.user?._id === room?.hostId && !isHost) {
@@ -324,12 +324,12 @@ export default function Room() {
 
         let screenShareObj = null
         if (activeScreenSharePeerId === "local" && localScreenStream) {
-            screenShareObj = { stream: localScreenStream, peerID: "local_screen", isLocal: true, isScreen: true, userName: `${auth?.user?.name || "You"} (Screen)` }
+            screenShareObj = { stream: localScreenStream, peerID: "local_screen", isLocal: true, isScreen: true, userName: `${auth?.user?.fullName || "You"} (Screen)` }
         } else if (activeScreenSharePeerId && activeScreenSharePeerId !== "local") {
             const data = remoteStreams.get(activeScreenSharePeerId)
             if (data?.screenStream) {
                 const pInfo = participants.find(p => p.id === activeScreenSharePeerId)
-                const name = pInfo?.user?.name || pInfo?.user?._id?.slice(-6) || "Guest"
+                const name = pInfo?.user?.fullName || pInfo?.user?._id?.slice(-6) || "Guest"
                 screenShareObj = { stream: data.screenStream, peerID: `${activeScreenSharePeerId}_screen`, isLocal: false, isScreen: true, userName: `${name} (Screen)` }
             }
         }
@@ -491,7 +491,7 @@ export default function Room() {
                                             <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3">
                                                 {participants.map((p) => {
                                                     const isMe = p.id === socket.id
-                                                    const name = isMe ? `${p.user?.fullName || "You"} (You)` : (p.user?.FullName || p.user?._id?.slice(-6) || "Guest")
+                                                    const name = isMe ? `${p.user?.fullName || "You"} (You)` : (p.user?.fullName || p.user?._id?.slice(-6) || "Guest")
                                                     const pState = participantStates[p.id] || {}
                                                     const isMicActive = isMe ? isMicOn : !!pState.audio
                                                     const isCamActive = isMe ? isVideoOn : !!pState.video
@@ -556,6 +556,7 @@ export default function Room() {
                                             isChatEnabled={isChatEnabled}
                                             isHost={isHost}
                                             currentUserId={currentUserId}
+                                            participants={participants}
                                             onSendMessage={handleSendMessage}
                                             onToggleChat={handleToggleChat}
                                             onClose={() => setSidebarOpen(false)}

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Send, Shield, X } from "lucide-react"
 
-export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUserId, onSendMessage, onToggleChat, onClose }) {
+export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUserId, participants, onSendMessage, onToggleChat, onClose }) {
     const [newMessage, setNewMessage] = useState("")
     const scrollRef = useRef(null)
 
@@ -60,11 +60,13 @@ export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUs
                 ) : (
                     messages.map((msg) => {
                         const isMe = msg.sender?.id === currentUserId
+                        const senderParticipant = participants.find(p => p.user?._id === msg.sender?.id)
+                        const senderName = isMe ? "You" : (senderParticipant?.user?.fullName || senderParticipant?.user?.name || "Guest")
                         return (
                             <div key={msg.id} className="flex flex-col">
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className="font-semibold text-xs sm:text-sm text-gray-200 truncate max-w-[120px]">
-                                        {isMe ? "You" : msg.sender?.name}
+                                        {senderName}
                                     </span>
                                     {msg.isHost && (
                                         <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
@@ -75,11 +77,10 @@ export default function ChatSidebar({ messages, isChatEnabled, isHost, currentUs
                                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
-                                <div className={`p-2.5 sm:p-3 rounded-xl text-xs sm:text-sm break-words border ${
-                                    isMe
-                                        ? 'bg-white border-white text-black rounded-tr-sm'
-                                        : 'bg-white/10 border-white/10 text-gray-100 rounded-tl-sm'
-                                }`}>
+                                <div className={`p-2.5 sm:p-3 rounded-xl text-xs sm:text-sm break-words border ${isMe
+                                    ? 'bg-white border-white text-black rounded-tr-sm'
+                                    : 'bg-white/10 border-white/10 text-gray-100 rounded-tl-sm'
+                                    }`}>
                                     {msg.text}
                                 </div>
                             </div>
