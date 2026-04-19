@@ -97,7 +97,7 @@ export default function Home() {
           <p className="nocturnal-philosophy-kicker">The Philosophy</p>
           <blockquote>
             <span>Built for real</span> academic
-            flow <span>- not just video calls.</span>
+            flow,<span> not just video calls.</span>
           </blockquote>
         </section>
       </main>
