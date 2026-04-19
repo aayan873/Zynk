@@ -1,4 +1,41 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght,ital@6..72,400..700,0;6..72,400..700,1&family=Outfit:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
+
+:root {
+  --surface: #121414;
+  --surface-low: #1a1c1c;
+  --surface-high: #333535;
+  --text-main: #ffffff;
+  --text-muted: #a0a0a0;
+  --primary: #ffffff;
+  --primary-deep: #f0f0f0;
+  --on-primary: #000000;
+  --ghost-outline: rgba(255, 255, 255, 0.15);
+}
+
+@font-face {
+  font-family: "SK Concretica";
+  src:
+    local("SK Concretica"),
+    local("SK Concretica Regular"),
+    url("/fonts/sk-concretica.woff2") format("woff2"),
+    url("/fonts/sk-concretica.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Genie";
+  src:
+    local("Genie"),
+    local("Genie Regular"),
+    url("/fonts/genie.woff2") format("woff2"),
+    url("/fonts/genie.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
 
 /* Hide scrollbar for all browsers */
 * {

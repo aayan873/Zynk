@@ -109,7 +109,6 @@ export default function Home() {
             flow <span>- not just video calls.</span>
           </blockquote>
         </section>
-
       </main>
 
       <footer className="nocturnal-footer">
