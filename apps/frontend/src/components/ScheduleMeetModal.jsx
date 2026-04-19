@@ -78,7 +78,7 @@ export default function ScheduleMeetModal({ isOpen, onClose, onSuccess, classroo
                 
                 <div className="p-8 pb-6 border-b border-gray-800/80">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <CalendarPlus className="text-indigo-500" /> 
+                        <CalendarPlus className="text-gray-200" /> 
                         Schedule a Meet
                     </h2>
                     <p className="text-gray-400 text-sm mt-2">Plan a future session for your classroom.</p>
@@ -93,7 +93,7 @@ export default function ScheduleMeetModal({ isOpen, onClose, onSuccess, classroo
                             value={formData.title} 
                             onChange={handleChange} 
                             placeholder="e.g. Weekly Q&A Session" 
-                            className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition"
+                            className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-gray-500 text-white placeholder-gray-600 transition"
                         />
                     </div>
                     
@@ -106,7 +106,7 @@ export default function ScheduleMeetModal({ isOpen, onClose, onSuccess, classroo
                                 name="scheduledFor" 
                                 value={formData.scheduledFor} 
                                 onChange={handleChange} 
-                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white transition [color-scheme:dark]"
+                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-gray-500 text-white transition [color-scheme:dark]"
                             />
                         </div>
                         <div className="space-y-1">
@@ -116,7 +116,7 @@ export default function ScheduleMeetModal({ isOpen, onClose, onSuccess, classroo
                                 name="duration" 
                                 value={formData.duration} 
                                 onChange={handleChange} 
-                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white transition appearance-none"
+                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-gray-500 text-white transition appearance-none"
                             >
                                 <option value="30">30 Minutes</option>
                                 <option value="45">45 Minutes</option>
@@ -130,7 +130,7 @@ export default function ScheduleMeetModal({ isOpen, onClose, onSuccess, classroo
 
                     <div className="pt-4 flex justify-end gap-3">
                         <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition">Cancel</button>
-                        <button type="submit" disabled={loading} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-all shadow-md disabled:opacity-50 flex items-center justify-center min-w-[120px]">
+                        <button type="submit" disabled={loading} className="px-6 py-2.5 bg-gray-200 hover:bg-gray-100 text-black text-sm font-medium rounded-lg transition-all shadow-md disabled:opacity-50 flex items-center justify-center min-w-[120px]">
                             {loading ? 'Scheduling...' : 'Schedule Meet'}
                         </button>
                     </div>

@@ -35,8 +35,8 @@ const MultiSelect = ({ label, options, selected, onChange }) => {
                                 }}
                                 className="flex items-center px-4 py-2.5 hover:bg-[#20212a] cursor-pointer"
                             >
-                                <div className={`w-4 h-4 mr-3 flex items-center justify-center rounded border ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-gray-600'}`}>
-                                    {isSelected && <Check size={12} className="text-white" />}
+                                <div className={`w-4 h-4 mr-3 flex items-center justify-center rounded border ${isSelected ? 'bg-white border-white' : 'border-gray-600'}`}>
+                                    {isSelected && <Check size={12} className="text-black" />}
                                 </div>
                                 <span className="text-sm text-gray-300">{opt.label}</span>
                             </div>
@@ -111,7 +111,7 @@ export default function CreateClassroomModal({ isOpen, onClose, onSuccess }) {
                 
                 <div className="p-8 pb-6 border-b border-gray-800/80">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <PlusCircle className="text-indigo-500" /> 
+                        <PlusCircle className="text-gray-200" /> 
                         Create New Classroom
                     </h2>
                     <p className="text-gray-400 text-sm mt-2">Setup a new learning environment for your students.</p>
@@ -126,7 +126,7 @@ export default function CreateClassroomModal({ isOpen, onClose, onSuccess }) {
                             value={formData.name} 
                             onChange={handleChange} 
                             placeholder="e.g. Data Structures & Algorithms" 
-                            className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition"
+                            className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-gray-500 text-white placeholder-gray-600 transition"
                         />
                     </div>
                     
@@ -137,7 +137,7 @@ export default function CreateClassroomModal({ isOpen, onClose, onSuccess }) {
                             value={formData.description} 
                             onChange={handleChange} 
                             placeholder="Optional short detail about this class..."
-                            className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition h-20 resize-none"
+                            className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-gray-500 text-white placeholder-gray-600 transition h-20 resize-none"
                         />
                     </div>
 
@@ -157,7 +157,7 @@ export default function CreateClassroomModal({ isOpen, onClose, onSuccess }) {
                                 name="semester" 
                                 value={formData.semester} 
                                 onChange={handleChange} 
-                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white transition appearance-none"
+                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-gray-500 text-white transition appearance-none"
                             >
                                 <option value="" disabled hidden>Select Semester</option>
                                 {['1', '2', '3', '4', '5', '6', '7', '8'].map(sem => (
@@ -178,7 +178,7 @@ export default function CreateClassroomModal({ isOpen, onClose, onSuccess }) {
 
                     <div className="pt-4 flex justify-end gap-3 mt-4">
                         <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition">Cancel</button>
-                        <button type="submit" disabled={loading} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-all shadow-md disabled:opacity-50 flex items-center justify-center min-w-[120px]">
+                        <button type="submit" disabled={loading} className="px-6 py-2.5 bg-gray-200 hover:bg-gray-100 text-black text-sm font-medium rounded-lg transition-all shadow-md disabled:opacity-50 flex items-center justify-center min-w-[120px]">
                             {loading ? 'Creating...' : 'Create Classroom'}
                         </button>
                     </div>
