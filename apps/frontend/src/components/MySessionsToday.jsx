@@ -58,18 +58,18 @@ export default function MySessionsToday() {
                         key={meet._id || index}
                         className={`flex items-center justify-between p-3.5 sm:p-5 rounded-2xl border transition-all gap-3 sm:gap-4 ${
                             live
-                                ? 'bg-[#1e1f26] border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.15)] relative overflow-hidden'
-                                : 'bg-[#14151a] border-gray-800/80 hover:border-gray-700'
+                                ? 'bg-[#1e1f26] border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] relative overflow-hidden'
+                                : 'bg-[#121414] border-white/5 hover:border-white/10'
                         }`}
                     >
-                        {live && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />}
+                        {live && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white" />}
 
                         {/* Left: dot + info */}
                         <div className="flex items-center gap-3 sm:gap-6 min-w-0">
                             {/* Status dot */}
                             <div className="shrink-0">
                                 <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ring-4 ${
-                                    live ? 'bg-indigo-500 ring-indigo-500/20' : 'bg-gray-700 ring-gray-800'
+                                    live ? 'bg-white ring-white/20' : 'bg-gray-700 ring-[#121414]'
                                 }`} />
                             </div>
 
@@ -78,7 +78,7 @@ export default function MySessionsToday() {
                                 {/* Tags row */}
                                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 mb-1">
                                     {live && (
-                                        <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
+                                        <span className="bg-white/10 text-white border border-white/20 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
                                             Live Now
                                         </span>
                                     )}
@@ -89,7 +89,7 @@ export default function MySessionsToday() {
                                 </div>
 
                                 {meet.classroom?.name && (
-                                    <h5 className="text-indigo-400 font-semibold text-[10px] sm:text-xs tracking-wide uppercase mb-0.5 truncate">
+                                    <h5 className="text-gray-400 font-semibold text-[10px] sm:text-xs tracking-wide uppercase mb-0.5 truncate">
                                         {meet.classroom.name}
                                     </h5>
                                 )}
@@ -106,7 +106,7 @@ export default function MySessionsToday() {
                             {live ? (
                                 <button
                                     onClick={() => navigate(`/room/${meet.roomId}`)}
-                                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-all text-xs sm:text-sm shadow-md whitespace-nowrap active:scale-95"
+                                    className="bg-white hover:bg-gray-200 text-black font-medium px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-all text-xs sm:text-sm shadow-md whitespace-nowrap active:scale-95"
                                 >
                                     Join Room
                                 </button>
@@ -124,5 +124,5 @@ export default function MySessionsToday() {
 }
 
 const Spinner = () => (
-    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500/30 border-t-indigo-500" />
+    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white/20 border-t-white" />
 );

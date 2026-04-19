@@ -4,17 +4,18 @@ import Student from '../models/student.model.js';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import { branchMap } from '../utils/constants.js';
 
 const Signup = async (req, res) => {
     try {
         const { email, password, role, fullName } = req.body;
 
         if (!role || !['Teacher', 'Student'].includes(role)) {
-             return res.status(400).json({ success: false, message: "Valid role ('Teacher' or 'Student') is required" });
+            return res.status(400).json({ success: false, message: "Valid role ('Teacher' or 'Student') is required" });
         }
         
         if (!fullName) {
-             return res.status(400).json({ success: false, message: "Full Name is required" });
+            return res.status(400).json({ success: false, message: "Full Name is required" });
         }
 
         const ismatched = await User.findOne({ email });
@@ -28,7 +29,7 @@ const Signup = async (req, res) => {
         
         const domainParts = email.split('@')[1]?.split('.');
         if (!domainParts || domainParts.length < 2) {
-             return res.status(400).json({ success: false, message: "Invalid email address format" });
+            return res.status(400).json({ success: false, message: "Invalid email address format" });
         }
         const institution = domainParts[0].toUpperCase();
 
@@ -61,7 +62,8 @@ const Signup = async (req, res) => {
                 '21': 'PhD'
             };
             const programmeObj = progMap[match[3]];
-            const branchObj = match[4].toUpperCase();
+            const rawBranch = match[4].toLowerCase();
+            const branchObj = branchMap[rawBranch] || match[4].toUpperCase();
             const rollNumberObj = email.split('@')[0].split('_')[1]; 
 
             const existingStudentsWithSameRoll = await Student.find({ rollNumber: rollNumberObj })
@@ -182,6 +184,7 @@ const Login = async (req, res) => {
                 _id: user._id,
                 email: user.email,
                 role: user.role,
+                fullName: user.fullName,
                 institution: user.institution,
                 profileCompleted: user.profileCompleted
             },
@@ -200,10 +203,10 @@ const Login = async (req, res) => {
 }
 
 const validateAuth = async (req, res) => {
-  return res.status(200).json({
-    success: true,
-    user: req.user,
-  });
+    return res.status(200).json({
+        success: true,
+        user: req.user,
+    });
 };
 
 

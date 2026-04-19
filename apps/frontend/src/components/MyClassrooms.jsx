@@ -71,9 +71,9 @@ export default function MyClassrooms() {
                     {isTeacher && (
                         <div 
                             onClick={() => setIsModalOpen(true)}
-                            className="bg-[#14151a] border border-gray-800/80 hover:border-indigo-500/50 rounded-2xl overflow-hidden group transition-all cursor-pointer flex flex-col items-center justify-center p-8 border-dashed shadow-[inset_0_0_20px_rgba(255,255,255,0.02)] min-h-[220px]"
+                            className="bg-[#121414] border border-white/10 hover:border-white/30 rounded-2xl overflow-hidden group transition-all cursor-pointer flex flex-col items-center justify-center p-8 border-dashed shadow-[inset_0_0_20px_rgba(255,255,255,0.02)] min-h-[220px]"
                         >
-                            <div className="w-14 h-14 bg-indigo-500/10 text-indigo-400 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                            <div className="w-14 h-14 bg-white/5 text-gray-400 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-white group-hover:text-black transition-all">
                                 <Plus size={24} />
                             </div>
                             <h4 className="text-lg font-bold text-gray-200 group-hover:text-white transition-colors">Create New Classroom</h4>
@@ -81,10 +81,10 @@ export default function MyClassrooms() {
                         </div>
                     )}
                     {displayedClassrooms.map((cls) => (
-                        <div key={cls._id} onClick={() => navigate(`/classroom/${cls._id}`)} className="bg-[#14151a] border border-gray-800/80 hover:border-gray-700/80 rounded-2xl overflow-hidden group transition-all cursor-pointer">
+                        <div key={cls._id} onClick={() => navigate(`/classroom/${cls._id}`)} className="bg-[#121414] border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden group transition-all cursor-pointer">
                             {/* Card Banner */}
-                            <div className="h-28 bg-gradient-to-br from-indigo-900/40 to-slate-800 relative border-b border-gray-800/50">
-                                <div className="absolute top-4 left-4 bg-[#0e0e11]/80 backdrop-blur-sm text-[10px] font-bold px-2.5 py-1 rounded text-gray-300 uppercase tracking-wider border border-gray-700">
+                            <div className="h-28 bg-gradient-to-br from-[#1e1f24] to-[#121414] relative border-b border-white/5">
+                                <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-sm text-[10px] font-bold px-2.5 py-1 rounded text-gray-300 uppercase tracking-wider border border-white/10">
                                     {cls.institute || 'Institution'}
                                 </div>
                             </div>
@@ -92,7 +92,7 @@ export default function MyClassrooms() {
                             {/* Card Details */}
                             <div className="p-5 relative">
                                 <h4 className="text-lg font-bold text-gray-100 mb-1 truncate" title={cls.name}>{cls.name}</h4>
-                                <p className="text-xs text-indigo-400 font-semibold uppercase tracking-wider mb-5 truncate">
+                                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-5 truncate">
                                     {cls.programme || 'Programme'}
                                 </p>
                                 
@@ -107,14 +107,14 @@ export default function MyClassrooms() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between pt-4 border-t border-gray-800/80 mt-2">
+                                <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-2">
                                     <div className="flex -space-x-2">
                                         {/* Static user avatar approximations for design effect */}
-                                        <div className="w-7 h-7 rounded-full border-2 border-[#14151a] bg-blue-600"></div>
-                                        <div className="w-7 h-7 rounded-full border-2 border-[#14151a] bg-emerald-600"></div>
-                                        <div className="w-7 h-7 rounded-full border-2 border-[#14151a] bg-gray-700 flex items-center justify-center text-[9px] text-gray-300 font-bold">+{cls.students?.length || 0}</div>
+                                        <div className="w-7 h-7 rounded-full border-2 border-[#14151a] bg-gray-600"></div>
+                                        <div className="w-7 h-7 rounded-full border-2 border-[#14151a] bg-gray-500"></div>
+                                        <div className="w-7 h-7 rounded-full border-2 border-[#14151a] bg-gray-800 flex items-center justify-center text-[9px] text-gray-300 font-bold">+{cls.students?.length || 0}</div>
                                     </div>
-                                    <div className="p-1.5 bg-[#1e1f26] rounded-lg text-gray-500 group-hover:bg-indigo-500 group-hover:text-white transition-all transform group-hover:scale-105">
+                                    <div className="p-1.5 bg-[#1e1f26] rounded-lg text-gray-500 group-hover:bg-white group-hover:text-black transition-all transform group-hover:scale-105">
                                         <ExternalLink size={16} />
                                     </div>
                                 </div>
@@ -134,5 +134,5 @@ export default function MyClassrooms() {
 }
 
 const Spinner = () => (
-    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500/30 border-t-indigo-500"></div>
+    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white/20 border-t-white"></div>
 );

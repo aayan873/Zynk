@@ -5,7 +5,7 @@ const Root = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        navigate('/login', { replace: true });
+        navigate('/home', { replace: true });
     }, [navigate]);
 
     return null;
