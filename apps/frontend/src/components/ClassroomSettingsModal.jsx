@@ -14,13 +14,13 @@ const MultiSelect = ({ label, options, selected, onChange }) => {
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{label} *</label>
             <div 
                 onClick={() => setOpen(!open)}
-                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm text-gray-300 cursor-pointer flex justify-between items-center transition"
+                className="w-full bg-[#121414] border border-white/10 rounded-lg px-4 py-3 text-sm text-gray-100 cursor-pointer flex justify-between items-center transition"
             >
                 <span className="truncate">{selected.length > 0 ? `${selected.length} selected` : `Select ${label}`}</span>
                 <ChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
             </div>
             {open && (
-                <div className="absolute z-35 w-full mt-1 bg-[#1a1b23] border border-gray-800 rounded-lg shadow-xl max-h-48 overflow-y-auto overflow-x-hidden">
+                <div className="absolute z-35 w-full mt-1 bg-black border border-white/10 rounded-lg shadow-xl max-h-48 overflow-y-auto overflow-x-hidden">
                     {options.map(opt => {
                         const isSelected = selected.includes(opt.value);
                         return (
@@ -33,12 +33,12 @@ const MultiSelect = ({ label, options, selected, onChange }) => {
                                         onChange([...selected, opt.value]);
                                     }
                                 }}
-                                className="flex items-center px-4 py-2.5 hover:bg-[#20212a] cursor-pointer"
+                                className="flex items-center px-4 py-2.5 hover:bg-white/5 cursor-pointer"
                             >
-                                <div className={`w-4 h-4 mr-3 flex items-center justify-center rounded border ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-gray-600'}`}>
-                                    {isSelected && <Check size={12} className="text-white" />}
+                                <div className={`w-4 h-4 mr-3 flex items-center justify-center rounded border ${isSelected ? 'bg-white border-white' : 'border-gray-600'}`}>
+                                    {isSelected && <Check size={12} className="text-black" />}
                                 </div>
-                                <span className="text-sm text-gray-300">{opt.label}</span>
+                                <span className="text-sm text-gray-100">{opt.label}</span>
                             </div>
                         );
                     })}
@@ -133,7 +133,7 @@ export default function ClassroomSettingsModal({ isOpen, onClose, onSuccessUpdat
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-[#14151a] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-black border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden">
                 <button 
                     onClick={onClose} 
                     className="absolute top-5 right-5 text-gray-500 hover:text-white transition z-10"
@@ -141,9 +141,9 @@ export default function ClassroomSettingsModal({ isOpen, onClose, onSuccessUpdat
                     <X size={20} />
                 </button>
                 
-                <div className="p-8 pb-6 border-b border-gray-800/80 shrink-0">
+                <div className="p-8 pb-6 border-b border-white/10 shrink-0">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <SettingsIcon className="text-indigo-500" /> 
+                        <SettingsIcon className="text-white" /> 
                         Classroom Settings
                     </h2>
                     <p className="text-gray-400 text-sm mt-2">Update settings and boundaries for this classroom.</p>
@@ -159,7 +159,7 @@ export default function ClassroomSettingsModal({ isOpen, onClose, onSuccessUpdat
                                 value={formData.name} 
                                 onChange={handleChange} 
                                 placeholder="e.g. Data Structures & Algorithms" 
-                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition"
+                                className="w-full bg-[#121414] border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-white/50 text-white placeholder-gray-600 transition"
                             />
                         </div>
                         
@@ -170,7 +170,7 @@ export default function ClassroomSettingsModal({ isOpen, onClose, onSuccessUpdat
                                 value={formData.description} 
                                 onChange={handleChange} 
                                 placeholder="Optional short detail about this class..."
-                                className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600 transition h-20 resize-none"
+                                className="w-full bg-[#121414] border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-white/50 text-white placeholder-gray-600 transition h-20 resize-none"
                             />
                         </div>
 
@@ -190,7 +190,7 @@ export default function ClassroomSettingsModal({ isOpen, onClose, onSuccessUpdat
                                     name="semester" 
                                     value={formData.semester} 
                                     onChange={handleChange} 
-                                    className="w-full bg-[#1a1b23] border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white transition appearance-none"
+                                    className="w-full bg-[#121414] border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-white/50 text-white transition appearance-none"
                                 >
                                     <option value="" disabled hidden>Select Semester</option>
                                     {['1', '2', '3', '4', '5', '6', '7', '8'].map(sem => (
@@ -228,9 +228,9 @@ export default function ClassroomSettingsModal({ isOpen, onClose, onSuccessUpdat
                     </div>
                 </div>
 
-                <div className="p-6 border-t border-gray-800/80 bg-[#14151a] shrink-0 flex justify-end gap-3 rounded-b-2xl">
+                <div className="p-6 border-t border-white/10 bg-black shrink-0 flex justify-end gap-3 rounded-b-2xl">
                     <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition">Cancel</button>
-                    <button type="submit" form="settingsForm" disabled={loading} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-all shadow-md disabled:opacity-50 flex items-center justify-center min-w-[120px]">
+                    <button type="submit" form="settingsForm" disabled={loading} className="px-6 py-2.5 bg-white hover:bg-gray-200 text-black text-sm font-medium rounded-lg transition-all shadow-lg shadow-white/20 disabled:opacity-50 flex items-center justify-center min-w-[120px]">
                         {loading ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
