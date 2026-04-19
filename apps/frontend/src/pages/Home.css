@@ -358,6 +358,19 @@
   }
 }
 
+.brand-image {
+  width: clamp(180px, 60vw, 700px);
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  opacity: 0.95;
+  transition: transform 0.3s ease;
+}
+
+.brand-image:hover {
+  transform: scale(1.03);
+}
+
 @media (max-width: 760px) {
   .nocturnal-topbar {
     grid-template-columns: 1fr auto;

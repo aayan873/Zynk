@@ -27,8 +27,7 @@ export default function Navbar() {
                         className="flex flex-col cursor-pointer select-none shrink-0"
                         onClick={() => { navigate('/dashboard'); setMenuOpen(false); }}
                     >
-                        <span className="text-xl font-bold tracking-tight text-white leading-none">Zynk</span>
-                        <span className="text-[10px] font-semibold tracking-[0.18em] text-gray-400 uppercase mt-0.5">Live Learning</span>
+                        <img src="/brand_name.png" alt="Zynk Live Learning" className="h-8" />
                     </div>
 
                     {/* Desktop Right */}

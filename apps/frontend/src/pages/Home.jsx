@@ -60,7 +60,7 @@ export default function Home() {
         <section className="nocturnal-hero" id="why-zynk">
           <div className="nocturnal-hero-copy">
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <img src="/brand_name.png" alt="Zynk Logo" style={{ maxWidth: '700px', height: 'auto' }} />
+              <img src="/brand_name.png" alt="Zynk Logo" className="brand-image" />
             </div>
 
             <p className="nocturnal-subline">
@@ -104,7 +104,7 @@ export default function Home() {
 
       <footer className="nocturnal-footer">
         <div>
-          <p className="nocturnal-footer-brand">Zynk</p>
+          <img src="/brand_name.png" alt="Zynk Logo" style={{ height: "1.5rem", marginBottom: "0.25rem" }} />
           <p className="nocturnal-footer-copy">© {year} Zynk. The modern archive of education.</p>
         </div>
 

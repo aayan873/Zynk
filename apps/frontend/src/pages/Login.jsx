@@ -64,8 +64,7 @@ export default function Login() {
                     {/* <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gray-500/10 border border-gray-500/20 mb-4">
                         <Zap size={22} className="text-gray-400" fill="currentColor" />
                     </div> */}
-                    <h1 className="text-3xl font-black text-white tracking-tight">Zynk</h1>
-                    <p className="text-[11px] font-bold tracking-[0.25em] text-gray-400 uppercase mt-1">Live Learning</p>
+                    <img src="/brand_name.png" alt="Zynk Live Learning" className="h-12 mx-auto" />
                 </div>
 
                 {/* Form card */}
