@@ -53,8 +53,8 @@ export default function Login() {
             />
 
             {/* Glow blobs */}
-            <div className="absolute top-[-10%] left-[-5%] w-72 h-72  rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-5%] w-96 h-96  rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute top-[-10%] left-[-5%] w-72 h-72  bg-gray-900/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-5%] w-96 h-96  bg-gray-900/20 rounded-full blur-[120px] pointer-events-none" />
 
             {/* Card */}
             <div className="relative w-full max-w-md">
@@ -117,7 +117,7 @@ export default function Login() {
                                     onChange={e => setPassword(e.target.value)}
                                     onFocus={() => setFocusedField('password')}
                                     onBlur={() => setFocusedField(null)}
-                                    placeholder="••••••••"
+                                    placeholder="Password"
                                     className="flex-1 bg-transparent text-gray-100 text-sm placeholder:text-gray-600 outline-none"
                                 />
                                 <button
