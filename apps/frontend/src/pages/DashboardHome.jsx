@@ -64,7 +64,7 @@ export default function DashboardHome() {
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
                         <div>
                             <h2 className="text-2xl sm:text-3xl font-['Outfit',_'Manrope',_sans-serif] font-bold tracking-tight text-white mb-2">
-                                Good morning, {user?.fullName?.split(' ')[0] || 'User'}.
+                                Welcome Back, {user?.fullName?.split(' ')[0] || 'User'}.
                             </h2>
                             <p className="text-gray-400 text-sm font-medium">
                                 You have upcoming sessions scheduled for today.
